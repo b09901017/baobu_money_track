@@ -54,16 +54,29 @@ export class TransactionRenderer {
             : tx.beneficiary === 'partner' ? '步步'
             : '寶步';
 
+        // 根據付款人決定邊框顏色和標記
+        const payerBorderClass = tx.payer === 'me'
+            ? 'border-l-4 border-macaron-pink'
+            : 'border-l-4 border-macaron-blue';
+
+        const payerBadgeClass = tx.payer === 'me'
+            ? 'bg-macaron-pink/20 text-macaron-rose'
+            : 'bg-macaron-blue/20 text-blue-600';
+
         return `
-            <div class="transaction-item bg-white rounded-2xl p-4 shadow-watercolor-layered hover:shadow-floating transition-all cursor-pointer group" data-transaction-id="${tx.id}">
+            <div class="transaction-item bg-white rounded-2xl p-4 shadow-watercolor-layered hover:shadow-floating transition-all cursor-pointer group ${payerBorderClass}" data-transaction-id="${tx.id}">
                 <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 rounded-2xl ${colorClass} flex items-center justify-center text-soft-ink shrink-0 group-hover:scale-110 transition-transform">
+                    <div class="w-14 h-14 rounded-2xl ${colorClass} flex items-center justify-center text-soft-ink shrink-0 group-hover:scale-110 transition-transform relative">
                         <span class="material-symbols-outlined text-2xl">${icon}</span>
+                        <!-- 付款人標記 -->
+                        <div class="absolute -top-1 -right-1 w-5 h-5 rounded-full ${payerBadgeClass} flex items-center justify-center text-xs font-bold shadow-sm">
+                            ${tx.payer === 'me' ? '寶' : '步'}
+                        </div>
                     </div>
                     <div class="flex-1 min-w-0">
                         <h4 class="font-hand font-bold text-lg text-soft-ink truncate">${tx.item_name}</h4>
                         <p class="text-sm text-warm-brown/80 truncate mt-0.5">
-                            ${payerText} 付 · ${beneficiaryText} · ${formatDisplayDate(tx.date)}
+                            <span class="font-bold ${tx.payer === 'me' ? 'text-macaron-rose' : 'text-blue-600'}">${payerText} 付</span> · ${beneficiaryText} · ${formatDisplayDate(tx.date)}
                         </p>
                     </div>
                     <div class="text-right">
@@ -94,21 +107,36 @@ export class TransactionRenderer {
             : tx.beneficiary === 'partner' ? '步步'
             : '寶步';
 
+        // 根據付款人決定邊框顏色
+        const payerBorderClass = tx.payer === 'me'
+            ? 'border-l-4 border-macaron-pink'
+            : 'border-l-4 border-macaron-blue';
+
+        const payerDotClass = tx.payer === 'me'
+            ? 'border-macaron-pink bg-macaron-pink/20'
+            : 'border-macaron-blue bg-macaron-blue/20';
+
+        const payerBadgeClass = tx.payer === 'me'
+            ? 'bg-macaron-pink/20 text-macaron-rose'
+            : 'bg-macaron-blue/20 text-blue-600';
+
         // 計算時間（使用 created_at）
         const time = new Date(tx.created_at);
         const timeStr = `${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`;
 
         return `
             <div class="relative">
-                <!-- 時間軸點 -->
-                <div class="absolute -left-8 top-6 w-4 h-4 rounded-full bg-white border-[3px] ${colorClass} shadow-sm z-10"></div>
+                <!-- 時間軸點 - 根據付款人著色 -->
+                <div class="absolute -left-8 top-6 w-4 h-4 rounded-full ${payerDotClass} border-[3px] shadow-sm z-10"></div>
 
                 <!-- 交易卡片 -->
-                <div class="transaction-item bg-white rounded-2xl p-4 shadow-watercolor-layered hover:shadow-floating transition-all cursor-pointer group border-l-4 ${colorClass}" data-transaction-id="${tx.id}">
+                <div class="transaction-item bg-white rounded-2xl p-4 shadow-watercolor-layered hover:shadow-floating transition-all cursor-pointer group ${payerBorderClass}" data-transaction-id="${tx.id}">
                     <!-- 時間標籤 -->
                     <div class="flex items-center gap-2 mb-3">
                         <span class="text-xs font-hand font-bold text-warm-brown/60">${timeStr}</span>
                         <div class="h-px flex-1 bg-warm-brown/10"></div>
+                        <!-- 付款人標記 -->
+                        <span class="px-2 py-0.5 rounded-full ${payerBadgeClass} text-xs font-bold">${tx.payer === 'me' ? '寶寶付' : '步步付'}</span>
                     </div>
 
                     <div class="flex items-center gap-4">
@@ -118,7 +146,7 @@ export class TransactionRenderer {
                         <div class="flex-1 min-w-0">
                             <h4 class="font-hand font-bold text-lg text-soft-ink truncate">${tx.item_name}</h4>
                             <p class="text-sm text-warm-brown/80 mt-0.5">
-                                ${payerText} 付給 ${beneficiaryText}
+                                付給 ${beneficiaryText}
                             </p>
                             ${tx.note ? `<p class="text-xs text-warm-brown/60 mt-1 italic truncate">📝 ${tx.note}</p>` : ''}
                         </div>
