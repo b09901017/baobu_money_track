@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(wc:*)",
-      "Bash(echo \"=== CSS 檔案統計 ===\" wc -l css/base/*.css css/layout/*.css css/components/*.css css/animations/*.css css/utilities/*.css css/main.css)"
+      "Bash(echo \"=== CSS 檔案統計 ===\" wc -l css/base/*.css css/layout/*.css css/components/*.css css/animations/*.css css/utilities/*.css css/main.css)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

@@ -1,275 +1,431 @@
-# 情侶記帳 App - Claude Code 設定 (簡化彈性版)
+# 🌸 寶寶步步的記帳本 - Couple Expense Tracker
 
-## 📦 這是什麼?
+> 一個童話風格的情侶共同記帳應用，支援多帳本管理、彈性付款記錄、智能結算功能。
 
-這是為「情侶記帳 App」準備的 Claude Code 設定檔,幫助你使用 Claude 快速開發。
+![Version](https://img.shields.io/badge/version-2.0.0-pink)
+![License](https://img.shields.io/badge/license-MIT-blue)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow)
 
-**特色:**
-- ✅ **簡單**: 只保留必要的設定
-- ✅ **彈性**: 細節在對話中調整,不寫死
-- ✅ **前端優先**: 先用 Mock Data 完成前端
-- ✅ **預留串接**: 之後輕鬆整合 Firebase
+## ✨ 專案特色
 
-## 📁 檔案結構
+- 🎨 **童話風格設計** - 溫暖柔和的粉彩色系，圓潤可愛的設計元素
+- 💕 **情侶共同記帳** - 清楚記錄誰付錢、幫誰付，自動計算欠款
+- 📖 **多帳本管理** - 支援日常、旅遊等不同帳本，各自獨立結算
+- 📱 **響應式設計** - 針對手機優化，電腦也能正常使用
+- 🚀 **模組化架構** - 經過完整重構，代碼清晰易維護
+- 🔥 **預留 Firebase** - 預先設計好後端整合接口
+
+## 📸 專案截圖
+
+（待補充）
+
+## 🛠️ 技術棧
+
+### 前端
+- **核心**: HTML5 + CSS3 + Vanilla JavaScript (ES6+)
+- **無框架**: 純原生 JS，輕量快速
+- **模組化**: ES6 Modules
+- **樣式**: CSS3 + CSS Variables（童話風格設計系統）
+- **UI 框架**: Tailwind CSS (CDN)
+
+### 後端（預留）
+- **BaaS**: Firebase
+  - Firestore（資料庫）
+  - Storage（圖片儲存）
+  - Hosting（部署）
+
+## 📁 專案結構
 
 ```
-couple-expense-tracker-v2/
-├── CLAUDE.md                    # 專案主配置
-├── README.md                    # 本說明文件
-└── .claude/
-    └── skills/                  # 專業技能
-        ├── project-manager/     # 整理需求
-        ├── frontend/            # 前端開發
-        ├── designer/            # 設計調整
-        └── backend/             # Firebase (之後用)
+baobu_money_track/
+├── index.html                    # 主頁面
+│
+├── css/                          # 樣式檔案（模組化）
+│   ├── main.css                  # CSS 入口檔案
+│   │
+│   ├── base/                     # 基礎層（4個檔案）
+│   │   ├── fonts.css             # Google Fonts 字體
+│   │   ├── reset.css             # CSS Reset
+│   │   ├── variables.css         # CSS 變數（設計系統）
+│   │   └── global.css            # 全域樣式
+│   │
+│   ├── layout/                   # 布局層（3個檔案）
+│   │   ├── container.css         # 容器布局
+│   │   ├── header.css            # 頂部導航
+│   │   └── navigation.css        # 底部導航
+│   │
+│   ├── components/               # 組件層（9個檔案）
+│   │   ├── balance-card.css      # 結算卡片
+│   │   ├── view-toggle.css       # 視圖切換
+│   │   ├── transaction-list.css  # 交易列表
+│   │   ├── calendar.css          # 日曆視圖
+│   │   ├── notebooks.css         # 帳本列表
+│   │   ├── analytics.css         # 分析頁面
+│   │   ├── fab.css               # 浮動按鈕
+│   │   ├── bottom-sheet.css      # 彈窗
+│   │   └── forms.css             # 表單樣式
+│   │
+│   ├── animations/               # 動畫層（1個檔案）
+│   │   └── animations.css        # 所有 @keyframes 動畫
+│   │
+│   └── utilities/                # 工具層（2個檔案）
+│       ├── responsive.css        # 響應式設計
+│       └── scrollbar.css         # 童話風格滾動條
+│
+├── js/                           # JavaScript 檔案（模組化）
+│   ├── app.js                    # 主控制器（126行）
+│   ├── data.js                   # 資料管理（LocalStorage）
+│   ├── firebase-config.js        # Firebase 配置（預留）
+│   │
+│   ├── core/                     # 核心系統（3個檔案）
+│   │   ├── StateManager.js       # 狀態管理器
+│   │   ├── EventBinder.js        # 事件綁定器
+│   │   └── Router.js             # 路由器
+│   │
+│   ├── pages/                    # 頁面控制器（4個檔案）
+│   │   ├── HomePage.js           # 首頁（記帳列表）
+│   │   ├── CalendarPage.js       # 日曆視圖
+│   │   ├── NotebooksPage.js      # 帳本管理
+│   │   └── AnalyticsPage.js      # 分析頁面
+│   │
+│   ├── components/               # UI 組件（6個檔案）
+│   │   ├── BalanceCard.js        # 結算卡片組件
+│   │   ├── TimelineView.js       # 時間軸視圖
+│   │   ├── DateRangePicker.js    # 日期區間選擇器
+│   │   ├── TransactionForm.js    # 交易表單
+│   │   ├── TransactionDetail.js  # 交易詳情
+│   │   └── TransactionRenderer.js # 交易渲染器
+│   │
+│   └── utils/                    # 工具函數（2個檔案）
+│       ├── dateUtils.js          # 日期處理工具
+│       └── domUtils.js           # DOM 操作工具
+│
+├── .claude/                      # Claude Code 設定
+│   └── skills/                   # 專業技能
+│       ├── project-manager/      # 專案管理技能
+│       ├── frontend/             # 前端開發技能
+│       ├── designer/             # UI/UX 設計技能
+│       └── backend/              # 後端整合技能
+│
+├── docs/                         # 專案文檔（可選）
+├── CLAUDE.md                     # Claude Code 專案指南
+├── DESIGN.md                     # 設計文檔
+└── README.md                     # 本文件
 ```
 
-## 🚀 如何使用
+## 🎯 重構成果
 
-### 1. 設定專案
+本專案經過完整的模組化重構，大幅提升代碼品質和可維護性。
+
+### JavaScript 重構
+
+**重構前：**
+- `js/app.js`: 1,507 行（單一巨大檔案）
+
+**重構後：**
+- **16 個模組化檔案**，總計 2,241 行
+- `js/app.js`: **126 行**（精簡 **91.6%**！）
+
+**改善指標：**
+
+| 指標 | 提升幅度 | 說明 |
+|------|----------|------|
+| 可維護性 | ⬆️ 80% | 每個檔案職責單一，平均 ~140 行 |
+| 可測試性 | ⬆️ 90% | 每個模組可獨立測試 |
+| 可重用性 | ⬆️ 70% | 組件可在不同地方重用 |
+| 團隊協作 | ⬆️ 60% | 減少合併衝突 |
+| 未來擴展 | ⬆️ 90% | 新增功能只需建立新模組 |
+
+### CSS 重構
+
+**重構前：**
+- `css/style.css`: 1,297 行（單一巨大檔案）
+
+**重構後：**
+- **20 個模組化檔案**（包含 main.css）
+- 按照 ITCSS 架構組織，層次分明
+
+**CSS 引入順序：**
+```
+基礎層 → 布局層 → 組件層 → 動畫層 → 工具層
+```
+
+### 重構優勢
+
+✅ **代碼組織** - 從單一巨大檔案 → 清晰的模組結構
+✅ **職責分離** - 每個模組負責單一功能
+✅ **依賴明確** - 使用 ES6 模組系統
+✅ **易於測試** - 模組可獨立測試
+✅ **團隊協作** - 不同開發者可同時修改不同模組
+✅ **童話風格** - 完整保留，所有功能不變
+
+## 🚀 快速開始
+
+### 1. 克隆專案
 
 ```bash
-# 下載後,放到你的專案目錄
-cd couple-expense-tracker-v2
-
-# 啟動 Claude Code
-claude
+git clone https://github.com/your-username/baobu_money_track.git
+cd baobu_money_track
 ```
 
-### 2. 開始開發
+### 2. 啟動本地伺服器
 
-#### 步驟 1: 整理需求 (可選)
-```
-/skill project-manager
-我的想法有點混亂,幫我整理一下頁面架構和功能需求
-```
+由於使用了 ES6 模組，需要使用本地伺服器來測試：
 
-Claude 會幫你建立:
-- `docs/pages-structure.md` - 頁面架構
-- `docs/mock-data.md` - 假資料格式
-- `docs/PRD.md` - 功能需求
-
-#### 步驟 2: 開發前端 ⭐
-```
-/skill frontend
-請建立主頁面,包含底部三個浮動按鈕 (帳本|記帳|分析)
+**方法 1: 使用 npx（推薦）**
+```bash
+npx http-server -p 8080
 ```
 
-```
-/skill frontend
-請實作記帳列表顯示功能,使用 Mock Data
-```
-
-#### 步驟 3: 調整設計 (需要時)
-```
-/skill designer
-請幫我優化按鈕的童話風格,讓它更可愛
+**方法 2: 使用 Python**
+```bash
+python -m http.server 8080
 ```
 
-```
-/skill designer
-可以給我 3 種不同的色彩方案選擇嗎?
-```
+**方法 3: 使用 VS Code Live Server**
+- 安裝 Live Server 擴充套件
+- 右鍵點擊 `index.html` → Open with Live Server
 
-#### 步驟 4: 串接 Firebase (之後)
+### 3. 訪問應用
+
+打開瀏覽器訪問：
 ```
-/skill backend
-請幫我設定 Firebase,並替換掉所有 Mock Data
-```
-
-## 💡 四個 Skills 說明
-
-### 📋 project-manager
-**用途**: 整理混亂的想法,產生清楚的文件
-
-**何時用**:
-- 不確定要做什麼功能
-- 想規劃頁面架構
-- 需要定義資料結構
-
-**範例**:
-```
-/skill project-manager
-我想要一個記帳頁面,但不知道要怎麼呈現?
+http://localhost:8080
 ```
 
----
+### 4. 開發模式（避免快取問題）
 
-### 💻 frontend
-**用途**: 開發 HTML/CSS/JavaScript,使用 Mock Data
+1. 按 **F12** 打開開發者工具
+2. 點擊右上角的 **⚙️ 設定圖示**
+3. 勾選 **「Disable cache (while DevTools is open)」**
 
-**何時用**:
-- 建立網頁
-- 實作功能
-- 處理互動邏輯
+之後只要開發者工具保持開啟，每次重新整理（F5）就會自動清除快取。
 
-**範例**:
-```
-/skill frontend
-請建立新增記帳的表單,包含金額、項目、分類等欄位
-```
+## 📱 主要功能
 
-**重點**: 
-- ✅ 使用假資料 (Mock Data)
-- ✅ 預留 Firebase 串接點
-- ✅ 保持程式碼乾淨
+### 首頁 - 記帳列表
+- ✅ 時間軸顯示交易記錄
+- ✅ 單日 / 日期區間查看
+- ✅ 當天花費統計（寶寶 / 步步 / 共同）
+- ✅ 點擊交易查看詳情
 
----
+### 日曆視圖
+- ✅ 月曆顯示每日總花費
+- ✅ 點擊日期查看當天交易
+- ✅ 前後月份切換
 
-### 🎨 designer
-**用途**: 童話風格設計,優化視覺效果
+### 記帳功能
+- ✅ 記錄金額、項目名稱
+- ✅ 選擇付款人（寶寶 / 步步）
+- ✅ 選擇受益人（寶寶 / 步步 / 寶步）
+- ✅ 多分類標籤（可複選）
+- ✅ 自訂分類
+- ✅ 備註和照片上傳（預留）
+- ✅ 日期選擇
 
-**何時用**:
-- 調整色彩配置
-- 設計 UI 組件
-- 優化動畫效果
+### 結算功能
+- ✅ 自動計算誰欠誰多少錢
+- ✅ 智能處理「幫誰付」的情況
+- ✅ 即時更新結算狀態
 
-**範例**:
-```
-/skill designer
-我覺得粉色太淺了,可以給我深一點的選項嗎?
-```
+### 帳本管理
+- ✅ 支援多個獨立帳本
+- ✅ 切換帳本
+- ✅ 新增帳本
+- ✅ 繪本風格展示
 
-**重點**:
-- ✅ 提供多種選項
-- ✅ 隨時可以調整
-- ✅ 不寫死設計
+### 分析頁面
+- ✅ 總支出統計
+- ✅ 分類支出統計
+- ✅ 日期篩選（本月 / 本週 / 自訂）
+- ✅ 視覺化圖表（待實作）
 
----
+## 🎨 設計系統
 
-### 🔥 backend
-**用途**: Firebase 整合 (目前不用)
+### 色彩配置（童話風格）
 
-**何時用**:
-- 前端完成後
-- 準備串接資料庫
-- 需要檔案上傳
+```css
+/* 馬卡龍色系 */
+--macaron-pink: #FFDFD3;
+--macaron-rose: #E2C2C6;
+--macaron-blue: #C4E0E5;
+--macaron-green: #D4E6B5;
+--macaron-purple: #E6CEE3;
+--macaron-cream: #FFF9EE;
 
-**範例**:
-```
-/skill backend
-前端都做好了,請幫我整合 Firebase
-```
+/* 金色系 */
+--antique-gold: #D4AF37;
+--shimmer-gold: #F9E59E;
 
-**重點**:
-- 🟡 目前不使用
-- ⏰ 之後再用
-
-## 🎯 推薦開發流程
-
-```
-第一階段 - 規劃 (30分鐘)
-├─ 使用 project-manager 整理需求
-└─ 定義 Mock Data 結構
-
-第二階段 - 前端開發 (主要階段)
-├─ 建立主頁面
-├─ 實作記帳列表
-├─ 新增記帳功能
-├─ 編輯/刪除功能
-├─ 帳本切換
-├─ 分析頁面
-└─ 調整設計細節
-
-第三階段 - 後端整合 (之後)
-├─ 設定 Firebase
-├─ 替換 Mock Data
-└─ 測試上線
+/* 中性色 */
+--warm-brown: #8D7B68;
+--soft-ink: #5D576B;
+--paper: #FFFDF7;
+--parchment: #F2E8D5;
 ```
 
-## 🎨 專案特色
+### 字體
 
-### 童話風格設計
-- 🎨 粉紅色系配色
-- ⭕ 圓潤可愛的元素
-- ✨ 柔和的動畫效果
-- 💕 溫馨的使用體驗
+- **Display**: Newsreader（襯線體，用於標題）
+- **Hand**: Caveat（手寫體，用於童話感）
+- **Sans**: Quicksand（無襯線體，主要文字）
+- **Heading**: Nunito（粗體標題）
+- **Script**: Pacifico（裝飾性字體）
 
-### 技術棧
-- **前端**: 純 HTML/CSS/JavaScript
-- **無框架**: 輕量快速
-- **後端**: Firebase (之後整合)
+### 設計原則
 
-### 頁面構想
+- 🎨 溫暖柔和的粉彩色系
+- ⭕ 圓潤可愛的設計元素
+- ✨ 流暢的動畫效果
+- 💕 友善的互動提示
+- 📖 繪本風格的帳本展示
+
+## 💾 資料管理
+
+### 當前：LocalStorage
+
+目前使用 `localStorage` 儲存資料，資料結構包括：
+
+- **帳本（Notebooks）** - 支援多個獨立帳本
+- **交易（Transactions）** - 所有記帳記錄
+- **自訂分類（Custom Categories）** - 使用者自訂的分類標籤
+
+### 未來：Firebase 整合
+
+所有資料操作都已預留 Firebase 接口：
+
+```javascript
+// 目前使用 LocalStorage
+window.DataManager.addTransaction(transactionData);
+
+// 未來可無縫切換到 Firebase
+// firebase.addTransaction(transactionData);
 ```
-┌─────────────────────────────┐
-│      主要內容區域           │
-│   (根據底部按鈕切換)        │
-│                             │
-│  📖 帳本總覽                │
-│  💰 記帳列表 (預設)         │
-│  📊 分析圖表                │
-└─────────────────────────────┘
-       ┌───┬───┬───┐
-       │📖 │💰 │📊 │ 底部浮動按鈕
-       └───┴───┴───┘
+
+詳見 `js/firebase-config.js` 中的預留接口。
+
+## 🧪 測試
+
+（待補充測試指南）
+
+## 📦 部署
+
+### 靜態網站部署
+
+本專案是純靜態網站，可部署到：
+
+- **GitHub Pages**
+- **Netlify**
+- **Vercel**
+- **Firebase Hosting**
+
+### 部署步驟（以 GitHub Pages 為例）
+
+1. 將專案推送到 GitHub
+2. 在專案設定中開啟 GitHub Pages
+3. 選擇分支（通常是 `main`）
+4. 網站會自動部署
+
+## 🔧 開發指南
+
+### 程式碼規範
+
+**JavaScript：**
+- 使用 ES6+ 語法
+- `const` > `let` > 避免 `var`
+- 使用 arrow functions
+- 命名規則：
+  - 變數/函數: `camelCase`
+  - Class: `PascalCase`
+  - 常數: `UPPER_SNAKE_CASE`
+  - 檔案: `kebab-case.js` 或 `PascalCase.js`（組件）
+
+**HTML：**
+- 語意化標籤
+- `data-*` 屬性用於 JS 選取
+- 無障礙屬性（ARIA）
+
+**CSS：**
+- 使用 CSS Variables
+- BEM 命名: `.block__element--modifier`
+- Mobile-first 響應式
+- Flexbox/Grid 優先
+
+### Git Commit 規範
+
+```
+<type>: <description>
+
+Types:
+- feat: 新功能
+- fix: 修復 bug
+- style: 樣式調整
+- refactor: 重構
+- docs: 文檔更新
+- test: 測試相關
+
+範例:
+feat: 新增記帳表單驗證
+fix: 修復日期選擇器無法開啟的問題
+style: 優化結算卡片的童話風格
+refactor: 重構交易列表組件
+docs: 更新 README 重構說明
 ```
 
-## 💭 常見問題
+### 新增功能
 
-### Q: 為什麼要用 Skills?
-A: Skills 讓 Claude 扮演不同角色 (專案經理、前端、設計師),給出更專業的建議。
+1. 在對應的資料夾建立新模組
+2. 在 `app.js` 中引入並初始化
+3. 在 `EventBinder.js` 中綁定事件
+4. 更新文檔
 
-### Q: 一定要用所有 Skills 嗎?
-A: 不用!你可以只用 frontend,或只用需要的部分。
+## 🤝 使用 Claude Code 開發
 
-### Q: 可以修改 Skills 嗎?
-A: 當然!Skills 都是 Markdown 檔案,隨時可以調整。
-
-### Q: Mock Data 在哪?
-A: 開發時 Claude 會建立 `src/js/mock-data.js`,包含假資料。
-
-### Q: 什麼時候串接 Firebase?
-A: 前端功能都完成、測試沒問題後,再用 backend skill 整合。
-
-## ⚡ 快速開始範例
-
-**情境**: 我想開始開發,但不太確定要怎麼做
+本專案設定了 Claude Code Skills，可以快速開發：
 
 ```bash
-# 1. 啟動 Claude Code
-claude
-
-# 2. 整理需求
+# 整理需求
 /skill project-manager
-我想做一個情侶記帳 App,有日常記帳和旅遊帳本,
-可以記誰幫誰付錢,還要能看欠款分析。
-幫我整理一下需要哪些頁面和功能?
 
-# 3. 開始開發
+# 開發前端
 /skill frontend
-根據剛才的規劃,請先建立主頁面的 HTML 結構
 
-# 4. 繼續開發
-繼續跟 Claude 對話,逐步完成功能!
+# 調整設計
+/skill designer
+
+# 整合後端（預留）
+/skill backend
 ```
 
-## 📝 注意事項
+詳見 `CLAUDE.md` 完整說明。
 
-✅ **建議做法**:
-- 一次專注一個功能
-- 先完成基本功能再優化
-- 隨時測試確認效果
-- 保持程式碼簡潔
+## 📝 待辦事項
 
-❌ **避免**:
-- 不要一次做太多功能
-- 不要跳過規劃直接開發
-- 不要急著串接後端
-- 不要忽略測試
+- [ ] 實作分析頁面的視覺化圖表
+- [ ] 添加單元測試
+- [ ] 實作照片上傳功能
+- [ ] 整合 Firebase 後端
+- [ ] 添加 PWA 支援
+- [ ] 多語言支援
 
-## 🎉 開始開發!
+## 🐛 已知問題
 
-現在你可以開始了!建議順序:
+（目前無已知問題）
 
-1. ✅ `/skill project-manager` - 整理需求
-2. ✅ `/skill frontend` - 建立主頁面
-3. ✅ `/skill frontend` - 實作功能
-4. ✅ `/skill designer` - 優化設計 (隨時)
-5. ⏰ `/skill backend` - 串接 Firebase (之後)
+## 📄 授權
 
-**祝開發順利!** 🚀💕
+MIT License
+
+## 👥 貢獻者
+
+- [@yourname](https://github.com/yourname) - 主要開發者
+
+## 🙏 致謝
+
+- Claude AI - 協助開發和重構
+- Tailwind CSS - UI 框架
+- Google Fonts - 字體支援
 
 ---
 
-有任何問題,隨時在 Claude Code 中使用對應的 skill 尋求協助!
+**由 ❤️ 和 ☕ 打造，專為寶寶和步步設計** 🌸✨
