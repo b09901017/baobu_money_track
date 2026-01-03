@@ -15,21 +15,24 @@ export class TransactionForm {
      * 開啟表單
      */
     open() {
-        if (!this.sheet) return;
+        console.log('🔓 TransactionForm.open() 被呼叫');
+        console.log('Sheet 元素:', this.sheet);
 
-        this.sheet.classList.remove('hidden');
-
-        // 設定今天日期
-        const dateInput = document.getElementById('transactionDate');
-        if (dateInput) {
-            dateInput.valueAsDate = new Date();
+        if (!this.sheet) {
+            console.error('❌ Sheet 元素不存在');
+            return;
         }
+
+        // 移除 hidden class 並添加 active class
+        this.sheet.classList.remove('hidden');
+        this.sheet.classList.add('active');
+        console.log('✅ Sheet 已顯示');
+
+        // 重置表單（會同時設置今天日期）
+        this.reset();
 
         // 渲染自訂分類
         this.renderCustomCategories();
-
-        // 重置表單
-        this.reset();
     }
 
     /**
@@ -37,6 +40,7 @@ export class TransactionForm {
      */
     close() {
         if (this.sheet) {
+            this.sheet.classList.remove('active');
             this.sheet.classList.add('hidden');
         }
     }
@@ -49,9 +53,14 @@ export class TransactionForm {
             this.form.reset();
         }
 
+        // 設定今天日期
         const dateInput = document.getElementById('transactionDate');
         if (dateInput) {
-            dateInput.valueAsDate = new Date();
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            dateInput.value = `${year}-${month}-${day}`;
         }
 
         this.state.selectedCategories = [];
@@ -175,37 +184,58 @@ export class TransactionForm {
      * 提交交易
      */
     submit() {
-        if (!this.form) return;
+        console.log('🔍 開始提交交易...');
+
+        if (!this.form) {
+            console.error('❌ 找不到表單元素');
+            return;
+        }
 
         if (!this.form.checkValidity()) {
+            console.warn('⚠️ 表單驗證失敗');
             this.form.reportValidity();
             return;
         }
 
-        const payer = document.querySelector('input[name="payer"]:checked').value;
-        const beneficiary = document.querySelector('input[name="beneficiary"]:checked').value;
+        try {
+            const payer = document.querySelector('input[name="payer"]:checked').value;
+            const beneficiary = document.querySelector('input[name="beneficiary"]:checked').value;
 
-        const transactionData = {
-            payer: payer,
-            beneficiary: beneficiary,
-            amount: parseFloat(document.getElementById('amount').value),
-            item_name: document.getElementById('itemName').value.trim(),
-            categories: [...this.state.selectedCategories],
-            note: document.getElementById('note').value.trim(),
-            date: document.getElementById('transactionDate').value,
-            photo_url: null
-        };
+            const transactionData = {
+                payer: payer,
+                beneficiary: beneficiary,
+                amount: parseFloat(document.getElementById('amount').value),
+                item_name: document.getElementById('itemName').value.trim(),
+                categories: [...this.state.selectedCategories],
+                note: document.getElementById('note').value.trim(),
+                date: document.getElementById('transactionDate').value,
+                photo_url: null
+            };
 
-        window.DataManager.addTransaction(transactionData);
+            console.log('📝 交易資料:', transactionData);
 
-        this.close();
+            if (!window.DataManager) {
+                console.error('❌ DataManager 不存在');
+                alert('系統錯誤：資料管理器未初始化');
+                return;
+            }
 
-        // 呼叫提交回調（更新首頁）
-        if (this.onSubmitCallback) {
-            this.onSubmitCallback();
+            const result = window.DataManager.addTransaction(transactionData);
+            console.log('✅ 交易已新增:', result);
+
+            this.close();
+
+            // 呼叫提交回調（更新首頁）
+            if (this.onSubmitCallback) {
+                console.log('🔄 呼叫更新回調...');
+                this.onSubmitCallback();
+            }
+
+            // 簡單的成功提示
+            alert('✨ 交易已記入日記！');
+        } catch (error) {
+            console.error('❌ 提交交易時發生錯誤:', error);
+            alert('發生錯誤：' + error.message);
         }
-
-        // 簡單的成功提示
-        alert('✨ 交易已記入日記！');
     }
 }

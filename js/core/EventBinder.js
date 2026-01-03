@@ -8,8 +8,10 @@ export class EventBinder {
     }
 
     bindAll() {
+        console.log('🔗 開始綁定所有事件...');
         this.bindNavigation();
         this.bindViewToggle();
+        console.log('🔗 準備綁定 FAB...');
         this.bindFAB();
         this.bindBottomSheet();
         this.bindCategories();
@@ -20,6 +22,7 @@ export class EventBinder {
         this.bindDateRange();
         this.bindAnalytics();
         this.bindDetailModal();
+        console.log('🔗 所有事件綁定完成');
     }
 
     bindNavigation() {
@@ -47,14 +50,29 @@ export class EventBinder {
     }
 
     bindFAB() {
+        console.log('🔍 bindFAB() 被呼叫');
         // 浮動新增按鈕
         const fabAdd = document.getElementById('fabAdd');
+        console.log('🔍 fabAdd 元素:', fabAdd);
+
         if (fabAdd) {
+            console.log('✅ FAB 按鈕已找到，正在綁定事件...');
             fabAdd.addEventListener('click', () => {
+                console.log('🎯 FAB 按鈕被點擊');
+                console.log('🔍 this.app:', this.app);
+                console.log('🔍 this.app.transactionForm:', this.app.transactionForm);
+
                 if (this.app.transactionForm) {
+                    console.log('📝 開啟交易表單...');
                     this.app.transactionForm.open();
+                } else {
+                    console.error('❌ transactionForm 不存在');
                 }
             });
+            console.log('✅ FAB 按鈕事件已綁定');
+        } else {
+            console.error('❌ 找不到 FAB 按鈕 #fabAdd');
+            console.error('🔍 當前 DOM 載入狀態:', document.readyState);
         }
     }
 
@@ -127,12 +145,18 @@ export class EventBinder {
         // 表單提交
         const form = document.getElementById('transactionForm');
         if (form) {
+            console.log('✅ 表單事件已綁定');
             form.addEventListener('submit', (e) => {
+                console.log('📋 表單提交事件觸發');
                 e.preventDefault();
                 if (this.app.transactionForm) {
                     this.app.transactionForm.submit();
+                } else {
+                    console.error('❌ transactionForm 不存在');
                 }
             });
+        } else {
+            console.error('❌ 找不到表單元素 #transactionForm');
         }
     }
 
