@@ -8,16 +8,8 @@ const {
     getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
 } = window.firebaseModules;
 
-// Firebase 設定
-const firebaseConfig = {
-    apiKey: "AIzaSyBljCwLMZG1sQOc_CceZ872q2PsBmJ-g3k",
-    authDomain: "baobu-app.firebaseapp.com",
-    projectId: "baobu-app",
-    storageBucket: "baobu-app.firebasestorage.app",
-    messagingSenderId: "106168212860",
-    appId: "1:106168212860:web:344654c947143b636318f9",
-    measurementId: "G-YJ6SY4YGJK"
-};
+// 從配置檔案載入 Firebase 設定（已從 index.html 注入）
+const firebaseConfig = window.firebaseConfig;
 
 // 初始化 Firebase
 const app = initializeApp(firebaseConfig);

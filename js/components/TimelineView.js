@@ -18,14 +18,14 @@ export class TimelineView {
     /**
      * 更新時間軸視圖
      */
-    update() {
+    async update() {
         let transactions;
 
         if (this.state.isRangeMode && this.state.rangeStart && this.state.rangeEnd) {
             // 區間模式
             const startStr = window.DataManager.formatDate(this.state.rangeStart);
             const endStr = window.DataManager.formatDate(this.state.rangeEnd);
-            transactions = window.DataManager.getTransactionsByDateRange(startStr, endStr);
+            transactions = await window.DataManager.getTransactionsByDateRange(startStr, endStr);
         } else {
             // 單日模式
             const dateStr = window.DataManager.formatDate(this.state.currentDayView);

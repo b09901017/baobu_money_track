@@ -1,152 +1,164 @@
-// ==================== 資料管理模組 ====================
-// 此模組負責管理應用的資料狀態（目前使用本地 localStorage，未來可無縫切換至 Firebase）
+// ==================== 資料管理模組 (Firebase 版本) ====================
+// 此模組負責管理應用的資料狀態，使用 Firebase Firestore
 
 class DataManager {
     constructor() {
-        this.currentUser = { id: 'user1', name: '寶寶' };
-        this.partner = { id: 'user2', name: '步步' };
-        this.currentNotebook = null;
-        this.notebooks = [];
-        this.transactions = [];
-        this.customCategories = [];
-
-        this.init();
+        this.currentUser = null;  // Firebase 用戶物件
+        this.partner = null;  // 伴侶資訊（從帳本推斷）
+        this.currentNotebook = null;  // 當前帳本 ID
+        this.notebooks = [];  // 帳本列表（快取）
+        this.transactions = [];  // 交易列表（快取）
+        this.customCategories = [];  // 自訂分類（快取）
+        this.isInitialized = false;  // 是否已初始化
     }
 
-    // 初始化：從 localStorage 載入資料，若無則建立範例資料
-    init() {
-        const savedData = localStorage.getItem('coupleAppData');
+    // ==================== 初始化 ====================
 
-        if (savedData) {
-            const data = JSON.parse(savedData);
-            this.notebooks = data.notebooks || [];
-            this.transactions = data.transactions || [];
-            this.currentNotebook = data.currentNotebook || null;
-            this.customCategories = data.customCategories || [];
-        } else {
-            // 建立預設帳本和範例資料
-            this.createDefaultData();
+    /**
+     * 初始化資料管理器
+     * @param {Object} user - Firebase 用戶物件
+     */
+    async init(user) {
+        if (!user) {
+            throw new Error('用戶物件不能為空');
         }
 
-        // 如果沒有當前帳本，設定第一個為當前
-        if (!this.currentNotebook && this.notebooks.length > 0) {
-            this.currentNotebook = this.notebooks[0].id;
-        }
-    }
+        console.log('📊 開始初始化 DataManager...');
+        this.currentUser = user;
 
-    // 建立預設資料（範例）
-    createDefaultData() {
-        const defaultNotebook = {
-            id: 'notebook_1',
-            name: '寶寶步步的日常',
-            members: ['user1', 'user2'],
-            created_at: new Date().toISOString()
-        };
+        try {
+            // 1. 載入用戶的帳本
+            await this.loadNotebooks();
 
-        this.notebooks.push(defaultNotebook);
-        this.currentNotebook = defaultNotebook.id;
-
-        // 建立一些範例交易
-        const sampleTransactions = [
-            {
-                id: 'tx_1',
-                notebook_id: 'notebook_1',
-                payer: 'me',
-                beneficiary: 'both',
-                amount: 350,
-                item_name: '晚餐',
-                categories: ['吃吃'],
-                note: '好好吃的義大利麵',
-                photo_url: null,
-                date: this.formatDate(new Date()),
-                created_at: new Date().toISOString()
-            },
-            {
-                id: 'tx_2',
-                notebook_id: 'notebook_1',
-                payer: 'partner',
-                beneficiary: 'both',
-                amount: 580,
-                item_name: '電影票',
-                categories: ['玩'],
-                note: '看了超好看的電影！',
-                photo_url: null,
-                date: this.formatDate(new Date(Date.now() - 86400000)),
-                created_at: new Date(Date.now() - 86400000).toISOString()
-            },
-            {
-                id: 'tx_3',
-                notebook_id: 'notebook_1',
-                payer: 'me',
-                beneficiary: 'self',
-                amount: 120,
-                item_name: '計程車',
-                categories: ['交通'],
-                note: '',
-                photo_url: null,
-                date: this.formatDate(new Date(Date.now() - 86400000 * 2)),
-                created_at: new Date(Date.now() - 86400000 * 2).toISOString()
-            },
-            {
-                id: 'tx_4',
-                notebook_id: 'notebook_1',
-                payer: 'partner',
-                beneficiary: 'both',
-                amount: 1200,
-                item_name: '購物',
-                categories: ['購物', '生活'],
-                note: '買了好多東西',
-                photo_url: null,
-                date: this.formatDate(new Date(Date.now() - 86400000 * 3)),
-                created_at: new Date(Date.now() - 86400000 * 3).toISOString()
-            },
-            {
-                id: 'tx_5',
-                notebook_id: 'notebook_1',
-                payer: 'me',
-                beneficiary: 'both',
-                amount: 450,
-                item_name: '午餐',
-                categories: ['吃吃'],
-                note: '',
-                photo_url: null,
-                date: this.formatDate(new Date(Date.now() - 86400000 * 4)),
-                created_at: new Date(Date.now() - 86400000 * 4).toISOString()
+            // 2. 如果沒有帳本，建立預設帳本
+            if (this.notebooks.length === 0) {
+                console.log('📝 首次登入，建立預設帳本...');
+                await this.createDefaultNotebook();
             }
-        ];
 
-        this.transactions = sampleTransactions;
-        this.save();
+            // 3. 設定當前帳本
+            if (!this.currentNotebook && this.notebooks.length > 0) {
+                this.currentNotebook = this.notebooks[0].id;
+                console.log('📖 當前帳本:', this.notebooks[0].name);
+            }
+
+            // 4. 載入當前帳本的交易
+            if (this.currentNotebook) {
+                await this.loadTransactions();
+            }
+
+            // 5. 載入自訂分類
+            await this.loadCustomCategories();
+
+            this.isInitialized = true;
+            console.log('✅ DataManager 初始化完成');
+        } catch (error) {
+            console.error('❌ DataManager 初始化失敗:', error);
+            throw error;
+        }
     }
 
-    // 儲存資料到 localStorage
-    save() {
-        const data = {
-            notebooks: this.notebooks,
-            transactions: this.transactions,
-            currentNotebook: this.currentNotebook,
-            customCategories: this.customCategories
+    /**
+     * 載入用戶的帳本
+     */
+    async loadNotebooks() {
+        try {
+            this.notebooks = await window.FirebaseAPI.getNotebooks(this.currentUser.uid);
+            console.log(`📚 已載入 ${this.notebooks.length} 個帳本`);
+        } catch (error) {
+            console.error('❌ 載入帳本失敗:', error);
+            this.notebooks = [];
+        }
+    }
+
+    /**
+     * 載入當前帳本的交易
+     */
+    async loadTransactions() {
+        try {
+            this.transactions = await window.FirebaseAPI.getTransactions(this.currentNotebook);
+            console.log(`💰 已載入 ${this.transactions.length} 筆交易`);
+        } catch (error) {
+            console.error('❌ 載入交易失敗:', error);
+            this.transactions = [];
+        }
+    }
+
+    /**
+     * 載入自訂分類
+     */
+    async loadCustomCategories() {
+        try {
+            this.customCategories = await window.FirebaseAPI.getCustomCategories(this.currentUser.uid);
+            console.log(`🏷️ 已載入 ${this.customCategories.length} 個自訂分類`);
+        } catch (error) {
+            console.error('❌ 載入自訂分類失敗:', error);
+            this.customCategories = [];
+        }
+    }
+
+    /**
+     * 建立預設帳本（首次登入時）
+     */
+    async createDefaultNotebook() {
+        const defaultNotebook = {
+            name: `${this.currentUser.displayName || '我'}的記帳本`,
+            member_ids: [this.currentUser.uid],
+            member_names: {
+                [this.currentUser.uid]: this.currentUser.displayName || '我'
+            }
         };
-        localStorage.setItem('coupleAppData', JSON.stringify(data));
+
+        try {
+            const notebookId = await window.FirebaseAPI.addNotebook(defaultNotebook);
+            console.log('✅ 已建立預設帳本:', notebookId);
+
+            // 重新載入帳本列表
+            await this.loadNotebooks();
+        } catch (error) {
+            console.error('❌ 建立預設帳本失敗:', error);
+            throw error;
+        }
     }
 
     // ==================== 交易相關操作 ====================
 
-    // 新增交易
-    addTransaction(transactionData) {
-        const transaction = {
-            id: 'tx_' + Date.now(),
-            notebook_id: this.currentNotebook,
-            ...transactionData,
-            created_at: new Date().toISOString()
-        };
+    /**
+     * 新增交易
+     * @param {Object} transactionData - 交易資料
+     * @returns {Promise<Object>} - 交易物件
+     */
+    async addTransaction(transactionData) {
+        try {
+            const transaction = {
+                notebook_id: this.currentNotebook,
+                user_id: this.currentUser.uid,
+                ...transactionData
+            };
 
-        this.transactions.unshift(transaction);
-        this.save();
-        return transaction;
+            const transactionId = await window.FirebaseAPI.addTransaction(transaction);
+
+            // 更新快取
+            const newTransaction = {
+                id: transactionId,
+                ...transaction,
+                created_at: new Date().toISOString()
+            };
+            this.transactions.unshift(newTransaction);
+
+            console.log('✅ 交易已新增:', transactionId);
+            return newTransaction;
+        } catch (error) {
+            console.error('❌ 新增交易失敗:', error);
+            throw error;
+        }
     }
 
-    // 取得當前帳本的交易
+    /**
+     * 取得當前帳本的交易
+     * @param {number} limit - 限制筆數
+     * @returns {Array} - 交易列表
+     */
     getTransactions(limit = null) {
         const filtered = this.transactions
             .filter(tx => tx.notebook_id === this.currentNotebook)
@@ -155,7 +167,11 @@ class DataManager {
         return limit ? filtered.slice(0, limit) : filtered;
     }
 
-    // 取得特定日期的交易
+    /**
+     * 取得特定日期的交易
+     * @param {string} date - 日期 (YYYY-MM-DD)
+     * @returns {Array} - 交易列表
+     */
     getTransactionsByDate(date) {
         return this.transactions
             .filter(tx =>
@@ -165,103 +181,197 @@ class DataManager {
             .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     }
 
-    // 取得日期範圍內的交易
-    getTransactionsByDateRange(startDate, endDate) {
-        return this.transactions
-            .filter(tx => {
-                if (tx.notebook_id !== this.currentNotebook) return false;
-                const txDate = new Date(tx.date);
-                return txDate >= new Date(startDate) && txDate <= new Date(endDate);
-            })
-            .sort((a, b) => new Date(b.date) - new Date(a.date));
+    /**
+     * 取得日期範圍內的交易
+     * @param {string} startDate - 開始日期 (YYYY-MM-DD)
+     * @param {string} endDate - 結束日期 (YYYY-MM-DD)
+     * @returns {Promise<Array>} - 交易列表
+     */
+    async getTransactionsByDateRange(startDate, endDate) {
+        try {
+            // 從 Firebase 取得日期範圍內的交易（確保最新資料）
+            const transactions = await window.FirebaseAPI.getTransactionsByDateRange(
+                this.currentNotebook,
+                startDate,
+                endDate
+            );
+            return transactions;
+        } catch (error) {
+            console.error('❌ 取得日期範圍交易失敗:', error);
+            // Fallback 到快取資料
+            return this.transactions
+                .filter(tx => {
+                    if (tx.notebook_id !== this.currentNotebook) return false;
+                    const txDate = new Date(tx.date);
+                    return txDate >= new Date(startDate) && txDate <= new Date(endDate);
+                })
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+        }
     }
 
-    // 刪除交易
-    deleteTransaction(id) {
-        const index = this.transactions.findIndex(tx => tx.id === id);
-        if (index !== -1) {
-            this.transactions.splice(index, 1);
-            this.save();
+    /**
+     * 刪除交易
+     * @param {string} id - 交易 ID
+     * @returns {Promise<boolean>} - 是否成功
+     */
+    async deleteTransaction(id) {
+        try {
+            await window.FirebaseAPI.deleteTransaction(id);
+
+            // 更新快取
+            const index = this.transactions.findIndex(tx => tx.id === id);
+            if (index !== -1) {
+                this.transactions.splice(index, 1);
+            }
+
+            console.log('✅ 交易已刪除:', id);
             return true;
+        } catch (error) {
+            console.error('❌ 刪除交易失敗:', error);
+            throw error;
         }
-        return false;
     }
 
-    // 更新交易
-    updateTransaction(id, updates) {
-        const transaction = this.transactions.find(tx => tx.id === id);
-        if (transaction) {
-            Object.assign(transaction, updates);
-            this.save();
+    /**
+     * 更新交易
+     * @param {string} id - 交易 ID
+     * @param {Object} updates - 更新資料
+     * @returns {Promise<Object>} - 更新後的交易物件
+     */
+    async updateTransaction(id, updates) {
+        try {
+            await window.FirebaseAPI.updateTransaction(id, updates);
+
+            // 更新快取
+            const transaction = this.transactions.find(tx => tx.id === id);
+            if (transaction) {
+                Object.assign(transaction, updates);
+            }
+
+            console.log('✅ 交易已更新:', id);
             return transaction;
+        } catch (error) {
+            console.error('❌ 更新交易失敗:', error);
+            throw error;
         }
-        return null;
     }
 
     // ==================== 帳本相關操作 ====================
 
-    // 取得所有帳本
+    /**
+     * 取得所有帳本
+     * @returns {Array} - 帳本列表
+     */
     getNotebooks() {
         return this.notebooks;
     }
 
-    // 新增帳本
-    addNotebook(name) {
-        const notebook = {
-            id: 'notebook_' + Date.now(),
-            name: name,
-            members: ['user1', 'user2'],
-            created_at: new Date().toISOString()
-        };
+    /**
+     * 新增帳本
+     * @param {string} name - 帳本名稱
+     * @returns {Promise<Object>} - 帳本物件
+     */
+    async addNotebook(name) {
+        try {
+            const notebook = {
+                name: name,
+                member_ids: [this.currentUser.uid],
+                member_names: {
+                    [this.currentUser.uid]: this.currentUser.displayName || '我'
+                }
+            };
 
-        this.notebooks.push(notebook);
-        this.save();
-        return notebook;
+            const notebookId = await window.FirebaseAPI.addNotebook(notebook);
+
+            // 更新快取
+            const newNotebook = {
+                id: notebookId,
+                ...notebook,
+                created_at: new Date().toISOString()
+            };
+            this.notebooks.push(newNotebook);
+
+            console.log('✅ 帳本已新增:', notebookId);
+            return newNotebook;
+        } catch (error) {
+            console.error('❌ 新增帳本失敗:', error);
+            throw error;
+        }
     }
 
-    // 切換當前帳本
-    switchNotebook(notebookId) {
+    /**
+     * 切換當前帳本
+     * @param {string} notebookId - 帳本 ID
+     * @returns {Promise<Object>} - 帳本物件
+     */
+    async switchNotebook(notebookId) {
         const notebook = this.notebooks.find(nb => nb.id === notebookId);
         if (notebook) {
             this.currentNotebook = notebookId;
-            this.save();
+
+            // 重新載入該帳本的交易
+            await this.loadTransactions();
+
+            console.log('📖 已切換帳本:', notebook.name);
             return notebook;
         }
         return null;
     }
 
-    // 取得當前帳本
+    /**
+     * 取得當前帳本
+     * @returns {Object} - 帳本物件
+     */
     getCurrentNotebook() {
         return this.notebooks.find(nb => nb.id === this.currentNotebook);
     }
 
     // ==================== 統計計算 ====================
 
-    // 計算結算狀態（誰欠誰多少）
+    /**
+     * 計算結算狀態（誰欠誰多少）
+     * @returns {Object} - 結算狀態
+     */
     calculateBalance() {
         const transactions = this.getTransactions();
+        const currentNotebook = this.getCurrentNotebook();
+
+        if (!currentNotebook) {
+            return { status: 'settled', amount: 0, debtor: null, creditor: null };
+        }
+
+        // 取得當前用戶和伴侶的名稱
+        const myId = this.currentUser.uid;
+        const myName = this.currentUser.displayName || '我';
+
+        // 找出伴侶（如果有的話）
+        const partnerIds = currentNotebook.member_ids?.filter(id => id !== myId) || [];
+        const partnerId = partnerIds[0];
+        const partnerName = partnerId ? (currentNotebook.member_names?.[partnerId] || '對方') : '對方';
+
         let myTotal = 0;
         let partnerTotal = 0;
 
         transactions.forEach(tx => {
             const amount = parseFloat(tx.amount);
+            const isPaidByMe = tx.payer === 'me' || tx.user_id === myId;
 
             if (tx.beneficiary === 'both') {
                 // 兩人平分
                 const half = amount / 2;
-                if (tx.payer === 'me') {
+                if (isPaidByMe) {
                     myTotal += half;  // 我多付了一半
                 } else {
                     partnerTotal += half;  // 對方多付了一半
                 }
             } else if (tx.beneficiary === 'partner') {
                 // 幫對方付
-                if (tx.payer === 'me') {
+                if (isPaidByMe) {
                     myTotal += amount;  // 我幫對方付，對方欠我
                 }
             } else if (tx.beneficiary === 'self') {
                 // 自己付自己的
-                if (tx.payer === 'partner') {
+                if (!isPaidByMe) {
                     partnerTotal += amount;  // 對方幫我付，我欠對方
                 }
             }
@@ -275,20 +385,24 @@ class DataManager {
             return {
                 status: 'owed',
                 amount: Math.abs(difference),
-                debtor: this.partner.name,
-                creditor: this.currentUser.name
+                debtor: partnerName,
+                creditor: myName
             };
         } else {
             return {
                 status: 'owes',
                 amount: Math.abs(difference),
-                debtor: this.currentUser.name,
-                creditor: this.partner.name
+                debtor: myName,
+                creditor: partnerName
             };
         }
     }
 
-    // 計算分類統計
+    /**
+     * 計算分類統計
+     * @param {Array} transactions - 交易列表（可選）
+     * @returns {Array} - 分類統計
+     */
     getCategoryStats(transactions = null) {
         const txs = transactions || this.getTransactions();
         const categoryTotals = {};
@@ -312,9 +426,15 @@ class DataManager {
             .sort((a, b) => b.amount - a.amount);
     }
 
-    // 計算總支出統計
+    /**
+     * 計算總支出統計
+     * @param {Array} transactions - 交易列表（可選）
+     * @returns {Object} - 支出統計
+     */
     getExpenseStats(transactions = null) {
         const txs = transactions || this.getTransactions();
+        const myId = this.currentUser.uid;
+
         let totalExpense = 0;
         let myExpense = 0;
         let partnerExpense = 0;
@@ -323,7 +443,8 @@ class DataManager {
             const amount = parseFloat(tx.amount);
             totalExpense += amount;
 
-            if (tx.payer === 'me') {
+            const isPaidByMe = tx.payer === 'me' || tx.user_id === myId;
+            if (isPaidByMe) {
                 myExpense += amount;
             } else {
                 partnerExpense += amount;
@@ -333,7 +454,12 @@ class DataManager {
         return { totalExpense, myExpense, partnerExpense };
     }
 
-    // 取得每日支出統計（用於日曆顯示）
+    /**
+     * 取得每日支出統計（用於日曆顯示）
+     * @param {number} year - 年份
+     * @param {number} month - 月份 (0-11)
+     * @returns {Object} - 每日支出統計
+     */
     getDailyExpenses(year, month) {
         const dailyTotals = {};
 
@@ -353,7 +479,11 @@ class DataManager {
 
     // ==================== 工具函數 ====================
 
-    // 格式化日期為 YYYY-MM-DD
+    /**
+     * 格式化日期為 YYYY-MM-DD
+     * @param {Date} date - 日期物件
+     * @returns {string} - 格式化後的日期
+     */
     formatDate(date) {
         const d = new Date(date);
         const year = d.getFullYear();
@@ -362,50 +492,83 @@ class DataManager {
         return `${year}-${month}-${day}`;
     }
 
-    // 取得今天日期
+    /**
+     * 取得今天日期
+     * @returns {string} - 今天的日期 (YYYY-MM-DD)
+     */
     getToday() {
         return this.formatDate(new Date());
     }
 
     // ==================== 自訂分類管理 ====================
 
-    // 新增自訂分類
-    addCustomCategory(name, icon = 'label') {
-        const category = {
-            id: 'custom_' + Date.now(),
-            name: name,
-            icon: icon,
-            created_at: new Date().toISOString()
-        };
-        this.customCategories.push(category);
-        this.save();
-        return category;
+    /**
+     * 新增自訂分類
+     * @param {string} name - 分類名稱
+     * @param {string} icon - 圖標名稱
+     * @returns {Promise<Object>} - 分類物件
+     */
+    async addCustomCategory(name, icon = 'label') {
+        try {
+            const category = {
+                name: name,
+                icon: icon
+            };
+
+            const categoryId = await window.FirebaseAPI.addCustomCategory(this.currentUser.uid, category);
+
+            // 更新快取
+            const newCategory = {
+                id: categoryId,
+                ...category,
+                created_at: new Date().toISOString()
+            };
+            this.customCategories.push(newCategory);
+
+            console.log('✅ 自訂分類已新增:', categoryId);
+            return newCategory;
+        } catch (error) {
+            console.error('❌ 新增自訂分類失敗:', error);
+            throw error;
+        }
     }
 
-    // 取得所有自訂分類
+    /**
+     * 取得所有自訂分類
+     * @returns {Array} - 自訂分類列表
+     */
     getCustomCategories() {
         return this.customCategories;
     }
 
-    // 刪除自訂分類
-    deleteCustomCategory(id) {
-        const index = this.customCategories.findIndex(cat => cat.id === id);
-        if (index !== -1) {
-            this.customCategories.splice(index, 1);
-            this.save();
+    /**
+     * 刪除自訂分類
+     * @param {string} id - 分類 ID
+     * @returns {Promise<boolean>} - 是否成功
+     */
+    async deleteCustomCategory(id) {
+        try {
+            await window.FirebaseAPI.deleteCustomCategory(id);
+
+            // 更新快取
+            const index = this.customCategories.findIndex(cat => cat.id === id);
+            if (index !== -1) {
+                this.customCategories.splice(index, 1);
+            }
+
+            console.log('✅ 自訂分類已刪除:', id);
             return true;
+        } catch (error) {
+            console.error('❌ 刪除自訂分類失敗:', error);
+            throw error;
         }
-        return false;
     }
 
-    // 清除所有資料（重置）
+    /**
+     * 清除所有資料（重置）- Firebase 版本不支援
+     */
     reset() {
-        this.notebooks = [];
-        this.transactions = [];
-        this.currentNotebook = null;
-        this.customCategories = [];
-        localStorage.removeItem('coupleAppData');
-        this.createDefaultData();
+        console.warn('⚠️ Firebase 版本不支援 reset 功能');
     }
 }
 

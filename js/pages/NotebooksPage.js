@@ -104,18 +104,28 @@ export class NotebooksPage {
         }
     }
 
-    switchNotebook(notebookId) {
-        const notebook = window.DataManager.switchNotebook(notebookId);
-        if (notebook && this.onSwitchCallback) {
-            this.onSwitchCallback();
+    async switchNotebook(notebookId) {
+        try {
+            const notebook = await window.DataManager.switchNotebook(notebookId);
+            if (notebook && this.onSwitchCallback) {
+                this.onSwitchCallback();
+            }
+        } catch (error) {
+            console.error('❌ 切換帳本失敗:', error);
+            alert('切換帳本失敗：' + error.message);
         }
     }
 
-    addNewNotebook() {
+    async addNewNotebook() {
         const name = prompt('請輸入帳本名稱：');
         if (name && name.trim()) {
-            window.DataManager.addNotebook(name.trim());
-            this.update();
+            try {
+                await window.DataManager.addNotebook(name.trim());
+                this.update();
+            } catch (error) {
+                console.error('❌ 新增帳本失敗:', error);
+                alert('新增帳本失敗：' + error.message);
+            }
         }
     }
 }

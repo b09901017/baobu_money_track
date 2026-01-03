@@ -118,7 +118,7 @@ export class TransactionForm {
     /**
      * 新增自訂分類
      */
-    addCustomCategory() {
+    async addCustomCategory() {
         const categoryName = prompt('請輸入新分類名稱：');
         if (!categoryName || !categoryName.trim()) return;
 
@@ -131,13 +131,18 @@ export class TransactionForm {
             return;
         }
 
-        // 新增到資料庫
-        window.DataManager.addCustomCategory(trimmedName);
+        try {
+            // 新增到資料庫
+            await window.DataManager.addCustomCategory(trimmedName);
 
-        // 重新渲染分類列表
-        this.renderCustomCategories();
+            // 重新渲染分類列表
+            this.renderCustomCategories();
 
-        alert(`✨ 已新增分類「${trimmedName}」！`);
+            alert(`✨ 已新增分類「${trimmedName}」！`);
+        } catch (error) {
+            console.error('❌ 新增分類失敗:', error);
+            alert('新增分類失敗：' + error.message);
+        }
     }
 
     /**
@@ -183,7 +188,7 @@ export class TransactionForm {
     /**
      * 提交交易
      */
-    submit() {
+    async submit() {
         console.log('🔍 開始提交交易...');
 
         if (!this.form) {
@@ -220,7 +225,7 @@ export class TransactionForm {
                 return;
             }
 
-            const result = window.DataManager.addTransaction(transactionData);
+            const result = await window.DataManager.addTransaction(transactionData);
             console.log('✅ 交易已新增:', result);
 
             this.close();

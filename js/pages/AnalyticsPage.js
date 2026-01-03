@@ -9,9 +9,9 @@ export class AnalyticsPage {
         this.onTransactionClickCallback = onTransactionClickCallback;
     }
 
-    update(period = 'month') {
+    async update(period = 'month') {
         const { startDate, endDate } = this.getDateRange(period);
-        const transactions = window.DataManager.getTransactionsByDateRange(startDate, endDate);
+        const transactions = await window.DataManager.getTransactionsByDateRange(startDate, endDate);
 
         // 更新支出統計
         const stats = window.DataManager.getExpenseStats(transactions);
@@ -69,9 +69,9 @@ export class AnalyticsPage {
         });
     }
 
-    showCategoryDetail(category) {
+    async showCategoryDetail(category) {
         const { startDate, endDate } = this.getDateRange(this.state.currentPeriod || 'month');
-        const allTransactions = window.DataManager.getTransactionsByDateRange(startDate, endDate);
+        const allTransactions = await window.DataManager.getTransactionsByDateRange(startDate, endDate);
         const categoryTransactions = allTransactions.filter(tx =>
             tx.categories && tx.categories.includes(category)
         );

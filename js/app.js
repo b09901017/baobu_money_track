@@ -149,24 +149,32 @@ function initializeApp() {
     // 設定認證監聽器
     window.FirebaseAPI.setupAuthListener(
         // 登入成功回調
-        (user) => {
+        async (user) => {
             console.log('👤 用戶已登入，初始化 App');
 
-            // 隱藏登入頁面
-            const loginPage = document.getElementById('loginPage');
-            if (loginPage) {
-                loginPage.style.display = 'none';
-            }
+            try {
+                // 初始化 DataManager
+                await window.DataManager.init(user);
 
-            // 顯示主容器
-            const mainContainer = document.getElementById('mainContainer');
-            if (mainContainer) {
-                mainContainer.classList.remove('hidden');
-            }
+                // 隱藏登入頁面
+                const loginPage = document.getElementById('loginPage');
+                if (loginPage) {
+                    loginPage.style.display = 'none';
+                }
 
-            // 初始化 CoupleApp
-            if (!window.app) {
-                window.app = new CoupleApp();
+                // 顯示主容器
+                const mainContainer = document.getElementById('mainContainer');
+                if (mainContainer) {
+                    mainContainer.classList.remove('hidden');
+                }
+
+                // 初始化 CoupleApp
+                if (!window.app) {
+                    window.app = new CoupleApp();
+                }
+            } catch (error) {
+                console.error('❌ 應用初始化失敗:', error);
+                alert('初始化失敗，請重新整理頁面');
             }
         },
 
