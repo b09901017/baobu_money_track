@@ -1,0 +1,158 @@
+// ==================== 交易項目渲染器 ====================
+// 來源: app.js 行 683-809
+// 負責渲染交易卡片（列表模式和時間軸模式）
+
+import { formatDisplayDate } from '../utils/dateUtils.js';
+
+// 分類圖標配置
+const CATEGORY_ICONS = {
+    '吃吃': 'restaurant',
+    '玩': 'local_activity',
+    '交通': 'directions_subway',
+    '購物': 'shopping_bag',
+    '生活': 'cottage',
+    '其他': 'auto_stories'
+};
+
+// 分類顏色配置（列表模式）
+const CATEGORY_COLORS = {
+    '吃吃': 'bg-macaron-pink/20',
+    '玩': 'bg-macaron-blue/20',
+    '交通': 'bg-macaron-green/20',
+    '購物': 'bg-macaron-purple/20',
+    '生活': 'bg-macaron-cream/40',
+    '其他': 'bg-warm-brown/10'
+};
+
+// 分類顏色配置（時間軸模式）
+const TIMELINE_COLORS = {
+    '吃吃': 'bg-macaron-pink/20 border-macaron-pink',
+    '玩': 'bg-macaron-blue/20 border-macaron-blue',
+    '交通': 'bg-macaron-green/20 border-macaron-green',
+    '購物': 'bg-macaron-purple/20 border-macaron-purple',
+    '生活': 'bg-macaron-cream/40 border-macaron-cream',
+    '其他': 'bg-warm-brown/10 border-warm-brown'
+};
+
+export class TransactionRenderer {
+    /**
+     * 渲染交易項目（列表模式）
+     * @param {Object} tx - 交易物件
+     * @returns {string} - HTML 字串
+     */
+    static renderTransactionItem(tx) {
+        const icon = tx.categories && tx.categories.length > 0
+            ? CATEGORY_ICONS[tx.categories[0]] || 'auto_stories'
+            : 'auto_stories';
+
+        const colorClass = tx.categories && tx.categories.length > 0
+            ? CATEGORY_COLORS[tx.categories[0]] || 'bg-warm-brown/10'
+            : 'bg-warm-brown/10';
+
+        const payerText = tx.payer === 'me' ? '寶寶' : '步步';
+        const beneficiaryText = tx.beneficiary === 'self' ? '寶寶'
+            : tx.beneficiary === 'partner' ? '步步'
+            : '寶步';
+
+        return `
+            <div class="transaction-item bg-white rounded-2xl p-4 shadow-watercolor-layered hover:shadow-floating transition-all cursor-pointer group" data-transaction-id="${tx.id}">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-2xl ${colorClass} flex items-center justify-center text-soft-ink shrink-0 group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined text-2xl">${icon}</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-hand font-bold text-lg text-soft-ink truncate">${tx.item_name}</h4>
+                        <p class="text-sm text-warm-brown/80 truncate mt-0.5">
+                            ${payerText} 付 · ${beneficiaryText} · ${formatDisplayDate(tx.date)}
+                        </p>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-display font-bold text-xl text-[#E27D60]">$${tx.amount}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * 渲染時間軸交易項目（時間軸模式）
+     * @param {Object} tx - 交易物件
+     * @param {number} index - 索引（保留參數以保持兼容性）
+     * @returns {string} - HTML 字串
+     */
+    static renderTimelineItem(tx, index) {
+        const icon = tx.categories && tx.categories.length > 0
+            ? CATEGORY_ICONS[tx.categories[0]] || 'auto_stories'
+            : 'auto_stories';
+
+        const colorClass = tx.categories && tx.categories.length > 0
+            ? TIMELINE_COLORS[tx.categories[0]] || 'bg-warm-brown/10 border-warm-brown'
+            : 'bg-warm-brown/10 border-warm-brown';
+
+        const payerText = tx.payer === 'me' ? '寶寶' : '步步';
+        const beneficiaryText = tx.beneficiary === 'self' ? '寶寶'
+            : tx.beneficiary === 'partner' ? '步步'
+            : '寶步';
+
+        // 計算時間（使用 created_at）
+        const time = new Date(tx.created_at);
+        const timeStr = `${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`;
+
+        return `
+            <div class="relative">
+                <!-- 時間軸點 -->
+                <div class="absolute -left-8 top-6 w-4 h-4 rounded-full bg-white border-[3px] ${colorClass} shadow-sm z-10"></div>
+
+                <!-- 交易卡片 -->
+                <div class="transaction-item bg-white rounded-2xl p-4 shadow-watercolor-layered hover:shadow-floating transition-all cursor-pointer group border-l-4 ${colorClass}" data-transaction-id="${tx.id}">
+                    <!-- 時間標籤 -->
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-xs font-hand font-bold text-warm-brown/60">${timeStr}</span>
+                        <div class="h-px flex-1 bg-warm-brown/10"></div>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl ${colorClass} flex items-center justify-center text-soft-ink shrink-0 group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-xl">${icon}</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-hand font-bold text-lg text-soft-ink truncate">${tx.item_name}</h4>
+                            <p class="text-sm text-warm-brown/80 mt-0.5">
+                                ${payerText} 付給 ${beneficiaryText}
+                            </p>
+                            ${tx.note ? `<p class="text-xs text-warm-brown/60 mt-1 italic truncate">📝 ${tx.note}</p>` : ''}
+                        </div>
+                        <div class="text-right">
+                            <div class="font-display font-bold text-2xl text-[#E27D60]">$${tx.amount}</div>
+                        </div>
+                    </div>
+
+                    <!-- 分類標籤 -->
+                    ${tx.categories && tx.categories.length > 0 ? `
+                        <div class="flex flex-wrap gap-2 mt-3">
+                            ${tx.categories.map(cat => `<span class="px-3 py-1 rounded-full bg-warm-brown/10 text-xs font-hand font-bold text-warm-brown">${cat}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * 綁定交易項目點擊事件
+     * @param {HTMLElement} container - 容器元素
+     * @param {Function} onClickCallback - 點擊回調函數，接收 transactionId
+     */
+    static bindClickEvents(container, onClickCallback) {
+        if (!container) return;
+
+        container.querySelectorAll('.transaction-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                const txId = e.currentTarget.dataset.transactionId;
+                if (txId && onClickCallback) {
+                    onClickCallback(txId);
+                }
+            });
+        });
+    }
+}

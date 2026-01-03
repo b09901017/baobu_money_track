@@ -1,0 +1,138 @@
+/* ==================== 日曆視圖（童話月曆）==================== */
+.calendar-container {
+    padding: 0 var(--spacing-lg);
+}
+
+.calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+}
+
+.btn-nav {
+    width: 42px;
+    height: 42px;
+    border: none;
+    background: linear-gradient(135deg, var(--fairy-pink), var(--fairy-purple));
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    box-shadow: var(--shadow-soft);
+    font-size: 1.2rem;
+    color: white;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-nav:hover {
+    transform: scale(1.1);
+    box-shadow: var(--shadow-medium);
+}
+
+.btn-nav:active {
+    transform: scale(0.95);
+}
+
+#currentMonth {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--background);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: var(--spacing-xs);
+    position: relative;
+    font-family: 'Fredoka', sans-serif;
+}
+
+.calendar-day.header {
+    background: transparent;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    cursor: default;
+}
+
+.calendar-day.other-month {
+    opacity: 0.3;
+}
+
+.calendar-day.today {
+    background: linear-gradient(135deg, var(--fairy-yellow), var(--fairy-peach));
+    font-weight: 700;
+    box-shadow: var(--shadow-soft);
+}
+
+.calendar-day.selected {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: white;
+    transform: scale(1.05);
+    box-shadow: var(--shadow-medium);
+}
+
+.calendar-day.has-transaction::after {
+    content: '✨';
+    position: absolute;
+    bottom: 2px;
+    font-size: 0.6rem;
+}
+
+.day-number {
+    font-size: 0.95rem;
+    margin-bottom: 2px;
+    font-weight: 600;
+}
+
+.day-amount {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.calendar-day.selected .day-amount {
+    color: white;
+}
+
+.day-details {
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-lg);
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+}
+
+#selectedDate {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: var(--spacing-md);
+    color: var(--text-primary);
+}
+

@@ -1,0 +1,49 @@
+/* ==================== 浮動按鈕（童話魔法按鈕）==================== */
+.fab {
+    position: fixed;
+    bottom: 100px;
+    right: calc(50% - 220px);
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-full);
+    box-shadow: var(--shadow-large);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 3px solid rgba(255, 255, 255, 0.5);
+}
+
+.fab::before {
+    content: '✨';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 1.2rem;
+    animation: sparkle 1.5s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+    0%, 100% { opacity: 1; transform: scale(1) rotate(0deg); }
+    50% { opacity: 0.5; transform: scale(1.2) rotate(180deg); }
+}
+
+.fab:hover {
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 12px 40px rgba(255, 158, 199, 0.4);
+}
+
+.fab:active {
+    transform: scale(0.95) rotate(90deg);
+}
+
+.fab-icon {
+    font-size: 2.2rem;
+    font-weight: 300;
+}
+

@@ -1,0 +1,124 @@
+/* ==================== 首頁 - 結算卡片（童話寶箱風格）==================== */
+.balance-card {
+    margin: var(--spacing-lg);
+    padding: var(--spacing-xl);
+    background: linear-gradient(135deg, #FFD4E5 0%, #E5D4FF 50%, #D4E5FF 100%);
+    border-radius: var(--radius-xl);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    box-shadow: var(--shadow-large);
+    position: relative;
+    overflow: hidden;
+    border: 3px solid rgba(255, 255, 255, 0.6);
+}
+
+.balance-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    animation: shimmer 3s linear infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.balance-icon {
+    font-size: 4rem;
+    z-index: 1;
+    filter: drop-shadow(2px 2px 4px rgba(93, 78, 109, 0.2));
+    animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.balance-info {
+    flex: 1;
+    z-index: 1;
+}
+
+.balance-label {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1rem;
+    opacity: 0.8;
+    margin-bottom: var(--spacing-xs);
+    font-weight: 500;
+}
+
+.balance-amount {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1.7rem;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.5);
+}
+
+/* ==================== 視圖切換按鈕（童話標籤）==================== */
+.view-toggle {
+    display: flex;
+    gap: var(--spacing-md);
+    padding: 0 var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.toggle-btn {
+    flex: 1;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border: none;
+    background: white;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    box-shadow: var(--shadow-soft);
+    color: var(--text-secondary);
+    position: relative;
+    overflow: hidden;
+}
+
+.toggle-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.toggle-btn.active::before {
+    opacity: 1;
+}
+
+.toggle-btn.active {
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
+}
+
+.toggle-btn .icon {
+    font-size: 1.4rem;
+    z-index: 1;
+}
+
+.toggle-btn span:not(.icon) {
+    z-index: 1;
+}
+

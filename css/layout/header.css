@@ -1,0 +1,36 @@
+/* ==================== 童話風格頂部 - 雲朵和星星裝飾 ==================== */
+.app-header {
+    padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-xl);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+    color: white;
+    box-shadow: var(--shadow-medium);
+    position: relative;
+    overflow: hidden;
+}
+
+.app-header::before {
+    content: '✨';
+    position: absolute;
+    top: 12px;
+    right: 20px;
+    font-size: 1.5rem;
+    animation: twinkle 2s infinite;
+}
+
+.app-header::after {
+    content: '🌙';
+    position: absolute;
+    top: 12px;
+    left: 20px;
+    font-size: 1.5rem;
+    animation: float 3s ease-in-out infinite;
+}
+
+.notebook-title {
+    font-family: 'Fredoka', 'Microsoft JhengHei', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 600;
+    text-align: center;
+    text-shadow: 2px 2px 4px rgba(93, 78, 109, 0.2);
+    letter-spacing: 0.5px;
+}

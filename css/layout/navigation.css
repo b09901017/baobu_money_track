@@ -1,0 +1,75 @@
+/* ==================== 底部導航欄（童話標籤頁）==================== */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 480px;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    background: white;
+    border-top: none;
+    padding: var(--spacing-sm) 0 var(--spacing-md);
+    box-shadow: 0 -8px 24px rgba(93, 78, 109, 0.1);
+    z-index: 100;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-xs);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: var(--spacing-sm);
+    color: var(--text-secondary);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: var(--radius-md);
+    position: relative;
+}
+
+.nav-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    border-radius: 0 0 3px 3px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.nav-item.active::before {
+    opacity: 1;
+}
+
+.nav-item.active {
+    color: var(--primary-color);
+}
+
+.nav-item:active {
+    transform: scale(0.95);
+}
+
+.nav-icon {
+    font-size: 1.6rem;
+    transition: transform 0.3s ease;
+}
+
+.nav-item.active .nav-icon {
+    transform: scale(1.1);
+}
+
+.nav-label {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+

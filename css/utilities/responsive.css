@@ -1,0 +1,17 @@
+/* ==================== 響應式設計 ==================== */
+@media (max-width: 480px) {
+    .fab {
+        right: var(--spacing-lg);
+    }
+
+    .notebooks-list {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 481px) {
+    .fab {
+        right: calc(50% - 220px);
+    }
+}
+

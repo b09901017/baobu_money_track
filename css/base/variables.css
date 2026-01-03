@@ -1,0 +1,45 @@
+/* ==================== CSS 變數 - 童話風格設計系統 ==================== */
+:root {
+    /* 童話風格色彩 - 柔和粉彩 */
+    --fairy-pink: #FFB5D8;
+    --fairy-purple: #D4A5FF;
+    --fairy-blue: #A8D8FF;
+    --fairy-yellow: #FFF4A3;
+    --fairy-peach: #FFD4B8;
+    --fairy-mint: #B8F0D8;
+    --fairy-lavender: #E8D4FF;
+
+    /* 主題色彩 */
+    --primary-color: #FF9EC7;
+    --secondary-color: #FFE5F1;
+    --accent-color: #D4A5FF;
+    --accent-2: #A8D8FF;
+    --background: #FFF8F3;
+    --surface: #FFFFFF;
+    --text-primary: #5D4E6D;
+    --text-secondary: #9B8AA8;
+    --border-color: #F0D9E7;
+
+    /* 陰影 - 柔和童話感 */
+    --shadow-soft: 0 4px 12px rgba(255, 158, 199, 0.15);
+    --shadow-medium: 0 6px 20px rgba(212, 165, 255, 0.2);
+    --shadow-large: 0 10px 30px rgba(168, 216, 255, 0.25);
+    --shadow-book:
+        4px 4px 8px rgba(93, 78, 109, 0.15),
+        -2px -2px 6px rgba(255, 255, 255, 0.8),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+
+    /* 間距 */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+
+    /* 圓角 - 柔和童話感 */
+    --radius-sm: 12px;
+    --radius-md: 16px;
+    --radius-lg: 24px;
+    --radius-xl: 32px;
+    --radius-full: 50%;
+}
