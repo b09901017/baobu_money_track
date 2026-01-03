@@ -1,77 +1,92 @@
-// ==================== Firebase 配置 ====================
-// 此文件預留 Firebase 接口，未來可直接整合雲端資料庫
+// ==================== Firebase 配置與初始化 ====================
 
-/*
-Firebase 初始化配置範例：
+// 從 index.html 中載入的 Firebase 模組
+const {
+    initializeApp,
+    getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp,
+    getStorage, ref, uploadBytes, getDownloadURL,
+    getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+} = window.firebaseModules;
 
-import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
-import { getAuth } from 'firebase/auth';
-
+// Firebase 設定
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyBljCwLMZG1sQOc_CceZ872q2PsBmJ-g3k",
+    authDomain: "baobu-app.firebaseapp.com",
+    projectId: "baobu-app",
+    storageBucket: "baobu-app.firebasestorage.app",
+    messagingSenderId: "106168212860",
+    appId: "1:106168212860:web:344654c947143b636318f9",
+    measurementId: "G-YJ6SY4YGJK"
 };
 
+// 初始化 Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 const auth = getAuth(app);
 
-export { db, storage, auth };
-*/
+console.log('✅ Firebase 已初始化');
+console.log('📦 專案 ID:', firebaseConfig.projectId);
 
-// ==================== 資料結構設計 ====================
-
-/**
- * 用戶 (Users Collection)
- * {
- *   user_id: {
- *     name: string,
- *     email: string,
- *     avatar_url: string,
- *     created_at: timestamp
- *   }
- * }
- */
+// ==================== 認證相關 ====================
 
 /**
- * 帳本 (Notebooks Collection)
- * {
- *   notebook_id: {
- *     name: string,
- *     members: [user_id1, user_id2],
- *     created_by: user_id,
- *     created_at: timestamp,
- *     updated_at: timestamp
- *   }
- * }
+ * Google 登入
+ * @returns {Promise<User>} - Firebase 用戶物件
  */
+async function signInWithGoogle() {
+    try {
+        const provider = new GoogleAuthProvider();
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+
+        console.log('✅ 登入成功');
+        console.log('👤 用戶:', user.displayName);
+        console.log('📧 Email:', user.email);
+
+        window.currentUser = user;
+        return user;
+    } catch (error) {
+        console.error('❌ 登入失敗:', error);
+        alert('登入失敗：' + error.message);
+        throw error;
+    }
+}
 
 /**
- * 交易 (Transactions Collection)
- * {
- *   transaction_id: {
- *     notebook_id: string,
- *     payer: string,  // "me" or "partner" or user_id
- *     beneficiary: string,  // "self", "partner", "both"
- *     amount: number,
- *     item_name: string,
- *     categories: [string],  // 可複選分類
- *     photo_url: string,  // 照片 URL
- *     date: string,  // "YYYY-MM-DD"
- *     created_at: timestamp,
- *     updated_at: timestamp
- *   }
- * }
+ * 登出
  */
+async function signOutUser() {
+    try {
+        await signOut(auth);
+        console.log('✅ 已登出');
+        window.currentUser = null;
+    } catch (error) {
+        console.error('❌ 登出失敗:', error);
+        throw error;
+    }
+}
 
-// ==================== Firebase 操作接口（預留） ====================
+/**
+ * 監聽認證狀態變化
+ * @param {Function} onUserSignedIn - 用戶登入時的回調
+ * @param {Function} onUserSignedOut - 用戶登出時的回調
+ */
+function setupAuthListener(onUserSignedIn, onUserSignedOut) {
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            console.log('👤 用戶已登入:', user.displayName || user.email);
+            window.currentUser = user;
+            if (onUserSignedIn) onUserSignedIn(user);
+        } else {
+            console.log('👤 用戶未登入');
+            window.currentUser = null;
+            if (onUserSignedOut) onUserSignedOut();
+        }
+    });
+}
+
+// ==================== Firestore CRUD（Phase 2 將完整實作）====================
 
 /**
  * 新增交易
@@ -79,33 +94,75 @@ export { db, storage, auth };
  * @returns {Promise<string>} - 交易 ID
  */
 async function addTransaction(transactionData) {
-    // 未來實作：
-    // const docRef = await addDoc(collection(db, "transactions"), transactionData);
-    // return docRef.id;
-
-    console.log('Firebase 接口預留：addTransaction', transactionData);
-    return Promise.resolve('temp_id_' + Date.now());
+    try {
+        const docRef = await addDoc(collection(db, "transactions"), {
+            ...transactionData,
+            created_at: serverTimestamp()
+        });
+        console.log('✅ 交易已新增:', docRef.id);
+        return docRef.id;
+    } catch (error) {
+        console.error('❌ 新增交易失敗:', error);
+        throw error;
+    }
 }
 
 /**
  * 取得交易列表
  * @param {string} notebookId - 帳本 ID
- * @param {number} limit - 限制筆數
+ * @param {number} limitCount - 限制筆數
  * @returns {Promise<Array>} - 交易列表
  */
-async function getTransactions(notebookId, limit = 50) {
-    // 未來實作：
-    // const q = query(
-    //     collection(db, "transactions"),
-    //     where("notebook_id", "==", notebookId),
-    //     orderBy("date", "desc"),
-    //     limit(limit)
-    // );
-    // const querySnapshot = await getDocs(q);
-    // return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+async function getTransactions(notebookId, limitCount = 50) {
+    try {
+        const q = query(
+            collection(db, "transactions"),
+            where("notebook_id", "==", notebookId),
+            orderBy("date", "desc"),
+            limit(limitCount)
+        );
+        const querySnapshot = await getDocs(q);
+        const transactions = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
 
-    console.log('Firebase 接口預留：getTransactions', notebookId, limit);
-    return Promise.resolve([]);
+        console.log(`✅ 已取得 ${transactions.length} 筆交易`);
+        return transactions;
+    } catch (error) {
+        console.error('❌ 取得交易失敗:', error);
+        throw error;
+    }
+}
+
+/**
+ * 取得日期範圍內的交易
+ * @param {string} notebookId - 帳本 ID
+ * @param {string} startDate - 開始日期 (YYYY-MM-DD)
+ * @param {string} endDate - 結束日期 (YYYY-MM-DD)
+ * @returns {Promise<Array>} - 交易列表
+ */
+async function getTransactionsByDateRange(notebookId, startDate, endDate) {
+    try {
+        const q = query(
+            collection(db, "transactions"),
+            where("notebook_id", "==", notebookId),
+            where("date", ">=", startDate),
+            where("date", "<=", endDate),
+            orderBy("date", "desc")
+        );
+        const querySnapshot = await getDocs(q);
+        const transactions = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        console.log(`✅ 已取得日期範圍 ${transactions.length} 筆交易`);
+        return transactions;
+    } catch (error) {
+        console.error('❌ 取得日期範圍交易失敗:', error);
+        throw error;
+    }
 }
 
 /**
@@ -114,12 +171,17 @@ async function getTransactions(notebookId, limit = 50) {
  * @param {Object} updates - 更新資料
  */
 async function updateTransaction(transactionId, updates) {
-    // 未來實作：
-    // const docRef = doc(db, "transactions", transactionId);
-    // await updateDoc(docRef, { ...updates, updated_at: serverTimestamp() });
-
-    console.log('Firebase 接口預留：updateTransaction', transactionId, updates);
-    return Promise.resolve();
+    try {
+        const docRef = doc(db, "transactions", transactionId);
+        await updateDoc(docRef, {
+            ...updates,
+            updated_at: serverTimestamp()
+        });
+        console.log('✅ 交易已更新:', transactionId);
+    } catch (error) {
+        console.error('❌ 更新交易失敗:', error);
+        throw error;
+    }
 }
 
 /**
@@ -127,27 +189,13 @@ async function updateTransaction(transactionId, updates) {
  * @param {string} transactionId - 交易 ID
  */
 async function deleteTransaction(transactionId) {
-    // 未來實作：
-    // await deleteDoc(doc(db, "transactions", transactionId));
-
-    console.log('Firebase 接口預留：deleteTransaction', transactionId);
-    return Promise.resolve();
-}
-
-/**
- * 上傳照片
- * @param {File} file - 圖片檔案
- * @returns {Promise<string>} - 圖片 URL
- */
-async function uploadPhoto(file) {
-    // 未來實作：
-    // const storageRef = ref(storage, `photos/${Date.now()}_${file.name}`);
-    // await uploadBytes(storageRef, file);
-    // const url = await getDownloadURL(storageRef);
-    // return url;
-
-    console.log('Firebase 接口預留：uploadPhoto', file.name);
-    return Promise.resolve('temp_photo_url');
+    try {
+        await deleteDoc(doc(db, "transactions", transactionId));
+        console.log('✅ 交易已刪除:', transactionId);
+    } catch (error) {
+        console.error('❌ 刪除交易失敗:', error);
+        throw error;
+    }
 }
 
 /**
@@ -156,16 +204,23 @@ async function uploadPhoto(file) {
  * @returns {Promise<Array>} - 帳本列表
  */
 async function getNotebooks(userId) {
-    // 未來實作：
-    // const q = query(
-    //     collection(db, "notebooks"),
-    //     where("members", "array-contains", userId)
-    // );
-    // const querySnapshot = await getDocs(q);
-    // return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    try {
+        const q = query(
+            collection(db, "notebooks"),
+            where("member_ids", "array-contains", userId)
+        );
+        const querySnapshot = await getDocs(q);
+        const notebooks = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
 
-    console.log('Firebase 接口預留：getNotebooks', userId);
-    return Promise.resolve([]);
+        console.log(`✅ 已取得 ${notebooks.length} 個帳本`);
+        return notebooks;
+    } catch (error) {
+        console.error('❌ 取得帳本失敗:', error);
+        throw error;
+    }
 }
 
 /**
@@ -174,23 +229,115 @@ async function getNotebooks(userId) {
  * @returns {Promise<string>} - 帳本 ID
  */
 async function addNotebook(notebookData) {
-    // 未來實作：
-    // const docRef = await addDoc(collection(db, "notebooks"), notebookData);
-    // return docRef.id;
-
-    console.log('Firebase 接口預留：addNotebook', notebookData);
-    return Promise.resolve('temp_notebook_id_' + Date.now());
+    try {
+        const docRef = await addDoc(collection(db, "notebooks"), {
+            ...notebookData,
+            created_at: serverTimestamp()
+        });
+        console.log('✅ 帳本已新增:', docRef.id);
+        return docRef.id;
+    } catch (error) {
+        console.error('❌ 新增帳本失敗:', error);
+        throw error;
+    }
 }
 
-// 導出函數供其他模組使用
-if (typeof window !== 'undefined') {
-    window.FirebaseAPI = {
-        addTransaction,
-        getTransactions,
-        updateTransaction,
-        deleteTransaction,
-        uploadPhoto,
-        getNotebooks,
-        addNotebook
-    };
+/**
+ * 新增自訂分類
+ * @param {string} userId - 用戶 ID
+ * @param {Object} categoryData - 分類資料
+ * @returns {Promise<string>} - 分類 ID
+ */
+async function addCustomCategory(userId, categoryData) {
+    try {
+        const docRef = await addDoc(collection(db, "custom_categories"), {
+            user_id: userId,
+            ...categoryData,
+            created_at: serverTimestamp()
+        });
+        console.log('✅ 自訂分類已新增:', docRef.id);
+        return docRef.id;
+    } catch (error) {
+        console.error('❌ 新增自訂分類失敗:', error);
+        throw error;
+    }
 }
+
+/**
+ * 取得自訂分類
+ * @param {string} userId - 用戶 ID
+ * @returns {Promise<Array>} - 分類列表
+ */
+async function getCustomCategories(userId) {
+    try {
+        const q = query(
+            collection(db, "custom_categories"),
+            where("user_id", "==", userId)
+        );
+        const querySnapshot = await getDocs(q);
+        const categories = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        console.log(`✅ 已取得 ${categories.length} 個自訂分類`);
+        return categories;
+    } catch (error) {
+        console.error('❌ 取得自訂分類失敗:', error);
+        throw error;
+    }
+}
+
+/**
+ * 刪除自訂分類
+ * @param {string} categoryId - 分類 ID
+ */
+async function deleteCustomCategory(categoryId) {
+    try {
+        await deleteDoc(doc(db, "custom_categories", categoryId));
+        console.log('✅ 自訂分類已刪除:', categoryId);
+    } catch (error) {
+        console.error('❌ 刪除自訂分類失敗:', error);
+        throw error;
+    }
+}
+
+// ==================== Storage（Phase 3 將實作）====================
+
+/**
+ * 上傳照片（Phase 3 實作）
+ * @param {File} file - 圖片檔案
+ * @param {string} userId - 用戶 ID
+ * @returns {Promise<string>} - 圖片 URL
+ */
+async function uploadPhoto(file, userId) {
+    // Phase 3 將實作完整上傳邏輯
+    console.log('📸 uploadPhoto 預留（Phase 3 實作）:', file.name);
+    return Promise.resolve(null);
+}
+
+// ==================== 導出 API ====================
+
+window.FirebaseAPI = {
+    // 認證
+    signInWithGoogle,
+    signOutUser,
+    setupAuthListener,
+
+    // Firestore
+    addTransaction,
+    getTransactions,
+    getTransactionsByDateRange,
+    updateTransaction,
+    deleteTransaction,
+    getNotebooks,
+    addNotebook,
+    addCustomCategory,
+    getCustomCategories,
+    deleteCustomCategory,
+
+    // Storage
+    uploadPhoto
+};
+
+console.log('✅ FirebaseAPI 已掛載到 window');

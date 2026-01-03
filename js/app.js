@@ -122,5 +122,69 @@ class CoupleApp {
 
 // ==================== 應用啟動 ====================
 document.addEventListener('DOMContentLoaded', () => {
-    window.app = new CoupleApp();
+    // 等待 FirebaseAPI 載入完成
+    const checkFirebaseAPI = setInterval(() => {
+        if (window.FirebaseAPI) {
+            clearInterval(checkFirebaseAPI);
+            initializeApp();
+        }
+    }, 100);
 });
+
+function initializeApp() {
+    console.log('🚀 開始初始化應用程式');
+
+    // 綁定 Google 登入按鈕
+    const btnGoogleSignIn = document.getElementById('btnGoogleSignIn');
+    if (btnGoogleSignIn) {
+        btnGoogleSignIn.addEventListener('click', async () => {
+            try {
+                await window.FirebaseAPI.signInWithGoogle();
+            } catch (error) {
+                console.error('登入按鈕點擊失敗:', error);
+            }
+        });
+    }
+
+    // 設定認證監聽器
+    window.FirebaseAPI.setupAuthListener(
+        // 登入成功回調
+        (user) => {
+            console.log('👤 用戶已登入，初始化 App');
+
+            // 隱藏登入頁面
+            const loginPage = document.getElementById('loginPage');
+            if (loginPage) {
+                loginPage.style.display = 'none';
+            }
+
+            // 顯示主容器
+            const mainContainer = document.getElementById('mainContainer');
+            if (mainContainer) {
+                mainContainer.classList.remove('hidden');
+            }
+
+            // 初始化 CoupleApp
+            if (!window.app) {
+                window.app = new CoupleApp();
+            }
+        },
+
+        // 登出回調
+        () => {
+            console.log('👤 用戶已登出，顯示登入頁面');
+
+            // 顯示登入頁面
+            const loginPage = document.getElementById('loginPage');
+            if (loginPage) {
+                loginPage.style.display = 'flex';
+            }
+
+            // 隱藏主容器
+            const mainContainer = document.getElementById('mainContainer');
+            if (mainContainer) {
+                mainContainer.classList.add('hidden');
+            }
+        }
+    );
+}

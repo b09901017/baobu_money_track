@@ -4,6 +4,9 @@
 
 export class StateManager {
     constructor() {
+        // 用戶狀態
+        this.currentUser = null;  // Firebase 用戶物件
+
         // 視圖狀態
         this.currentView = 'list';  // 'list' | 'calendar'
         this.currentPage = 'homePage';  // 'homePage' | 'notebooksPage' | 'analyticsPage'
