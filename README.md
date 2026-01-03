@@ -384,16 +384,16 @@ docs: 更新 README 重構說明
 本專案設定了 Claude Code Skills，可以快速開發：
 
 ```bash
-# 整理需求
+# 規劃新功能或優化方案
 /skill project-manager
 
-# 開發前端
+# 維護模組化架構、開發功能
 /skill frontend
 
-# 調整設計
+# 設計童話風格 UI（馬卡龍色系）
 /skill designer
 
-# 整合後端（預留）
+# 整合 Firebase 後端（未來）
 /skill backend
 ```
 

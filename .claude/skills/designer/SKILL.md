@@ -29,27 +29,50 @@ description: UI/UX 設計師技能 - 建立童話風格，沉浸式設計系統�
 
 ## 設計系統
 
-### 基礎色彩 (可調整)
+### 基礎色彩（馬卡龍色系）
 ```css
 :root {
-  /* 主色 - 粉紅系 */
-  --color-primary: #FF6B9D;
-  --color-primary-light: #FFB6C1;
-  --color-primary-dark: #E55A8A;
-  
-  /* 輔助色 - 柔和色系 */
-  --color-secondary: #98D8C8;    /* 薄荷綠 */
-  --color-accent: #E6E6FA;       /* 薰衣草紫 */
-  
+  /* 馬卡龍色系 - 主要色彩 */
+  --macaron-pink: #FFDFD3;       /* 粉色 */
+  --macaron-rose: #E2C2C6;       /* 玫瑰 */
+  --macaron-blue: #C4E0E5;       /* 天藍 */
+  --macaron-green: #D4E6B5;      /* 薄荷綠 */
+  --macaron-purple: #E6CEE3;     /* 薰衣草 */
+  --macaron-cream: #FFF9EE;      /* 奶油 */
+
+  /* 金色系 - 強調色 */
+  --antique-gold: #D4AF37;       /* 古金 */
+  --shimmer-gold: #F9E59E;       /* 閃金 */
+
   /* 中性色 */
-  --color-white: #FFFFFF;
-  --color-gray-light: #F5F5F5;
-  --color-gray: #999999;
-  --color-dark: #5A5A5A;
-  
-  /* 功能色 */
-  --color-success: #90EE90;
-  --color-error: #FF6B6B;
+  --warm-brown: #8D7B68;         /* 溫暖棕 */
+  --soft-ink: #5D576B;           /* 柔墨 */
+  --paper: #FFFDF7;              /* 紙張 */
+  --parchment: #F2E8D5;          /* 羊皮紙 */
+
+  /* 功能色（基於馬卡龍色系）*/
+  --success: var(--macaron-green);
+  --warning: var(--shimmer-gold);
+  --error: var(--macaron-rose);
+  --info: var(--macaron-blue);
+}
+```
+
+### 字體設計（Google Fonts）
+```css
+/* css/base/fonts.css - 專案實際使用的字體 */
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+
+:root {
+  --font-display: 'Newsreader', serif;      /* 襯線體，用於標題 */
+  --font-hand: 'Caveat', cursive;           /* 手寫體，童話感 */
+  --font-sans: 'Quicksand', sans-serif;     /* 主要文字 */
+  --font-heading: 'Nunito', sans-serif;     /* 粗體標題 */
+  --font-script: 'Pacifico', cursive;       /* 裝飾性字體 */
 }
 ```
 
@@ -61,20 +84,26 @@ description: UI/UX 設計師技能 - 建立童話風格，沉浸式設計系統�
   --spacing-md: 16px;
   --spacing-lg: 24px;
   --spacing-xl: 32px;
+  --spacing-2xl: 48px;
 }
 ```
 
 ### 圓角與陰影
 ```css
 :root {
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-full: 9999px;
-  
-  --shadow-sm: 0 2px 8px rgba(255, 107, 157, 0.1);
-  --shadow-md: 0 4px 12px rgba(255, 107, 157, 0.15);
-  --shadow-lg: 0 8px 24px rgba(255, 107, 157, 0.2);
+  /* 圓角 */
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-full: 50%;
+
+  /* 陰影（柔和的童話風格）*/
+  --shadow-soft: 0 2px 8px rgba(141, 123, 104, 0.1);
+  --shadow-medium: 0 4px 16px rgba(141, 123, 104, 0.15);
+  --shadow-large: 0 8px 32px rgba(141, 123, 104, 0.2);
+  --shadow-book: 0 8px 24px rgba(93, 87, 107, 0.25),
+                 inset -2px 0 4px rgba(0, 0, 0, 0.1);  /* 立體書皮效果 */
 }
 ```
 
@@ -224,10 +253,15 @@ description: UI/UX 設計師技能 - 建立童話風格，沉浸式設計系統�
 
 ## 設計建議
 
-### 色彩使用
-- **主色 (粉紅)**: 重要按鈕、連結、強調元素
-- **輔助色 (綠/紫)**: 分類標籤、輔助資訊
-- **中性色**: 文字、背景、邊框
+### 色彩使用（馬卡龍色系）
+- **粉色系（pink/rose）**: 主要按鈕、重要元素、溫馨氛圍
+- **紫色（purple）**: 強調色、hover 狀態、漸層背景
+- **藍色（blue）**: 資訊提示、清新點綴
+- **綠色（green）**: 成功狀態、自然元素
+- **奶油色（cream）**: 背景、卡片底色
+- **金色系（gold）**: 強調數字、特殊元素、閃爍效果
+- **中性色（brown/ink）**: 文字、邊框、柔和裝飾
+- **紙張色（paper/parchment）**: 主背景、書頁效果
 
 ### 間距規則
 - 相關元素: 4px-8px
@@ -279,26 +313,38 @@ description: UI/UX 設計師技能 - 建立童話風格，沉浸式設計系統�
 **使用者**: "我覺得按鈕太平凡了,想要更可愛一點"
 
 **你的回應**:
-提供幾種選項:
+提供幾種選項（馬卡龍色系）:
 
-**選項 1: 漸層按鈕**
+**選項 1: 粉紫漸層按鈕**
 ```css
 .btn--gradient {
-  background: linear-gradient(135deg, #FF6B9D, #FFB6C1);
+  background: linear-gradient(135deg, var(--macaron-pink), var(--macaron-purple));
+  border: 2px solid rgba(255, 255, 255, 0.5);
 }
 ```
 
-**選項 2: 加上圖示**
+**選項 2: 加上閃爍圖示**
 ```css
-.btn--with-icon::before {
+.btn--with-sparkle::before {
   content: '✨ ';
+  animation: sparkle 1.5s ease infinite;
 }
 ```
 
-**選項 3: 陰影加強**
+**選項 3: 童話風格陰影**
 ```css
-.btn--shadow {
-  box-shadow: 0 4px 16px rgba(255, 107, 157, 0.3);
+.btn--fairy {
+  box-shadow: 0 4px 16px rgba(226, 194, 198, 0.4),
+              0 0 0 3px rgba(255, 223, 211, 0.3);
+}
+```
+
+**選項 4: 立體書皮效果**
+```css
+.btn--book {
+  background: linear-gradient(135deg, var(--macaron-rose), var(--macaron-pink));
+  box-shadow: var(--shadow-book);
+  border-left: 4px solid var(--warm-brown);
 }
 ```
 

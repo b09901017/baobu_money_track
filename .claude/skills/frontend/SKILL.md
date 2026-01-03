@@ -9,34 +9,52 @@ description: 前端開發技能 - 使用 HTML/CSS/JavaScript 建立使用者介�
 
 ## 核心原則
 
-### 1. 使用 Mock Data
-目前所有資料都用假資料,不串接後端:
+### 1. 維護模組化架構
+專案已完成重構，使用清晰的模組化架構:
 ```javascript
-// ✅ 現在這樣做
-import { mockExpenses } from './mock-data.js';
-const expenses = mockExpenses;
+// ✅ 目前架構
+// Core: StateManager, Router, EventBinder
+// Pages: HomePage, CalendarPage, NotebooksPage, AnalyticsPage
+// Components: BalanceCard, TransactionForm, TimelineView, etc.
+// Utils: dateUtils, domUtils
 
-// ⏰ 之後再改成
-// const expenses = await firebase.getExpenses();
+// 使用 DataManager 管理資料
+window.DataManager.addTransaction(transactionData);
+window.DataManager.getTransactions(notebookId);
+
+// ⏰ 未來改成 Firebase
+// await firebase.addTransaction(transactionData);
 ```
 
-### 2. 預留串接點
-在需要後端的地方加上註解:
+### 2. 遵循現有模式
+在開發新功能或修改時:
+- 了解現有架構（16 個 JS 模組 + 20 個 CSS 模組）
+- 遵循相同的模組化模式
+- 使用 DataManager 進行資料操作
+- 透過 EventBinder 綁定事件
+- 透過 StateManager 管理狀態
+
+### 3. 預留 Firebase 串接點
+在需要後端的地方已加上註解:
 ```javascript
-// TODO: Firebase - 新增記帳
-const addExpense = async (expense) => {
-  // 目前加到 localStorage 或記憶體
-  expenses.push(expense);
-  
-  // 之後改成:
-  // await firebase.addExpense(expense);
-};
+// js/data.js - DataManager
+class DataManager {
+  addTransaction(transactionData) {
+    // 目前使用 localStorage
+    this.transactions.push(transactionData);
+    this.saveToLocalStorage();
+
+    // TODO: Firebase - 未來改成
+    // await firebase.addTransaction(transactionData);
+  }
+}
 ```
 
-### 3. 童話風格
-遵循可愛、溫馨的設計:
-- 粉色系配色
-- 圓潤的邊角
+### 4. 童話風格設計
+遵循馬卡龍色系的童話風格:
+- 馬卡龍粉彩色系（粉、紫、藍、綠、奶油）
+- 金色系（古金、閃金）
+- 圓潤的邊角（12px - 32px）
 - 柔和的動畫
 - 友善的提示
 
@@ -120,119 +138,207 @@ container.addEventListener('click', (e) => {
 });
 ```
 
-### Mock Data 管理
+### DataManager 資料管理
 ```javascript
-// src/js/mock-data.js
-export const mockExpenses = [
-  {
-    id: 'exp_001',
-    date: '2026-01-03',
-    item: '午餐',
-    amount: 150,
-    payer: 'person_a',
-    beneficiaries: { person_a: 75, person_b: 75 },
-    category: '吃',
-    tags: ['午餐']
+// js/data.js - 目前使用的資料管理系統
+class DataManager {
+  constructor() {
+    this.currentUser = { id: 'user1', name: '寶寶' };
+    this.partner = { id: 'user2', name: '步步' };
+    this.currentNotebook = null;
+    this.notebooks = [];
+    this.transactions = [];
+    this.customCategories = [];
   }
-];
 
-// src/js/services/data.js
-import { mockExpenses } from '../mock-data.js';
+  // 從 localStorage 載入資料
+  init() {
+    const savedData = localStorage.getItem('coupleAppData');
+    if (savedData) {
+      const data = JSON.parse(savedData);
+      this.notebooks = data.notebooks || [];
+      this.transactions = data.transactions || [];
+      this.currentNotebook = data.currentNotebook || null;
+    }
+  }
 
-export const getExpenses = () => {
-  // TODO: Firebase - 之後改成真實 API
-  return mockExpenses;
-};
+  // 取得交易記錄
+  getTransactions(notebookId) {
+    return this.transactions.filter(t => t.notebook_id === notebookId);
+  }
 
-export const addExpense = (expense) => {
-  // TODO: Firebase
-  mockExpenses.push({ ...expense, id: Date.now() });
-  return expense;
-};
+  // 新增交易
+  addTransaction(transactionData) {
+    const transaction = { ...transactionData, id: Date.now().toString() };
+    this.transactions.push(transaction);
+    this.saveToLocalStorage();
+    return transaction;
+  }
+
+  // 儲存到 localStorage
+  saveToLocalStorage() {
+    localStorage.setItem('coupleAppData', JSON.stringify({
+      notebooks: this.notebooks,
+      transactions: this.transactions,
+      currentNotebook: this.currentNotebook,
+      customCategories: this.customCategories
+    }));
+  }
+}
+
+// 全域使用
+window.DataManager = new DataManager();
 ```
 
-### 簡單狀態管理
+### 狀態管理系統
 ```javascript
-// src/js/state.js
-let currentBook = 'book_daily';
-let expenses = [];
+// js/core/StateManager.js
+class StateManager {
+  constructor() {
+    this.state = {
+      currentPage: 'home',
+      currentNotebook: null,
+      viewMode: 'single',    // 'single' or 'range'
+      selectedDate: new Date(),
+      dateRange: { start: null, end: null }
+    };
+    this.listeners = {};
+  }
 
-export const state = {
-  getCurrentBook: () => currentBook,
-  setCurrentBook: (id) => { currentBook = id; },
-  getExpenses: () => expenses,
-  setExpenses: (data) => { expenses = data; }
-};
-```
+  // 設定狀態並通知監聽者
+  setState(updates) {
+    Object.assign(this.state, updates);
+    this.notifyListeners(Object.keys(updates));
+  }
 
-## 頁面開發流程
-
-### 1. 建立 HTML 結構
-```html
-<!-- src/index.html -->
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>情侶記帳 App</title>
-  <link rel="stylesheet" href="css/variables.css">
-  <link rel="stylesheet" href="css/global.css">
-  <link rel="stylesheet" href="css/components.css">
-</head>
-<body>
-  <main class="container">
-    <!-- 主要內容 -->
-  </main>
-  
-  <!-- 底部浮動按鈕 -->
-  <nav class="bottom-nav">
-    <button class="nav-btn" data-page="books">📖</button>
-    <button class="nav-btn nav-btn--active" data-page="expenses">💰</button>
-    <button class="nav-btn" data-page="analysis">📊</button>
-  </nav>
-  
-  <script type="module" src="js/app.js"></script>
-</body>
-</html>
-```
-
-### 2. 撰寫樣式
-```css
-/* src/css/variables.css */
-:root {
-  --color-primary: #FF6B9D;
-  --color-secondary: #98D8C8;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --radius-lg: 16px;
-  --shadow-sm: 0 2px 8px rgba(255, 107, 157, 0.1);
+  // 取得狀態
+  getState(key) {
+    return key ? this.state[key] : this.state;
+  }
 }
 ```
 
-### 3. 實作邏輯
+## 修改現有功能流程
+
+### 1. 了解現有架構
 ```javascript
-// src/js/app.js
-import { getExpenses } from './services/data.js';
-import { renderExpenseList } from './components/expense-list.js';
+// js/app.js - 主控制器（126 行）
+import StateManager from './core/StateManager.js';
+import Router from './core/Router.js';
+import EventBinder from './core/EventBinder.js';
 
-const init = () => {
-  const expenses = getExpenses();
-  renderExpenseList(expenses);
-  setupEventListeners();
-};
+import HomePage from './pages/HomePage.js';
+import CalendarPage from './pages/CalendarPage.js';
+import NotebooksPage from './pages/NotebooksPage.js';
+import AnalyticsPage from './pages/AnalyticsPage.js';
 
-init();
+// 初始化
+const stateManager = new StateManager();
+const router = new Router(stateManager);
+const eventBinder = new EventBinder(stateManager, router);
+
+// 註冊頁面
+router.registerPage('home', HomePage);
+router.registerPage('calendar', CalendarPage);
+router.registerPage('notebooks', NotebooksPage);
+router.registerPage('analytics', AnalyticsPage);
+```
+
+### 2. 修改或新增頁面
+```javascript
+// js/pages/HomePage.js - 頁面範例
+export default class HomePage {
+  constructor(stateManager) {
+    this.stateManager = stateManager;
+  }
+
+  render() {
+    const container = document.getElementById('main-content');
+
+    // 使用 DataManager 取得資料
+    const currentNotebook = window.DataManager.currentNotebook;
+    const transactions = window.DataManager.getTransactions(currentNotebook);
+
+    // 渲染頁面
+    container.innerHTML = `
+      <div class="home-page">
+        <!-- 頁面內容 -->
+      </div>
+    `;
+  }
+}
+```
+
+### 3. 使用現有 CSS 變數
+```css
+/* css/base/variables.css - 馬卡龍色系 */
+:root {
+  /* 馬卡龍色系 */
+  --macaron-pink: #FFDFD3;
+  --macaron-rose: #E2C2C6;
+  --macaron-blue: #C4E0E5;
+  --macaron-green: #D4E6B5;
+  --macaron-purple: #E6CEE3;
+  --macaron-cream: #FFF9EE;
+
+  /* 金色系 */
+  --antique-gold: #D4AF37;
+  --shimmer-gold: #F9E59E;
+
+  /* 間距 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+}
+```
+
+### 4. 透過 EventBinder 綁定事件
+```javascript
+// js/core/EventBinder.js - 事件管理
+class EventBinder {
+  bindFabClick() {
+    const fab = document.getElementById('fab');
+    fab?.addEventListener('click', () => {
+      // 打開新增交易表單
+      TransactionForm.show();
+    });
+  }
+
+  bindNavigationClick() {
+    document.querySelectorAll('.bottom-nav__item').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const page = e.currentTarget.dataset.page;
+        this.router.navigateTo(page);
+      });
+    });
+  }
+}
 ```
 
 ## 童話風格元素
 
-### 色彩
+### 色彩（馬卡龍色系）
 ```css
 :root {
-  --fairy-pink: #FFB6C1;
-  --fairy-mint: #B0E0E6;
-  --fairy-lavender: #E6E6FA;
+  /* 馬卡龍色系 - 主要色彩 */
+  --macaron-pink: #FFDFD3;     /* 粉色 */
+  --macaron-rose: #E2C2C6;     /* 玫瑰 */
+  --macaron-blue: #C4E0E5;     /* 天藍 */
+  --macaron-green: #D4E6B5;    /* 薄荷綠 */
+  --macaron-purple: #E6CEE3;   /* 薰衣草 */
+  --macaron-cream: #FFF9EE;    /* 奶油 */
+
+  /* 金色系 - 強調色 */
+  --antique-gold: #D4AF37;     /* 古金 */
+  --shimmer-gold: #F9E59E;     /* 閃金 */
+
+  /* 中性色 */
+  --warm-brown: #8D7B68;       /* 溫暖棕 */
+  --soft-ink: #5D576B;         /* 柔墨 */
+  --paper: #FFFDF7;            /* 紙張 */
+  --parchment: #F2E8D5;        /* 羊皮紙 */
 }
 ```
 
@@ -262,27 +368,40 @@ const categoryIcons = {
 ## 注意事項
 
 ✅ **要做的:**
-- 保持程式碼簡潔
+- 遵循現有模組化架構
+- 使用 DataManager 進行資料操作
+- 透過 StateManager 管理狀態
+- 透過 EventBinder 綁定事件
+- 保持程式碼簡潔清晰
 - 使用語意化命名
 - 加上適當註解
-- 預留 Firebase 串接點
-- 考慮手機版體驗
+- 考慮手機版體驗（響應式設計）
+- 維持童話風格一致性（馬卡龍色系）
 
 ❌ **避免:**
-- 不要用 jQuery
+- 不要破壞現有架構
+- 不要直接操作 localStorage（使用 DataManager）
+- 不要使用 jQuery 或其他框架
 - 避免行內樣式
-- 不要全域變數
+- 不要使用全域變數（除了 window.DataManager）
 - 不要忽略錯誤處理
+- 不要忘記 Firebase 預留接口
 
 ## 測試重點
 
-開發時確認:
+開發或修改時確認:
 - [ ] 手機版顯示正常
-- [ ] 按鈕有 hover 效果
-- [ ] 動畫流暢
-- [ ] 空狀態顯示
-- [ ] 錯誤提示清楚
+- [ ] 所有互動有視覺回饋（hover、active）
+- [ ] 動畫流暢不卡頓
+- [ ] 空狀態顯示清楚
+- [ ] 錯誤提示友善
+- [ ] 資料正確儲存到 localStorage
+- [ ] 頁面切換正常
+- [ ] 不同帳本切換正常
 
 ---
 
-**記住**: 先用 Mock Data 完成功能,預留 Firebase 串接點!
+**記住**:
+- 專案已完成模組化重構，遵循現有架構！
+- 使用 DataManager 管理資料，已預留 Firebase 串接點！
+- 保持童話風格一致性（馬卡龍色系）！

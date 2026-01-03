@@ -11,14 +11,21 @@
 
 ## 開發策略
 
-### 🎯 當前階段: 前端優先開發
-1. **先用假資料完成所有前端功能**
-   - 使用 Mock Data 模擬資料
-   - 在程式碼中預留 Firebase 串接點
-   - 確保 UI/UX 完整可用
+### 🎯 當前階段: 維護與優化
+1. **前端已完成模組化重構**
+   - ✅ 完成 16 個 JS 模組化檔案（總計 2,241 行）
+   - ✅ 完成 20 個 CSS 模組化檔案（按 ITCSS 架構組織）
+   - ✅ 使用 `DataManager` + `localStorage` 管理資料
+   - ✅ 所有核心功能已實作完成
 
-2. **後續再串接 Firebase**
-   - 替換 Mock Data 為真實 Firebase 呼叫
+2. **目前可進行的工作**
+   - 🔧 優化現有功能與使用者體驗
+   - ➕ 擴展新功能（如：預算追蹤、視覺化圖表）
+   - 🧪 添加單元測試
+   - 🔥 未來整合 Firebase（已預留接口）
+
+3. **未來串接 Firebase**
+   - 替換 `DataManager` 為真實 Firebase 呼叫
    - 不需要大幅修改邏輯
    - 平滑過渡到後端整合
 
@@ -48,78 +55,140 @@
 ## 專案結構
 
 ```
-couple-expense-tracker/
-├── docs/                    # 📄 專案文件 (可選)
-│   ├── PRD.md              # 產品需求
-│   ├── mock-data.md        # 假資料結構
-│   └── pages-structure.md  # 頁面架構
+baobu_money_track/
+├── index.html                    # 主頁面
 │
-├── src/
-│   ├── index.html          # 主頁面
+├── css/                          # 樣式檔案（模組化）
+│   ├── main.css                  # CSS 入口檔案
 │   │
-│   ├── css/
-│   │   ├── variables.css   # CSS 變數 (設計系統)
-│   │   ├── global.css      # 全域樣式
-│   │   └── components.css  # 組件樣式
+│   ├── base/                     # 基礎層（4個檔案）
+│   │   ├── fonts.css             # Google Fonts 字體
+│   │   ├── reset.css             # CSS Reset
+│   │   ├── variables.css         # CSS 變數（設計系統）
+│   │   └── global.css            # 全域樣式
 │   │
-│   ├── js/
-│   │   ├── app.js          # 主程式
-│   │   ├── mock-data.js    # 假資料 (目前使用)
-│   │   ├── components/     # UI 組件
-│   │   ├── utils/          # 工具函數
-│   │   │   └── calculator.js  # 結算計算
-│   │   └── services/       # 服務層 (預留 Firebase)
-│   │       └── data.js     # 資料操作 (目前用 mock)
+│   ├── layout/                   # 布局層（3個檔案）
+│   │   ├── container.css         # 容器布局
+│   │   ├── header.css            # 頂部導航
+│   │   └── navigation.css        # 底部導航
 │   │
-│   └── assets/
-│       ├── images/
-│       └── icons/
+│   ├── components/               # 組件層（9個檔案）
+│   │   ├── balance-card.css      # 結算卡片
+│   │   ├── view-toggle.css       # 視圖切換
+│   │   ├── transaction-list.css  # 交易列表
+│   │   ├── calendar.css          # 日曆視圖
+│   │   ├── notebooks.css         # 帳本列表
+│   │   ├── analytics.css         # 分析頁面
+│   │   ├── fab.css               # 浮動按鈕
+│   │   ├── bottom-sheet.css      # 彈窗
+│   │   └── forms.css             # 表單樣式
+│   │
+│   ├── animations/               # 動畫層（1個檔案）
+│   │   └── animations.css        # 所有 @keyframes 動畫
+│   │
+│   └── utilities/                # 工具層（2個檔案）
+│       ├── responsive.css        # 響應式設計
+│       └── scrollbar.css         # 童話風格滾動條
 │
-└── firebase/               # Firebase 配置 (之後使用)
-    └── firestore.rules
+├── js/                           # JavaScript 檔案（模組化）
+│   ├── app.js                    # 主控制器（126行）
+│   ├── data.js                   # DataManager（LocalStorage）
+│   ├── firebase-config.js        # Firebase 配置（預留）
+│   │
+│   ├── core/                     # 核心系統（3個檔案）
+│   │   ├── StateManager.js       # 狀態管理器
+│   │   ├── EventBinder.js        # 事件綁定器
+│   │   └── Router.js             # 路由器
+│   │
+│   ├── pages/                    # 頁面控制器（4個檔案）
+│   │   ├── HomePage.js           # 首頁（記帳列表）
+│   │   ├── CalendarPage.js       # 日曆視圖
+│   │   ├── NotebooksPage.js      # 帳本管理
+│   │   └── AnalyticsPage.js      # 分析頁面
+│   │
+│   ├── components/               # UI 組件（6個檔案）
+│   │   ├── BalanceCard.js        # 結算卡片組件
+│   │   ├── TimelineView.js       # 時間軸視圖
+│   │   ├── DateRangePicker.js    # 日期區間選擇器
+│   │   ├── TransactionForm.js    # 交易表單
+│   │   ├── TransactionDetail.js  # 交易詳情
+│   │   └── TransactionRenderer.js # 交易渲染器
+│   │
+│   └── utils/                    # 工具函數（2個檔案）
+│       ├── dateUtils.js          # 日期處理工具
+│       └── domUtils.js           # DOM 操作工具
+│
+├── .claude/                      # Claude Code 設定
+│   └── skills/                   # 專業技能
+│       ├── project-manager/      # 專案管理技能
+│       ├── frontend/             # 前端開發技能
+│       ├── designer/             # UI/UX 設計技能
+│       └── backend/              # 後端整合技能
+│
+├── docs/                         # 專案文檔（可選）
+├── CLAUDE.md                     # Claude Code 專案指南
+├── DESIGN.md                     # 設計文檔
+└── README.md                     # 專案說明
 ```
 
 ## 開發流程
 
-### 1️⃣ 釐清需求 (可選)
+### 1️⃣ 規劃新功能或優化
 使用 `/skill project-manager`:
-- 整理功能需求
-- 定義 Mock Data 結構
-- 規劃頁面架構
+- 分析現有架構
+- 規劃實作方式
+- 評估影響範圍
+- 技術決策建議
 
-### 2️⃣ 前端開發 ⭐ (當前重點)
+### 2️⃣ 前端開發與維護 ⭐ (當前重點)
 使用 `/skill frontend`:
-- 建立 HTML 頁面
-- 撰寫 CSS 樣式
-- 實作 JavaScript 邏輯
-- 使用 Mock Data
+- 修改現有頁面或組件
+- 新增功能模組
+- 遵循現有模組化架構
+- 使用 DataManager 管理資料
 
-**預留 Firebase 串接點範例:**
+**當前架構範例:**
 ```javascript
-// src/js/services/data.js
-// TODO: Firebase - 之後替換成真實 Firebase 呼叫
+// js/data.js - DataManager (目前使用)
+// 資料管理使用 localStorage
 
-import { mockExpenses } from '../mock-data.js';
+class DataManager {
+  getTransactions(notebookId) {
+    // 從 localStorage 讀取資料
+    return this.transactions.filter(t => t.notebook_id === notebookId);
+  }
 
-export const getExpenses = async (bookId) => {
-  // 目前回傳假資料
-  return mockExpenses.filter(e => e.bookId === bookId);
-  
-  // 之後改成:
-  // return await firebase.getExpenses(bookId);
-};
+  addTransaction(transactionData) {
+    // 新增到 localStorage
+    this.transactions.push(transactionData);
+    this.saveToLocalStorage();
+  }
+}
+
+// 全域使用
+window.DataManager.getTransactions('notebook_1');
+
+// TODO: Firebase - 未來替換為
+// await firebase.getTransactions(coupleId, notebookId);
 ```
 
-### 3️⃣ 設計調整 (隨時)
+**模組化架構:**
+- **Core**: StateManager（狀態）、Router（路由）、EventBinder（事件）
+- **Pages**: HomePage、CalendarPage、NotebooksPage、AnalyticsPage
+- **Components**: BalanceCard、TransactionForm、TimelineView 等
+- **Utils**: dateUtils、domUtils
+
+### 3️⃣ 設計調整與優化 (隨時)
 使用 `/skill designer`:
-- 優化童話風格
+- 優化童話風格（馬卡龍色系）
 - 調整色彩和動畫
 - 改善使用者體驗
+- 設計新組件樣式
 
-### 4️⃣ 後端整合 (之後)
+### 4️⃣ 後端整合 (未來)
 使用 `/skill backend`:
 - 設定 Firebase
-- 替換 Mock Data
+- 替換 DataManager 為 Firebase
 - 整合真實資料庫
 
 ## 程式碼規範
@@ -184,24 +253,44 @@ export const getExpenses = async (bookId) => {
 
 ## 當前開發重點
 
-✅ **現在做:**
-- [ ] 建立主頁面結構
-- [ ] 實作底部浮動按鈕切換
-- [ ] 建立記帳列表顯示
-- [ ] 實作新增記帳功能
-- [ ] 建立分析頁面
-- [ ] 使用 Mock Data 模擬所有功能
+✅ **已完成:**
+- [x] 完整的模組化架構（16 JS + 20 CSS 模組）
+- [x] 主頁面結構與路由系統
+- [x] 底部導航與浮動按鈕
+- [x] 記帳列表與時間軸顯示
+- [x] 新增/編輯/刪除記帳功能
+- [x] 日曆視圖
+- [x] 帳本管理（切換、新增帳本）
+- [x] 分析頁面（統計、篩選）
+- [x] 結算卡片（智能計算欠款）
+- [x] 童話風格設計系統（馬卡龍色系）
+- [x] 響應式設計（手機優先）
+- [x] DataManager + localStorage 資料管理
 
-⏰ **之後做:**
-- [ ] Firebase 設定
-- [ ] 串接真實資料庫
-- [ ] 圖片上傳功能
-- [ ] 部署上線
+🔜 **下一步可做:**
+- [ ] 實作分析頁面的視覺化圖表（如：圓餅圖、長條圖）
+- [ ] 新增預算追蹤功能
+- [ ] 實作照片上傳功能（目前已預留欄位）
+- [ ] 添加單元測試
+- [ ] 優化動畫與互動體驗
+- [ ] 新增更多分類圖標
+- [ ] 實作搜尋與篩選功能
+- [ ] 匯出報表功能（CSV、PDF）
+
+⏰ **未來整合:**
+- [ ] Firebase 設定與串接
+- [ ] 替換 DataManager 為 Firebase
+- [ ] 圖片上傳至 Firebase Storage
+- [ ] 多使用者認證
+- [ ] PWA 支援（離線使用）
+- [ ] 部署上線（Firebase Hosting / Vercel）
 
 ---
 
-💡 **記住**: 
-- 保持彈性,細節在對話中調整
-- 先完成前端,預留後端介接點
-- 一次專注一個功能
+💡 **記住**:
+- 專案已完成模組化重構，架構清晰穩定
+- 遵循現有模組化架構進行開發
+- 使用 DataManager 管理資料（已預留 Firebase 接口）
+- 保持童話風格設計一致性（馬卡龍色系）
+- 一次專注一個功能，逐步優化
 - 有問題隨時使用對應的 skill!

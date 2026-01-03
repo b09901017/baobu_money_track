@@ -16,10 +16,10 @@ description: 後端開發技能 (Firebase) - 設定 Firebase、串接資料庫�
 - 設定環境變數
 - 配置 SDK
 
-### 2. 替換 Mock Data
-- 找到所有使用 Mock Data 的地方
+### 2. 替換 DataManager
+- 找到所有使用 DataManager 的地方
 - 替換成真實 Firebase 呼叫
-- 保持介面一致
+- 保持介面一致（盡量不修改前端邏輯）
 
 ### 3. 資料庫操作
 - Firestore CRUD
@@ -53,39 +53,82 @@ export const storage = getStorage(app);
 
 ### 替換資料層
 ```javascript
-// 原本 (Mock Data)
-// src/js/services/data.js
-import { mockExpenses } from '../mock-data.js';
+// 原本（DataManager + localStorage）
+// js/data.js
+class DataManager {
+  getTransactions(notebookId) {
+    // 從 localStorage 讀取
+    return this.transactions.filter(t => t.notebook_id === notebookId);
+  }
 
-export const getExpenses = () => {
-  return mockExpenses;
-};
+  addTransaction(transactionData) {
+    const transaction = { ...transactionData, id: Date.now().toString() };
+    this.transactions.push(transaction);
+    this.saveToLocalStorage();
+    return transaction;
+  }
 
-// 改成 (Firebase)
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebase-config.js';
+  saveToLocalStorage() {
+    localStorage.setItem('coupleAppData', JSON.stringify({
+      notebooks: this.notebooks,
+      transactions: this.transactions,
+      currentNotebook: this.currentNotebook
+    }));
+  }
+}
 
-export const getExpenses = async (coupleId, bookId) => {
-  const ref = collection(db, 'couples', coupleId, 'books', bookId, 'expenses');
-  const snapshot = await getDocs(ref);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-};
+// 改成（Firebase）
+import { collection, getDocs, addDoc, Timestamp } from 'firebase/firestore';
+import { db } from './firebase-config.js';
+
+class DataManager {
+  async getTransactions(coupleId, notebookId) {
+    const ref = collection(db, 'couples', coupleId, 'notebooks', notebookId, 'transactions');
+    const snapshot = await getDocs(ref);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
+
+  async addTransaction(coupleId, notebookId, transactionData) {
+    const ref = collection(db, 'couples', coupleId, 'notebooks', notebookId, 'transactions');
+    const docRef = await addDoc(ref, {
+      ...transactionData,
+      created_at: Timestamp.now()
+    });
+    return { id: docRef.id, ...transactionData };
+  }
+
+  // 不再需要 saveToLocalStorage
+}
 ```
 
 ### 資料庫結構
 ```
 firestore/
 ├── couples/{coupleId}/
-│   ├── members: [userId1, userId2]
-│   ├── books/{bookId}/
-│   │   ├── name: "日常記帳"
-│   │   ├── icon: "💰"
-│   │   └── expenses/{expenseId}/
+│   ├── members: [
+│   │   { id: 'user1', name: '寶寶' },
+│   │   { id: 'user2', name: '步步' }
+│   │ ]
+│   ├── notebooks/{notebookId}/
+│   │   ├── name: "寶寶步步的日常"
+│   │   ├── created_at: Timestamp
+│   │   ├── budget: 10000                      # 預算（可選）
+│   │   └── transactions/{transactionId}/
 │   │       ├── date: Timestamp
 │   │       ├── item: "午餐"
 │   │       ├── amount: 150
-│   │       ├── payer: "person_a"
-│   │       └── ...
+│   │       ├── payer: "user1"
+│   │       ├── for_whom: "both"               # user1, user2, both
+│   │       ├── category: "餐飲"
+│   │       ├── tags: ["午餐", "便當"]
+│   │       ├── note: "吃得好飽"
+│   │       ├── photo_url: ""                  # Firebase Storage URL
+│   │       └── created_at: Timestamp
+│
+└── customCategories/{categoryId}/              # 自訂分類（全域）
+    ├── coupleId: "couple_123"
+    ├── name: "特殊分類"
+    └── icon: "🎁"
 ```
 
 ## 工作方式
@@ -93,23 +136,33 @@ firestore/
 ### 當需要串接 Firebase 時:
 
 1. **設定環境**
-   - 建立 Firebase 專案
-   - 安裝 SDK
-   - 設定環境變數
+   - 建立 Firebase 專案（Firestore + Storage + Hosting）
+   - 安裝 Firebase SDK
+   - 設定環境變數（.env 或 firebase-config.js）
+   - 設定 Security Rules
 
-2. **找出所有 Mock Data 使用處**
-   - 搜尋 `import.*mock-data`
+2. **找出所有 DataManager 使用處**
+   - 搜尋 `window.DataManager`
    - 找到所有 `TODO: Firebase` 註解
+   - 檢查所有頁面和組件的資料操作
 
 3. **逐步替換**
-   - 一次替換一個功能
-   - 測試確認正常
-   - 再進行下一個
+   - 第1步：替換基本 CRUD（新增、讀取、更新、刪除）
+   - 第2步：替換帳本管理
+   - 第3步：替換自訂分類
+   - 第4步：整合圖片上傳（Storage）
+   - 每步完成後測試確認正常
 
 4. **保持介面一致**
-   - 前端不需要大改
-   - 只改資料來源
-   - 錯誤處理要完善
+   - 前端盡量不修改（或最小修改）
+   - DataManager 方法改為 async/await
+   - 只改資料來源（localStorage → Firestore）
+   - 完善錯誤處理與 loading 狀態
+
+5. **處理非同步**
+   - 所有資料方法改為 async
+   - 前端加上 loading 提示
+   - 處理網路錯誤與離線狀態
 
 ## Firestore 常用操作
 
@@ -204,9 +257,18 @@ service cloud.firestore {
 ## 當前狀態
 
 🟡 **目前**: 還不需要使用此技能
+- 專案使用 DataManager + localStorage
+- 所有功能已正常運作
+- 已預留 Firebase 串接點（TODO 註解）
 
-🟢 **之後**: 前端完成後,再使用此技能串接 Firebase
+🟢 **之後**: 當需要多裝置同步或雲端儲存時，使用此技能串接 Firebase
+- 替換 DataManager 為 Firebase
+- 整合圖片上傳（Storage）
+- 部署到 Firebase Hosting
 
 ---
 
-**記住**: 現在專注前端,保留好串接點,之後串接會很順利!
+**記住**:
+- 專案已完成前端開發，架構穩定
+- 已預留好串接點，替換會很順利
+- 保持 DataManager 介面一致，前端不需大改！
