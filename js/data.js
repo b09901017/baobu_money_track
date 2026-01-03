@@ -3,11 +3,12 @@
 
 class DataManager {
     constructor() {
-        this.currentUser = { id: 'user1', name: '我' };
-        this.partner = { id: 'user2', name: '對方' };
+        this.currentUser = { id: 'user1', name: '寶寶' };
+        this.partner = { id: 'user2', name: '步步' };
         this.currentNotebook = null;
         this.notebooks = [];
         this.transactions = [];
+        this.customCategories = [];
 
         this.init();
     }
@@ -21,6 +22,7 @@ class DataManager {
             this.notebooks = data.notebooks || [];
             this.transactions = data.transactions || [];
             this.currentNotebook = data.currentNotebook || null;
+            this.customCategories = data.customCategories || [];
         } else {
             // 建立預設帳本和範例資料
             this.createDefaultData();
@@ -36,7 +38,7 @@ class DataManager {
     createDefaultData() {
         const defaultNotebook = {
             id: 'notebook_1',
-            name: '我們的日常帳本',
+            name: '寶寶步步的日常',
             members: ['user1', 'user2'],
             created_at: new Date().toISOString()
         };
@@ -54,6 +56,7 @@ class DataManager {
                 amount: 350,
                 item_name: '晚餐',
                 categories: ['吃吃'],
+                note: '好好吃的義大利麵',
                 photo_url: null,
                 date: this.formatDate(new Date()),
                 created_at: new Date().toISOString()
@@ -66,6 +69,7 @@ class DataManager {
                 amount: 580,
                 item_name: '電影票',
                 categories: ['玩'],
+                note: '看了超好看的電影！',
                 photo_url: null,
                 date: this.formatDate(new Date(Date.now() - 86400000)),
                 created_at: new Date(Date.now() - 86400000).toISOString()
@@ -78,6 +82,7 @@ class DataManager {
                 amount: 120,
                 item_name: '計程車',
                 categories: ['交通'],
+                note: '',
                 photo_url: null,
                 date: this.formatDate(new Date(Date.now() - 86400000 * 2)),
                 created_at: new Date(Date.now() - 86400000 * 2).toISOString()
@@ -90,6 +95,7 @@ class DataManager {
                 amount: 1200,
                 item_name: '購物',
                 categories: ['購物', '生活'],
+                note: '買了好多東西',
                 photo_url: null,
                 date: this.formatDate(new Date(Date.now() - 86400000 * 3)),
                 created_at: new Date(Date.now() - 86400000 * 3).toISOString()
@@ -102,6 +108,7 @@ class DataManager {
                 amount: 450,
                 item_name: '午餐',
                 categories: ['吃吃'],
+                note: '',
                 photo_url: null,
                 date: this.formatDate(new Date(Date.now() - 86400000 * 4)),
                 created_at: new Date(Date.now() - 86400000 * 4).toISOString()
@@ -117,7 +124,8 @@ class DataManager {
         const data = {
             notebooks: this.notebooks,
             transactions: this.transactions,
-            currentNotebook: this.currentNotebook
+            currentNotebook: this.currentNotebook,
+            customCategories: this.customCategories
         };
         localStorage.setItem('coupleAppData', JSON.stringify(data));
     }
@@ -359,11 +367,43 @@ class DataManager {
         return this.formatDate(new Date());
     }
 
+    // ==================== 自訂分類管理 ====================
+
+    // 新增自訂分類
+    addCustomCategory(name, icon = 'label') {
+        const category = {
+            id: 'custom_' + Date.now(),
+            name: name,
+            icon: icon,
+            created_at: new Date().toISOString()
+        };
+        this.customCategories.push(category);
+        this.save();
+        return category;
+    }
+
+    // 取得所有自訂分類
+    getCustomCategories() {
+        return this.customCategories;
+    }
+
+    // 刪除自訂分類
+    deleteCustomCategory(id) {
+        const index = this.customCategories.findIndex(cat => cat.id === id);
+        if (index !== -1) {
+            this.customCategories.splice(index, 1);
+            this.save();
+            return true;
+        }
+        return false;
+    }
+
     // 清除所有資料（重置）
     reset() {
         this.notebooks = [];
         this.transactions = [];
         this.currentNotebook = null;
+        this.customCategories = [];
         localStorage.removeItem('coupleAppData');
         this.createDefaultData();
     }
