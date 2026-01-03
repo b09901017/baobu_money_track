@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Account Books Overview</title>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#E8A87C","secondary": "#9AB8C2","accent": "#E2C2C6","gold": "#D4AF37",
+                        "gold-light": "#F9E59E",
+                        "cream": "#FDFBF7",
+                        "parchment": "#F2E8D5",
+                        "ink": "#4A4036",
+                        "wood": "#A67B5B",
+                        "pastel-pink": "#fce7f3",
+                        "pastel-blue": "#e0f2fe",
+                        "pastel-green": "#dcfce7",
+                    },
+                    fontFamily: {
+                        "display": ["Newsreader", "serif"],
+                        "sans": ["Noto Sans", "sans-serif"],
+                    },
+                    boxShadow: {
+                        'book': '0 10px 15px -3px rgba(74, 64, 54, 0.2), 0 4px 6px -2px rgba(74, 64, 54, 0.1)',
+                        'floating': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                        'glow': '0 0 20px rgba(212, 175, 55, 0.4)',
+                        'inner-shine': 'inset 0 0 20px rgba(255,255,255,0.5)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #FDFBF7;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(232, 168, 124, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(154, 184, 194, 0.05) 0%, transparent 20%);
+        }
+        .text-shadow-sm {
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-[#4A4036] font-display antialiased overflow-x-hidden selection:bg-gold-light selection:text-ink">
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+<div class="absolute -top-20 -left-20 w-96 h-96 bg-primary/10 rounded-full blur-[100px]"></div>
+<div class="absolute top-1/2 -right-20 w-80 h-80 bg-secondary/10 rounded-full blur-[80px]"></div>
+<div class="absolute bottom-0 left-1/3 w-full h-64 bg-accent/15 rounded-full blur-[100px]"></div>
+<div class="absolute top-32 right-8 text-gold/40 text-xl animate-pulse duration-[3000ms]">✦</div>
+<div class="absolute top-48 left-6 text-gold/30 text-lg animate-pulse duration-[4000ms]" style="animation-delay: 1s;">✧</div>
+<div class="absolute bottom-40 right-1/3 text-gold/30 text-2xl animate-pulse duration-[5000ms]" style="animation-delay: 2s;">✦</div>
+</div>
+<div class="relative z-10 flex flex-col min-h-screen pb-28">
+<div class="sticky top-0 z-50 px-5 py-4 bg-[#FDFBF7]/90 backdrop-blur-md border-b border-gold/20">
+<div class="flex items-center justify-between">
+<button class="size-10 flex items-center justify-center rounded-full border border-gold/30 bg-white/60 text-gold hover:bg-gold/10 transition-colors shadow-sm">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="flex flex-col items-center">
+<div class="flex items-center gap-1.5">
+<div class="h-px w-3 bg-gold/50"></div>
+<span class="text-[10px] uppercase tracking-[0.25em] text-gold font-bold">The Library of</span>
+<div class="h-px w-3 bg-gold/50"></div>
+</div>
+<h1 class="text-xl font-bold text-ink tracking-wide">Alice &amp; Jack</h1>
+</div>
+<button class="size-10 flex items-center justify-center rounded-full border border-gold/30 bg-white/60 text-gold hover:bg-gold/10 transition-colors shadow-sm relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2.5 w-2 h-2 bg-accent rounded-full border border-white"></span>
+</button>
+</div>
+</div>
+<div class="px-6 pt-6">
+<div class="mb-8 text-center relative">
+<div class="inline-block relative">
+<h2 class="text-3xl font-italic text-ink font-medium relative z-10 drop-shadow-sm">Your Chronicles</h2>
+<div class="absolute -bottom-1 left-4 right-4 h-2 bg-gold/20 -skew-x-12 rounded-full -z-0"></div>
+</div>
+<p class="mt-2 text-sm text-[#8C8276] font-sans">Continue your shared fairy tale.</p>
+</div>
+<div class="mb-10 relative group">
+<div class="relative bg-parchment rounded-xl p-1 shadow-book border border-gold/30 overflow-hidden">
+<div class="absolute inset-1.5 border border-dashed border-gold/40 rounded-lg pointer-events-none"></div>
+<div class="relative bg-white/40 backdrop-blur-sm rounded-lg p-5 flex flex-col items-center text-center">
+<div class="flex items-center gap-2 mb-1 opacity-80">
+<span class="material-symbols-outlined text-gold" style="font-size: 16px;">diamond</span>
+<span class="text-xs font-bold uppercase tracking-widest text-[#8C8276]">Total Treasure</span>
+<span class="material-symbols-outlined text-gold" style="font-size: 16px;">diamond</span>
+</div>
+<div class="flex items-baseline gap-1 my-2">
+<span class="text-4xl font-bold text-ink font-display drop-shadow-sm">$24,850</span>
+<span class="text-lg text-[#8C8276] font-display">.00</span>
+</div>
+<div class="inline-flex items-center gap-1.5 px-3 py-1 bg-pastel-green/60 rounded-full border border-green-200/50 mt-1 shadow-sm">
+<span class="material-symbols-outlined text-green-700 text-sm">trending_up</span>
+<span class="text-xs font-bold text-green-800 font-sans">+12%</span>
+<span class="text-[10px] text-green-900/60 font-sans uppercase tracking-wide ml-1">saved</span>
+</div>
+</div>
+<div class="absolute top-0 left-0 w-6 h-6 border-t-[3px] border-l-[3px] border-gold rounded-tl-lg opacity-40"></div>
+<div class="absolute top-0 right-0 w-6 h-6 border-t-[3px] border-r-[3px] border-gold rounded-tr-lg opacity-40"></div>
+<div class="absolute bottom-0 left-0 w-6 h-6 border-b-[3px] border-l-[3px] border-gold rounded-bl-lg opacity-40"></div>
+<div class="absolute bottom-0 right-0 w-6 h-6 border-b-[3px] border-r-[3px] border-gold rounded-br-lg opacity-40"></div>
+</div>
+</div>
+<div class="relative">
+<div class="flex items-center gap-3 mb-6 px-2">
+<div class="h-px flex-1 bg-gradient-to-r from-transparent via-gold/40 to-transparent"></div>
+<span class="material-symbols-outlined text-gold/80 text-lg">auto_stories</span>
+<span class="text-xs font-bold uppercase tracking-widest text-ink/70">Storybooks</span>
+<div class="h-px flex-1 bg-gradient-to-r from-transparent via-gold/40 to-transparent"></div>
+</div>
+<div class="grid grid-cols-2 gap-x-6 gap-y-14 pb-4">
+<div class="group relative perspective-1000 cursor-pointer">
+<div class="relative w-full aspect-[3/4] rounded-r-xl rounded-l-sm shadow-book bg-white transition-all duration-300 transform group-hover:-translate-y-2 group-hover:shadow-floating border-l-[6px] border-l-[#3a5a78] overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center opacity-90 transition-transform duration-700 group-hover:scale-105" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBBSljt_hGEOnq9JOumnpgkTi3rrrHBrf0ITp_7Hks4tsar97p8oQMwCD4BqGyPn3GpQuzUpfhjyIocn1S-M0sSuwuJREvG-5Imaa2MYZCMAdqWpe71kpWJByBPMagoP2W59gfL37QgWuQ1NPl1lrtzrUxgpedoEgaXQ9s1AhnLX8kisSWQTZI9wktjcf64xIEMrZ_i4Gjgt7GJmWbDkYi-W1-fkDxdcGbRPciSS6ZozIs3HmZDX-dRbhPviiM9_WzecyfXuTr_zaU");'></div>
+<div class="absolute inset-0 bg-[#3a5a78]/30 mix-blend-multiply"></div>
+<div class="absolute inset-0 bg-gradient-to-tr from-black/50 via-transparent to-white/10"></div>
+<div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-12 flex flex-col justify-end h-full">
+<div class="flex items-center justify-between mb-2">
+<div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/10 shadow-glow">
+<span class="material-symbols-outlined text-pastel-blue text-lg">shopping_basket</span>
+</div>
+</div>
+<h3 class="text-white text-xl font-bold leading-tight font-display text-shadow-sm">Daily<br/>Expenses</h3>
+<div class="mt-2 flex items-center gap-1.5">
+<div class="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
+<div class="h-full w-3/4 bg-pastel-blue shadow-[0_0_10px_rgba(224,242,254,0.5)]"></div>
+</div>
+</div>
+<p class="text-pastel-blue text-xs font-sans mt-1 opacity-90 text-right">$1,240 left</p>
+</div>
+<div class="absolute inset-2 border border-white/20 rounded-sm pointer-events-none"></div>
+</div>
+<div class="absolute -top-1 right-4 w-5 h-8 bg-red-500 shadow-sm rounded-b-lg z-20 flex justify-center">
+<div class="w-px h-full bg-black/10"></div>
+</div>
+<div class="absolute -bottom-5 left-3 right-3 h-2 bg-black/10 rounded-[100%] blur-sm pointer-events-none"></div>
+</div>
+<div class="group relative perspective-1000 cursor-pointer">
+<div class="relative w-full aspect-[3/4] rounded-r-xl rounded-l-sm shadow-book bg-white transition-all duration-300 transform group-hover:-translate-y-2 group-hover:shadow-floating border-l-[6px] border-l-[#8B5A2B] overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center opacity-90 transition-transform duration-700 group-hover:scale-105" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAm9Bel743YN01y-8QQaua1vyck01ky48FL2uAPip9Qn4OTnebo5lUINt8qqhAEr8PUqnY5xHUuc2ssJhMDRC7-LiMfSUWxyeUWIER2Rc7YmqqTQ13ElsphsWoooxGnZexdaEMHadveQxwJ3__LzM120_MYrCwuN3k2gFqEgE7fN4xje5g-ltipxGgCb08fHmBkmm7ftZwyfiAy9mEHfRbmHEb0YlEOCqEXo18x312YU4AA4FJvjO4kUUFHzBIr5tz3Zs6xoeN4-xg");'></div>
+<div class="absolute inset-0 bg-primary/20 mix-blend-multiply"></div>
+<div class="absolute inset-0 bg-gradient-to-tr from-black/50 via-transparent to-white/10"></div>
+<div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-12 flex flex-col justify-end h-full">
+<div class="flex items-center justify-between mb-2">
+<div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/10 shadow-glow">
+<span class="material-symbols-outlined text-primary text-lg">flight_takeoff</span>
+</div>
+</div>
+<h3 class="text-white text-xl font-bold leading-tight font-display text-shadow-sm">Travel<br/>Fund</h3>
+<div class="mt-2 h-1.5 w-full bg-white/20 rounded-full overflow-hidden backdrop-blur-sm border border-white/10">
+<div class="h-full bg-primary w-[65%] shadow-[0_0_8px_rgba(232,168,124,0.6)]"></div>
+</div>
+<p class="text-primary text-xs font-sans mt-1 opacity-90 text-right">65% ready</p>
+</div>
+<div class="absolute inset-2 border border-white/20 rounded-sm pointer-events-none"></div>
+</div>
+<div class="absolute -bottom-5 left-3 right-3 h-2 bg-black/10 rounded-[100%] blur-sm pointer-events-none"></div>
+</div>
+<div class="group relative perspective-1000 cursor-pointer">
+<div class="relative w-full aspect-[3/4] rounded-r-xl rounded-l-sm shadow-book bg-white transition-all duration-300 transform group-hover:-translate-y-2 group-hover:shadow-floating border-l-[6px] border-l-[#C38D9E] overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center opacity-90 transition-transform duration-700 group-hover:scale-105" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCDVGWiWXNMNl-95un5_SxZ_0hApJEND78xW5oNKoXXzd6VkIwxxmSfsb1yo0a9p3eO7HhS7DDGPESV-RPD1ahDuIlT35PkH4XE99Nyq2Bjz5SfHHHqmFxjo0KGdt3ifPDvKmpT1D2CixwUoBLPdCfQu8tmH7RbGIYkA95m7hYqWcW7Dm54QN0s-vANGJp-3lAlAg_wYwRfsWRtXMb49MuSjBtK7sHFkFZVXjJeGiFnumTeVQS-BUo8VfH7F3zA3nd3Ae0bBMakM_Y");'></div>
+<div class="absolute inset-0 bg-accent/30 mix-blend-multiply"></div>
+<div class="absolute inset-0 bg-gradient-to-tr from-black/50 via-transparent to-white/10"></div>
+<div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-12 flex flex-col justify-end h-full">
+<div class="flex items-center justify-between mb-2">
+<div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/10 shadow-glow">
+<span class="material-symbols-outlined text-accent text-lg">favorite</span>
+</div>
+</div>
+<h3 class="text-white text-xl font-bold leading-tight font-display text-shadow-sm">Wedding<br/>Plans</h3>
+<p class="text-accent text-xs font-sans mt-2 opacity-90">Next: Venue Deposit</p>
+</div>
+<div class="absolute inset-2 border border-white/20 rounded-sm pointer-events-none"></div>
+</div>
+<div class="absolute -top-1 right-4 w-5 h-10 bg-accent shadow-sm rounded-b-lg z-20 flex items-end justify-center pb-2">
+<div class="w-1.5 h-1.5 bg-white/80 rounded-full shadow-sm"></div>
+</div>
+<div class="absolute -bottom-5 left-3 right-3 h-2 bg-black/10 rounded-[100%] blur-sm pointer-events-none"></div>
+</div>
+<div class="group relative cursor-pointer perspective-1000">
+<div class="relative w-full aspect-[3/4] rounded-r-xl rounded-l-sm border-[3px] border-dashed border-gold/30 bg-white/20 flex flex-col items-center justify-center text-center gap-3 transition-all duration-300 hover:bg-white/40 hover:border-gold hover:shadow-glow hover:-translate-y-1 backdrop-blur-sm overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-b from-transparent via-gold/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<span class="absolute top-4 left-4 text-gold/40 text-[10px] group-hover:animate-pulse">✦</span>
+<span class="absolute bottom-8 right-6 text-gold/40 text-[14px] group-hover:animate-pulse" style="animation-delay: 0.5s;">✧</span>
+<span class="absolute top-1/2 right-4 text-gold/40 text-[8px] group-hover:animate-pulse" style="animation-delay: 1s;">✦</span>
+</div>
+<div class="w-14 h-14 rounded-full bg-gold/10 text-gold flex items-center justify-center mb-1 group-hover:scale-110 group-hover:bg-gold/20 transition-all duration-300 shadow-sm border border-gold/20">
+<span class="material-symbols-outlined text-3xl">add</span>
+</div>
+<div class="px-2">
+<h3 class="text-ink/80 font-bold text-sm leading-tight group-hover:text-ink transition-colors">Start New<br/>Adventure</h3>
+</div>
+</div>
+<div class="absolute -bottom-5 left-3 right-3 h-2 bg-black/5 rounded-[100%] blur-sm pointer-events-none"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="fixed bottom-8 left-0 right-0 z-50 flex justify-center pointer-events-none">
+<div class="pointer-events-auto flex items-center gap-2 p-1.5 bg-[#4A4036]/95 rounded-full shadow-2xl border border-white/10 backdrop-blur-xl scale-100 hover:scale-105 transition-transform duration-300">
+<button class="w-12 h-12 rounded-full bg-gold text-[#4A4036] shadow-lg flex items-center justify-center transform -translate-y-2 border-2 border-[#4A4036] ring-2 ring-gold/30 relative">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="absolute -top-1 -right-1 text-white text-[10px]">✦</span>
+</button>
+<button class="w-12 h-12 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center">
+<span class="material-symbols-outlined">bar_chart</span>
+</button>
+<button class="w-12 h-12 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</div>
+</div>
+
+</body></html>

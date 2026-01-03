@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Add Expense - Fairy Tale Edition</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f0426e",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#221015",
+                        "paper": "#fffbf5",
+                        "paper-dark": "#2a1d21",
+                        "gold": "#d4af37",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem", 
+                        "lg": "2rem", 
+                        "xl": "3rem", 
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        "soft": "0 10px 40px -10px rgba(240, 66, 110, 0.15)",
+                        "paper": "0 -4px 20px rgba(0,0,0,0.05)"
+                    }
+                },
+            },
+        }
+    </script>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        /* Hide scrollbar for clean UI */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Custom styles for decorative elements */
+        .page-texture {
+            background-image: radial-gradient(#f0e6e8 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display flex flex-col items-center justify-end min-h-screen relative overflow-hidden">
+<!-- Background Image simulating app context -->
+<div class="absolute inset-0 z-0">
+<img class="w-full h-full object-cover opacity-80 blur-sm" data-alt="Blurred aesthetic desk with flowers and stationery background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBck5R8r_cpwbBqKxCk9iVFWCFjYQ2zgq6eguRJ7ZZLWtyULD83ZgpD37vnG_m95DrZoLBXKUz-NufQL3goYpZht6yibGFncSaAqUtgpYAtNMzEbyHjtgh9xhBi6zeH2DjOLfOgFqxpGFM-_KzRREdatGJJEBhjr-VWzKD3B1lUtHHVCFDrG031tDMNZiZCzzoD_s71SfrE5BOTcYkY9lvkcCzPcOXHaxjRcT9C3ZT78urBqolKN1WXzRTXJ7SA_QCi-yYfY2kAq7c"/>
+<div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+</div>
+<!-- Main Popup / Bottom Sheet -->
+<div class="relative z-10 w-full max-w-md h-[92vh] bg-paper dark:bg-paper-dark rounded-t-[40px] shadow-2xl flex flex-col overflow-hidden group/design-root border-t-8 border-[#fcfcfc]/20">
+<!-- Decorative Top Elements -->
+<!-- Gold Trim -->
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-1 bg-gradient-to-r from-transparent via-gold/40 to-transparent rounded-b-full"></div>
+<!-- Header / Handle -->
+<div class="pt-5 pb-2 px-6 flex flex-col items-center shrink-0 relative">
+<!-- Ribbon decoration -->
+<div class="absolute top-0 right-8 w-8 h-12 bg-primary/10 rounded-b-lg flex items-end justify-center pb-2">
+<div class="w-0 h-0 border-l-[16px] border-r-[16px] border-b-[8px] border-l-transparent border-r-transparent border-b-paper dark:border-b-paper-dark mb-[-8px]"></div>
+</div>
+<button class="flex h-5 w-16 items-center justify-center mb-4">
+<div class="h-1.5 w-full rounded-full bg-[#e7cfd5]"></div>
+</button>
+<div class="flex items-center gap-2 text-[#9a4c5f] dark:text-[#dcbabf] text-sm font-semibold tracking-wider uppercase opacity-80">
+<span class="material-symbols-outlined text-lg">edit_calendar</span>
+<span>New Page in Diary</span>
+</div>
+</div>
+<!-- Scrollable Content Area -->
+<div class="flex-1 overflow-y-auto no-scrollbar px-6 pb-28 pt-2 page-texture relative">
+<!-- Amount Section -->
+<div class="flex flex-col items-center justify-center py-8">
+<div class="relative w-full text-center">
+<label class="sr-only" for="amount">Amount</label>
+<div class="flex items-baseline justify-center gap-2 text-primary">
+<span class="text-4xl font-bold opacity-60">$</span>
+<input autofocus="" class="w-48 bg-transparent border-none p-0 text-7xl font-extrabold text-center text-primary focus:ring-0 placeholder-primary/20" id="amount" placeholder="0" type="number"/>
+</div>
+<!-- Underline decoration -->
+<div class="h-1.5 w-32 bg-[#e7cfd5]/30 rounded-full mx-auto mt-2"></div>
+</div>
+</div>
+<!-- Item Name Input -->
+<div class="mb-8 relative z-20">
+<label class="block text-[#9a4c5f] dark:text-[#dcbabf] text-sm font-bold mb-3 ml-2">What is this for?</label>
+<div class="group flex items-center bg-white dark:bg-[#35252a] rounded-2xl border-2 border-[#f2e6e9] dark:border-[#4a353b] focus-within:border-primary/40 focus-within:shadow-soft transition-all duration-300">
+<div class="pl-4 text-[#9a4c5f] dark:text-[#dcbabf]">
+<span class="material-symbols-outlined">edit</span>
+</div>
+<input class="w-full bg-transparent border-none h-14 text-lg text-[#1b0d11] dark:text-gray-100 placeholder-[#dcbabf] focus:ring-0 px-4 font-medium" placeholder="e.g. Pumpkin Carriage Ride..." value=""/>
+</div>
+</div>
+<!-- Payer & Split (Segmented Buttons) -->
+<div class="mb-8">
+<label class="block text-[#9a4c5f] dark:text-[#dcbabf] text-sm font-bold mb-3 ml-2">Who paid?</label>
+<div class="flex p-1.5 bg-[#f3e7ea] dark:bg-[#35252a] rounded-full">
+<label class="flex-1 relative cursor-pointer group">
+<input checked="" class="peer sr-only" name="payer_type" type="radio" value="I Paid"/>
+<div class="h-11 flex items-center justify-center rounded-full text-sm font-bold text-[#9a4c5f] transition-all peer-checked:bg-white dark:peer-checked:bg-[#4a353b] peer-checked:text-primary peer-checked:shadow-sm gap-2">
+<span class="material-symbols-outlined text-[18px]">face</span>
+<span>Me</span>
+</div>
+</label>
+<label class="flex-1 relative cursor-pointer group">
+<input class="peer sr-only" name="payer_type" type="radio" value="Partner Paid"/>
+<div class="h-11 flex items-center justify-center rounded-full text-sm font-bold text-[#9a4c5f] transition-all peer-checked:bg-white dark:peer-checked:bg-[#4a353b] peer-checked:text-primary peer-checked:shadow-sm gap-2">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+<span>Partner</span>
+</div>
+</label>
+<label class="flex-1 relative cursor-pointer group">
+<input class="peer sr-only" name="payer_type" type="radio" value="Split"/>
+<div class="h-11 flex items-center justify-center rounded-full text-sm font-bold text-[#9a4c5f] transition-all peer-checked:bg-white dark:peer-checked:bg-[#4a353b] peer-checked:text-primary peer-checked:shadow-sm gap-2">
+<span class="material-symbols-outlined text-[18px]">safety_divider</span>
+<span>Split</span>
+</div>
+</label>
+</div>
+</div>
+<!-- Categories Grid -->
+<div class="mb-8">
+<label class="block text-[#9a4c5f] dark:text-[#dcbabf] text-sm font-bold mb-4 ml-2">Category</label>
+<div class="grid grid-cols-4 gap-y-6 gap-x-2">
+<!-- Food (Active) -->
+<button class="group flex flex-col items-center gap-2">
+<div class="relative w-16 h-16 flex items-center justify-center">
+<!-- Active ring -->
+<div class="absolute inset-0 rounded-full border-[3px] border-primary opacity-20 scale-110"></div>
+<div class="w-full h-full rounded-full bg-primary text-white shadow-lg shadow-primary/30 flex items-center justify-center transform group-active:scale-95 transition-all">
+<span class="material-symbols-outlined text-2xl">restaurant</span>
+</div>
+<!-- Tiny decoration -->
+<div class="absolute -top-1 -right-1 text-gold text-lg drop-shadow-sm">✦</div>
+</div>
+<span class="text-xs font-bold text-primary">Food</span>
+</button>
+<!-- Transport -->
+<button class="group flex flex-col items-center gap-2">
+<div class="w-16 h-16 rounded-full bg-white dark:bg-[#35252a] border-2 border-[#f2e6e9] dark:border-[#4a353b] flex items-center justify-center text-[#9a4c5f] group-hover:border-primary/30 transition-all group-active:scale-95 shadow-sm">
+<span class="material-symbols-outlined text-2xl">directions_subway</span>
+</div>
+<span class="text-xs font-semibold text-[#9a4c5f] dark:text-[#dcbabf]">Transport</span>
+</button>
+<!-- Date -->
+<button class="group flex flex-col items-center gap-2">
+<div class="w-16 h-16 rounded-full bg-white dark:bg-[#35252a] border-2 border-[#f2e6e9] dark:border-[#4a353b] flex items-center justify-center text-[#9a4c5f] group-hover:border-primary/30 transition-all group-active:scale-95 shadow-sm">
+<span class="material-symbols-outlined text-2xl">local_activity</span>
+</div>
+<span class="text-xs font-semibold text-[#9a4c5f] dark:text-[#dcbabf]">Date</span>
+</button>
+<!-- Shopping -->
+<button class="group flex flex-col items-center gap-2">
+<div class="w-16 h-16 rounded-full bg-white dark:bg-[#35252a] border-2 border-[#f2e6e9] dark:border-[#4a353b] flex items-center justify-center text-[#9a4c5f] group-hover:border-primary/30 transition-all group-active:scale-95 shadow-sm">
+<span class="material-symbols-outlined text-2xl">shopping_bag</span>
+</div>
+<span class="text-xs font-semibold text-[#9a4c5f] dark:text-[#dcbabf]">Shop</span>
+</button>
+<!-- Gifts -->
+<button class="group flex flex-col items-center gap-2">
+<div class="w-16 h-16 rounded-full bg-white dark:bg-[#35252a] border-2 border-[#f2e6e9] dark:border-[#4a353b] flex items-center justify-center text-[#9a4c5f] group-hover:border-primary/30 transition-all group-active:scale-95 shadow-sm">
+<span class="material-symbols-outlined text-2xl">redeem</span>
+</div>
+<span class="text-xs font-semibold text-[#9a4c5f] dark:text-[#dcbabf]">Gift</span>
+</button>
+<!-- Home -->
+<button class="group flex flex-col items-center gap-2">
+<div class="w-16 h-16 rounded-full bg-white dark:bg-[#35252a] border-2 border-[#f2e6e9] dark:border-[#4a353b] flex items-center justify-center text-[#9a4c5f] group-hover:border-primary/30 transition-all group-active:scale-95 shadow-sm">
+<span class="material-symbols-outlined text-2xl">cottage</span>
+</div>
+<span class="text-xs font-semibold text-[#9a4c5f] dark:text-[#dcbabf]">Home</span>
+</button>
+<!-- Health -->
+<button class="group flex flex-col items-center gap-2">
+<div class="w-16 h-16 rounded-full bg-white dark:bg-[#35252a] border-2 border-[#f2e6e9] dark:border-[#4a353b] flex items-center justify-center text-[#9a4c5f] group-hover:border-primary/30 transition-all group-active:scale-95 shadow-sm">
+<span class="material-symbols-outlined text-2xl">medication</span>
+</div>
+<span class="text-xs font-semibold text-[#9a4c5f] dark:text-[#dcbabf]">Health</span>
+</button>
+<!-- More -->
+<button class="group flex flex-col items-center gap-2">
+<div class="w-16 h-16 rounded-full bg-transparent border-2 border-dashed border-[#dcbabf] flex items-center justify-center text-[#dcbabf] group-hover:border-primary/50 group-hover:text-primary transition-all group-active:scale-95">
+<span class="material-symbols-outlined text-2xl">add</span>
+</div>
+<span class="text-xs font-semibold text-[#9a4c5f] dark:text-[#dcbabf]">More</span>
+</button>
+</div>
+</div>
+<!-- Photo Upload -->
+<div class="mb-8">
+<label class="block text-[#9a4c5f] dark:text-[#dcbabf] text-sm font-bold mb-3 ml-2">Add a Memory</label>
+<div class="w-full h-32 rounded-3xl border-2 border-dashed border-[#dcbabf] bg-[#fcf8f9] dark:bg-[#35252a] dark:border-[#4a353b] flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-[#fff0f3] dark:hover:bg-[#402d33] transition-colors group">
+<div class="w-10 h-10 rounded-full bg-[#f3e7ea] dark:bg-[#2a1d21] flex items-center justify-center text-[#9a4c5f] group-hover:text-primary group-hover:scale-110 transition-all">
+<span class="material-symbols-outlined">add_a_photo</span>
+</div>
+<span class="text-xs font-medium text-[#9a4c5f]/70 dark:text-[#dcbabf]/70">Upload receipt or photo</span>
+</div>
+</div>
+</div>
+<!-- Sticky Footer Action -->
+<div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-paper via-paper to-transparent dark:from-paper-dark dark:via-paper-dark z-30">
+<button class="w-full h-16 bg-primary hover:bg-[#d63a61] text-white rounded-full font-bold text-lg shadow-lg shadow-primary/30 flex items-center justify-center gap-2 transition-transform transform active:scale-95 border-b-4 border-[#c92a51]">
+<span class="material-symbols-outlined">auto_stories</span>
+<span>Save to Diary</span>
+</button>
+</div>
+</div>
+</body></html>

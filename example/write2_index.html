@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Add Expense - Fairy Tale Edition</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#E27D60","secondary": "#85DCBA","accent": "#E8A87C","paper-cream": "#FFFDF7",
+                        "paper-texture": "#F9F5F0",
+                        "ink": "#5D4037","ink-light": "#8D6E63",
+                        "gold": "#D4AF37","mac-pink": "#FFB7B2",
+                        "mac-green": "#E2F0CB", 
+                        "mac-blue": "#C7CEEA",
+                        "mac-yellow": "#FFF4BD",
+                        "mac-purple": "#E0BBE4",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"],
+                        "hand": ["Caveat", "cursive"],},
+                    borderRadius: {
+                        "DEFAULT": "1rem", 
+                        "lg": "2rem", 
+                        "xl": "3rem", 
+                        "blob": "40% 60% 70% 30% / 40% 50% 60% 50%",},
+                    boxShadow: {
+                        "watercolor": "0 10px 30px -5px rgba(226, 125, 96, 0.25)",
+                        "paper": "0 -8px 30px rgba(93, 64, 55, 0.08)",
+                        "inner-soft": "inset 0 2px 4px 0 rgba(0, 0, 0, 0.03)"
+                    }
+                },
+            },
+        }
+    </script>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }.watercolor-paper {
+            background-color: #FFFDF7;
+            background-image: 
+                radial-gradient(#E8A87C 0.5px, transparent 0.5px), 
+                radial-gradient(#E8A87C 0.5px, #FFFDF7 0.5px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            opacity: 1;
+        }.lace-edge::before {
+            content: "";
+            position: absolute;
+            top: -12px;
+            left: 0;
+            right: 0;
+            height: 12px;
+            background-image: radial-gradient(circle at 10px 12px, transparent 8px, #FFFDF7 9px);
+            background-size: 20px 20px;
+            background-repeat: repeat-x;
+        }.divider-scallop {
+            height: 12px;
+            background-image: radial-gradient(circle at 6px 0px, transparent 5px, #fcebeb 6px);
+            background-size: 12px 12px;
+            background-position: 0 12px;
+            background-repeat: repeat-x;
+            transform: rotate(180deg);
+        }.watercolor-radio:checked + div {
+            background-image: linear-gradient(135deg, #FFB7B2 0%, #E8A87C 100%);
+            color: white;
+            transform: scale(1.05) rotate(-1deg);
+            box-shadow: 0 4px 12px rgba(226, 125, 96, 0.3);
+            border: none;
+        }
+        .blob-shape {
+            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+        }
+        .blob-shape-2 {
+            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+        }@keyframes wash {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .watercolor-btn {
+            background-size: 200% 200%;
+            animation: wash 6s ease infinite;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-[#F8E8E8] dark:bg-[#2C1E21] font-display flex flex-col items-center justify-end min-h-screen relative overflow-hidden">
+<div class="absolute inset-0 z-0">
+<img class="w-full h-full object-cover opacity-60 blur-sm mix-blend-overlay" data-alt="Blurred aesthetic desk with flowers and stationery background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBck5R8r_cpwbBqKxCk9iVFWCFjYQ2zgq6eguRJ7ZZLWtyULD83ZgpD37vnG_m95DrZoLBXKUz-NufQL3goYpZht6yibGFncSaAqUtgpYAtNMzEbyHjtgh9xhBi6zeH2DjOLfOgFqxpGFM-_KzRREdatGJJEBhjr-VWzKD3B1lUtHHVCFDrG031tDMNZiZCzzoD_s71SfrE5BOTcYkY9lvkcCzPcOXHaxjRcT9C3ZT78urBqolKN1WXzRTXJ7SA_QCi-yYfY2kAq7c"/>
+<div class="absolute inset-0 bg-gradient-to-b from-[#FDECEC]/60 to-[#F2D7D5]/80 backdrop-blur-[2px]"></div>
+</div>
+<div class="relative z-10 w-full max-w-md h-[94vh] bg-paper-cream dark:bg-[#2A2325] rounded-t-[40px] shadow-paper flex flex-col overflow-hidden group/design-root lace-edge border-x border-[#EFE5E5]">
+<div class="absolute top-3 left-4 right-4 h-0.5 border-t-2 border-dashed border-ink/10 dark:border-white/10 z-0"></div>
+<div class="pt-6 pb-2 px-6 flex flex-col items-center shrink-0 relative z-10">
+<div class="absolute -top-1 right-8 w-10 h-16 bg-gradient-to-b from-mac-pink to-primary shadow-md flex items-end justify-center pb-2 z-20">
+<div class="w-0 h-0 border-l-[20px] border-r-[20px] border-b-[12px] border-l-transparent border-r-transparent border-b-paper-cream dark:border-b-[#2A2325] mb-[-8px]"></div>
+<div class="absolute inset-x-1.5 bottom-4 top-0 border-x border-dashed border-white/40"></div>
+</div>
+<button class="flex h-6 w-20 items-center justify-center mb-1">
+<div class="h-1.5 w-full rounded-full bg-[#D7CCC8]/60"></div>
+</button>
+<div class="flex items-center gap-2 mt-2">
+<span class="material-symbols-outlined text-primary text-xl" style="font-variation-settings: 'FILL' 1;">auto_stories</span>
+<span class="text-ink dark:text-mac-pink text-2xl font-hand font-bold tracking-wide">Story of Spending</span>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto no-scrollbar px-6 pb-32 pt-2 relative">
+<div class="absolute inset-0 opacity-30 pointer-events-none" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDpuW6joYgrifOKZ5eTnQQEc3r9U_wzzOMGrdZyTjKCz5U-RZGJXZMMjTE7JsHeFg795zufpVCFsbB1fnCvnskSDLclKCHRdah9KQ1H8MMLG5Qi4geNFgFmbu2oaeNDEUQDIADkh8h8jiYbIRSeEahtzwxCV9hMawtMEOHpb79rxFbRDlH6suYcMa_zept5Y3XNgyd1jXHTwdPMjqxD-qR3Zbj_4g4F21xYORTICDerOmq6V9k5e7vD8Qqq0P_0hxFSSTAqfR11s3c');"></div>
+<div class="flex flex-col items-center justify-center py-6 relative">
+<div class="absolute inset-0 bg-gradient-to-tr from-mac-pink/20 via-transparent to-mac-yellow/20 blur-xl rounded-full scale-75"></div>
+<div class="relative w-full text-center z-10">
+<label class="sr-only" for="amount">Amount</label>
+<div class="flex items-baseline justify-center gap-1 text-ink">
+<span class="text-3xl font-hand font-bold text-ink-light">$</span>
+<input autofocus="" class="w-56 bg-transparent border-none p-0 text-[5rem] leading-none font-hand font-bold text-center text-primary focus:ring-0 placeholder-primary/20 drop-shadow-sm" id="amount" placeholder="0" type="number"/>
+</div>
+<div class="h-2 w-32 mx-auto mt-0 relative">
+<svg class="w-full h-full text-primary/40" preserveAspectRatio="none" viewBox="0 0 100 10">
+<path d="M0 5 Q 50 10 100 5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+</div>
+<div class="mb-8 relative z-20 group">
+<label class="block text-ink-light dark:text-mac-pink text-lg font-hand font-bold mb-1 ml-2 transform rotate-[-1deg]">
+<span class="inline-block border-b-2 border-mac-yellow/50 px-1">What's the story?</span>
+</label>
+<div class="relative">
+<div class="flex items-center bg-white/50 dark:bg-[#3E3236] rounded-xl border-b-[3px] border-[#EFE5E5] dark:border-[#4A3B40] focus-within:border-primary/50 focus-within:bg-white dark:focus-within:bg-[#3E3236] transition-all duration-300 shadow-sm">
+<div class="pl-4 text-primary/70">
+<span class="material-symbols-outlined text-2xl">edit_note</span>
+</div>
+<input class="w-full bg-transparent border-none h-14 text-xl text-ink dark:text-white placeholder-ink-light/40 focus:ring-0 px-4 font-hand font-bold tracking-wide" placeholder="e.g. Magic Beans..." value=""/>
+</div>
+<div class="absolute -right-2 -top-4 text-2xl filter drop-shadow-sm transform rotate-12 pointer-events-none">✨</div>
+</div>
+</div>
+<div class="mb-10">
+<label class="block text-ink-light dark:text-mac-pink text-lg font-hand font-bold mb-3 ml-2">Who's the hero?</label>
+<div class="flex gap-3 justify-between">
+<label class="flex-1 cursor-pointer group relative">
+<input checked="" class="peer sr-only watercolor-radio" name="payer_type" type="radio" value="I Paid"/>
+<div class="h-16 rounded-2xl border-2 border-dashed border-[#EFE5E5] bg-white/60 dark:bg-[#3E3236] flex flex-col items-center justify-center transition-all duration-300 text-ink-light hover:bg-white dark:hover:bg-[#4A3B40]">
+<span class="material-symbols-outlined text-2xl mb-1 text-mac-pink group-hover:scale-110 transition-transform">face_3</span>
+<span class="text-sm font-bold font-hand">Me</span>
+</div>
+<div class="absolute -top-2 -right-2 bg-gold text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm scale-0 peer-checked:scale-100 transition-transform">
+<span class="material-symbols-outlined text-xs font-bold">check</span>
+</div>
+</label>
+<label class="flex-1 cursor-pointer group relative">
+<input class="peer sr-only watercolor-radio" name="payer_type" type="radio" value="Partner Paid"/>
+<div class="h-16 rounded-2xl border-2 border-dashed border-[#EFE5E5] bg-white/60 dark:bg-[#3E3236] flex flex-col items-center justify-center transition-all duration-300 text-ink-light hover:bg-white dark:hover:bg-[#4A3B40]">
+<span class="material-symbols-outlined text-2xl mb-1 text-mac-blue group-hover:scale-110 transition-transform">favorite</span>
+<span class="text-sm font-bold font-hand">Partner</span>
+</div>
+<div class="absolute -top-2 -right-2 bg-gold text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm scale-0 peer-checked:scale-100 transition-transform">
+<span class="material-symbols-outlined text-xs font-bold">check</span>
+</div>
+</label>
+<label class="flex-1 cursor-pointer group relative">
+<input class="peer sr-only watercolor-radio" name="payer_type" type="radio" value="Split"/>
+<div class="h-16 rounded-2xl border-2 border-dashed border-[#EFE5E5] bg-white/60 dark:bg-[#3E3236] flex flex-col items-center justify-center transition-all duration-300 text-ink-light hover:bg-white dark:hover:bg-[#4A3B40]">
+<span class="material-symbols-outlined text-2xl mb-1 text-mac-green group-hover:scale-110 transition-transform">safety_divider</span>
+<span class="text-sm font-bold font-hand">Split</span>
+</div>
+<div class="absolute -top-2 -right-2 bg-gold text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm scale-0 peer-checked:scale-100 transition-transform">
+<span class="material-symbols-outlined text-xs font-bold">check</span>
+</div>
+</label>
+</div>
+</div>
+<div class="mb-10">
+<label class="block text-ink-light dark:text-mac-pink text-lg font-hand font-bold mb-4 ml-2">Which Chapter?</label>
+<div class="grid grid-cols-4 gap-y-6 gap-x-4">
+<button class="group flex flex-col items-center gap-2">
+<div class="relative w-16 h-16 flex items-center justify-center">
+<div class="absolute inset-0 blob-shape bg-gradient-to-br from-[#FF9EAA] to-[#FFB7B2] shadow-watercolor scale-110 rotate-3 transform transition-transform group-hover:scale-125 group-active:scale-95"></div>
+<span class="material-symbols-outlined text-3xl text-white relative z-10 drop-shadow-sm">restaurant</span>
+<div class="absolute -top-1 -right-1 text-gold text-xl drop-shadow-sm animate-pulse">✦</div>
+</div>
+<span class="text-sm font-hand font-bold text-primary">Feast</span>
+</button>
+<button class="group flex flex-col items-center gap-2">
+<div class="w-16 h-16 blob-shape-2 bg-mac-blue/20 hover:bg-mac-blue/40 flex items-center justify-center text-ink-light group-hover:text-ink transition-all group-active:scale-95 border-2 border-transparent group-hover:border-mac-blue/30">
+<span class="material-symbols-outlined text-2xl">directions_subway</span>
+</div>
+<span class="text-sm font-hand font-bold text-ink-light">Travel</span>
+</button>
+<button class="group flex flex-col items-center gap-2">
+<div class="w-16 h-16 rounded-[30%_70%_70%_30%_/_30%_30%_70%_70%] bg-mac-pink/20 hover:bg-mac-pink/40 flex items-center justify-center text-ink-light group-hover:text-ink transition-all group-active:scale-95 border-2 border-transparent group-hover:border-mac-pink/30">
+<span class="material-symbols-outlined text-2xl">local_activity</span>
+</div>
+<span class="text-sm font-hand font-bold text-ink-light">Date</span>
+</button>
+<button class="group flex flex-col items-center gap-2">
+<div class="w-16 h-16 rounded-[40%_60%_60%_40%_/_60%_30%_70%_40%] bg-mac-purple/20 hover:bg-mac-purple/40 flex items-center justify-center text-ink-light group-hover:text-ink transition-all group-active:scale-95 border-2 border-transparent group-hover:border-mac-purple/30">
+<span class="material-symbols-outlined text-2xl">shopping_bag</span>
+</div>
+<span class="text-sm font-hand font-bold text-ink-light">Treasure</span>
+</button>
+<button class="group flex flex-col items-center gap-2">
+<div class="w-16 h-16 blob-shape bg-mac-yellow/30 hover:bg-mac-yellow/50 flex items-center justify-center text-ink-light group-hover:text-ink transition-all group-active:scale-95 border-2 border-transparent group-hover:border-mac-yellow/40">
+<span class="material-symbols-outlined text-2xl">redeem</span>
+</div>
+<span class="text-sm font-hand font-bold text-ink-light">Gift</span>
+</button>
+<button class="group flex flex-col items-center gap-2">
+<div class="w-16 h-16 blob-shape-2 bg-mac-green/20 hover:bg-mac-green/40 flex items-center justify-center text-ink-light group-hover:text-ink transition-all group-active:scale-95 border-2 border-transparent group-hover:border-mac-green/30">
+<span class="material-symbols-outlined text-2xl">cottage</span>
+</div>
+<span class="text-sm font-hand font-bold text-ink-light">Castle</span>
+</button>
+<button class="group flex flex-col items-center gap-2">
+<div class="w-16 h-16 rounded-[50%_50%_40%_60%_/_50%_40%_60%_50%] bg-[#FFCCBC]/30 hover:bg-[#FFCCBC]/50 flex items-center justify-center text-ink-light group-hover:text-ink transition-all group-active:scale-95 border-2 border-transparent group-hover:border-[#FFCCBC]/40">
+<span class="material-symbols-outlined text-2xl">medication</span>
+</div>
+<span class="text-sm font-hand font-bold text-ink-light">Potion</span>
+</button>
+<button class="group flex flex-col items-center gap-2">
+<div class="w-16 h-16 rounded-full border-2 border-dashed border-ink-light/30 flex items-center justify-center text-ink-light/50 group-hover:border-primary/50 group-hover:text-primary transition-all group-active:scale-95 bg-white/30">
+<span class="material-symbols-outlined text-2xl">add</span>
+</div>
+<span class="text-sm font-hand font-bold text-ink-light">More</span>
+</button>
+</div>
+</div>
+<div class="mb-8">
+<label class="block text-ink-light dark:text-mac-pink text-lg font-hand font-bold mb-3 ml-2">Capture the Memory</label>
+<div class="w-full h-36 rounded-2xl border-4 border-[#F5E6E6] bg-white dark:bg-[#3E3236] dark:border-[#4A3B40] relative flex flex-col items-center justify-center gap-2 cursor-pointer group shadow-sm overflow-hidden">
+<div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#E27D60 1px, transparent 1px); background-size: 10px 10px;"></div>
+<div class="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-6 bg-[#E0E0E0]/60 rotate-2 backdrop-blur-sm z-10 shadow-sm"></div>
+<div class="w-14 h-14 rounded-full bg-[#FFF0F0] dark:bg-[#2A2325] flex items-center justify-center text-[#E27D60] group-hover:scale-110 transition-all duration-300 shadow-inner">
+<span class="material-symbols-outlined text-3xl">add_a_photo</span>
+</div>
+<span class="text-sm font-hand font-bold text-ink-light/70 relative z-10">Paste a picture here</span>
+</div>
+</div>
+</div>
+<div class="absolute bottom-0 left-0 right-0 p-6 z-30">
+<div class="absolute bottom-full left-0 right-0 h-12 bg-gradient-to-t from-paper-cream dark:from-[#2A2325] to-transparent pointer-events-none"></div>
+<button class="w-full h-16 bg-gradient-to-r from-[#E27D60] to-[#E8A87C] hover:from-[#d66c4f] hover:to-[#db996d] text-white rounded-xl font-hand font-bold text-2xl shadow-watercolor flex items-center justify-center gap-3 transition-transform transform active:scale-[0.98] relative overflow-hidden group border-b-[6px] border-[#BF5D42]">
+<div class="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+<span class="material-symbols-outlined">auto_stories</span>
+<span>Seal in Diary</span>
+<span class="material-symbols-outlined text-sm opacity-60">edit</span>
+</button>
+</div>
+</div>
+
+</body></html>
