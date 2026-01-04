@@ -127,37 +127,29 @@ export class TransactionRenderer {
         const time = new Date(tx.created_at);
         const timeStr = `${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`;
 
-        // 寶寶付款：圓點在左邊，卡片靠右
-        // 步步付款：圓點在右邊，卡片靠左
+        // 寶寶付款：卡片偏左，圓點在左邊
+        // 步步付款：卡片偏右，圓點在右邊
         if (isBaobao) {
             return `
-                <div class="relative mb-6">
+                <div class="relative mb-6 flex justify-start">
                     <!-- 時間軸點 - 寶寶（左邊）-->
-                    <div class="absolute -left-8 top-6 w-4 h-4 rounded-full ${payerDotClass} border-[3px] shadow-sm z-10"></div>
+                    <div class="absolute -left-8 top-3 w-4 h-4 rounded-full ${payerDotClass} border-[3px] shadow-sm z-10"></div>
 
-                    <!-- 交易卡片 - 向右 -->
-                    <div class="transaction-item bg-white rounded-2xl p-4 shadow-watercolor-layered hover:shadow-floating transition-all cursor-pointer group ${payerBorderClass}" data-transaction-id="${tx.id}">
-                        <!-- 時間標籤 -->
-                        <div class="flex items-center gap-2 mb-3">
-                            <span class="text-xs font-hand font-bold text-warm-brown/60">${timeStr}</span>
-                            <div class="h-px flex-1 bg-warm-brown/10"></div>
-                            <!-- 付款人標記 -->
-                            <span class="px-2 py-0.5 rounded-full ${payerBadgeClass} text-xs font-bold">寶寶付</span>
-                        </div>
-
+                    <!-- 交易卡片 - 偏左，內容：寶寶付 → 價錢 → 名稱 -->
+                    <div class="transaction-item max-w-[85%] bg-white rounded-2xl p-3 shadow-watercolor-layered hover:shadow-floating transition-all cursor-pointer group ${payerBorderClass}" data-transaction-id="${tx.id}">
                         <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 rounded-xl ${colorClass} flex items-center justify-center text-soft-ink shrink-0 group-hover:scale-110 transition-transform">
-                                <span class="material-symbols-outlined text-xl">${icon}</span>
+                            <!-- 寶寶付標籤 -->
+                            <span class="px-2 py-0.5 rounded-full ${payerBadgeClass} text-xs font-bold shrink-0">寶寶付</span>
+
+                            <!-- 價錢 -->
+                            <div class="shrink-0">
+                                <div class="font-display font-bold text-lg text-[#E27D60]">$${tx.amount}</div>
                             </div>
+
+                            <!-- 名稱 -->
                             <div class="flex-1 min-w-0">
-                                <h4 class="font-hand font-bold text-lg text-soft-ink truncate">${tx.item_name}</h4>
-                                <p class="text-sm text-warm-brown/80 mt-0.5">
-                                    付給 ${beneficiaryText}
-                                </p>
-                                ${tx.note ? `<p class="text-xs text-warm-brown/60 mt-1 italic truncate">📝 ${tx.note}</p>` : ''}
-                            </div>
-                            <div class="text-right shrink-0">
-                                <div class="font-display font-bold text-xl text-[#E27D60] break-words">$${tx.amount}</div>
+                                <h4 class="font-hand font-bold text-base text-soft-ink truncate">${tx.item_name}</h4>
+                                ${tx.note ? `<p class="text-xs text-warm-brown/60 italic truncate">📝 ${tx.note}</p>` : ''}
                             </div>
                         </div>
                     </div>
@@ -165,33 +157,25 @@ export class TransactionRenderer {
             `;
         } else {
             return `
-                <div class="relative mb-6">
+                <div class="relative mb-6 flex justify-end">
                     <!-- 時間軸點 - 步步（右邊）-->
-                    <div class="absolute -right-8 top-6 w-4 h-4 rounded-full ${payerDotClass} border-[3px] shadow-sm z-10"></div>
+                    <div class="absolute -right-8 top-3 w-4 h-4 rounded-full ${payerDotClass} border-[3px] shadow-sm z-10"></div>
 
-                    <!-- 交易卡片 - 向左 -->
-                    <div class="transaction-item bg-white rounded-2xl p-4 shadow-watercolor-layered hover:shadow-floating transition-all cursor-pointer group ${payerBorderClass}" data-transaction-id="${tx.id}">
-                        <!-- 時間標籤 -->
-                        <div class="flex items-center gap-2 mb-3">
-                            <!-- 付款人標記 -->
-                            <span class="px-2 py-0.5 rounded-full ${payerBadgeClass} text-xs font-bold">步步付</span>
-                            <div class="h-px flex-1 bg-warm-brown/10"></div>
-                            <span class="text-xs font-hand font-bold text-warm-brown/60">${timeStr}</span>
-                        </div>
-
+                    <!-- 交易卡片 - 偏右，內容：步步付 → 價錢 → 名稱 -->
+                    <div class="transaction-item max-w-[85%] bg-white rounded-2xl p-3 shadow-watercolor-layered hover:shadow-floating transition-all cursor-pointer group ${payerBorderClass}" data-transaction-id="${tx.id}">
                         <div class="flex items-center gap-3">
-                            <div class="text-left shrink-0">
-                                <div class="font-display font-bold text-xl text-[#E27D60] break-words">$${tx.amount}</div>
+                            <!-- 步步付標籤 -->
+                            <span class="px-2 py-0.5 rounded-full ${payerBadgeClass} text-xs font-bold shrink-0">步步付</span>
+
+                            <!-- 價錢 -->
+                            <div class="shrink-0">
+                                <div class="font-display font-bold text-lg text-[#E27D60]">$${tx.amount}</div>
                             </div>
+
+                            <!-- 名稱 -->
                             <div class="flex-1 min-w-0">
-                                <h4 class="font-hand font-bold text-lg text-soft-ink truncate">${tx.item_name}</h4>
-                                <p class="text-sm text-warm-brown/80 mt-0.5">
-                                    付給 ${beneficiaryText}
-                                </p>
-                                ${tx.note ? `<p class="text-xs text-warm-brown/60 mt-1 italic truncate">📝 ${tx.note}</p>` : ''}
-                            </div>
-                            <div class="w-12 h-12 rounded-xl ${colorClass} flex items-center justify-center text-soft-ink shrink-0 group-hover:scale-110 transition-transform">
-                                <span class="material-symbols-outlined text-xl">${icon}</span>
+                                <h4 class="font-hand font-bold text-base text-soft-ink truncate">${tx.item_name}</h4>
+                                ${tx.note ? `<p class="text-xs text-warm-brown/60 italic truncate">📝 ${tx.note}</p>` : ''}
                             </div>
                         </div>
                     </div>
