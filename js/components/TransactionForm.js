@@ -119,7 +119,7 @@ export class TransactionForm {
      * 新增自訂分類
      */
     async addCustomCategory() {
-        const categoryName = prompt('請輸入新分類名稱：');
+        const categoryName = await window.customDialog.prompt('請輸入新分類名稱', '', '新增分類');
         if (!categoryName || !categoryName.trim()) return;
 
         const trimmedName = categoryName.trim();
@@ -127,7 +127,7 @@ export class TransactionForm {
         // 檢查是否已存在
         const existingCategories = window.DataManager.getCustomCategories();
         if (existingCategories.some(cat => cat.name === trimmedName)) {
-            alert('此分類已存在！');
+            await window.customDialog.error('此分類已存在！');
             return;
         }
 
@@ -138,10 +138,10 @@ export class TransactionForm {
             // 重新渲染分類列表
             this.renderCustomCategories();
 
-            alert(`✨ 已新增分類「${trimmedName}」！`);
+            await window.customDialog.success(`已新增分類「${trimmedName}」！`);
         } catch (error) {
             console.error('❌ 新增分類失敗:', error);
-            alert('新增分類失敗：' + error.message);
+            await window.customDialog.error('新增分類失敗：' + error.message);
         }
     }
 
@@ -221,7 +221,7 @@ export class TransactionForm {
 
             if (!window.DataManager) {
                 console.error('❌ DataManager 不存在');
-                alert('系統錯誤：資料管理器未初始化');
+                await window.customDialog.error('系統錯誤：資料管理器未初始化');
                 return;
             }
 
@@ -237,10 +237,10 @@ export class TransactionForm {
             }
 
             // 簡單的成功提示
-            alert('✨ 交易已記入日記！');
+            await window.customDialog.success('交易已記入日記！');
         } catch (error) {
             console.error('❌ 提交交易時發生錯誤:', error);
-            alert('發生錯誤：' + error.message);
+            await window.customDialog.error('發生錯誤：' + error.message);
         }
     }
 }

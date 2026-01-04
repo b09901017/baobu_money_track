@@ -40,7 +40,12 @@ async function signInWithGoogle() {
         return user;
     } catch (error) {
         console.error('❌ 登入失敗:', error);
-        alert('登入失敗：' + error.message);
+        // 使用自訂對話框或降級到原生 alert
+        if (window.customDialog) {
+            await window.customDialog.error('登入失敗：' + error.message);
+        } else {
+            alert('登入失敗：' + error.message);
+        }
         throw error;
     }
 }

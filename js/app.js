@@ -16,6 +16,8 @@ import { CalendarPage } from './pages/CalendarPage.js';
 import { NotebooksPage } from './pages/NotebooksPage.js';
 import { AnalyticsPage } from './pages/AnalyticsPage.js';
 
+import customDialog from './utils/CustomDialog.js';
+
 class CoupleApp {
     constructor() {
         // 初始化狀態管理
@@ -35,6 +37,12 @@ class CoupleApp {
     }
 
     initComponents() {
+        // 初始化自訂對話框
+        customDialog.init();
+
+        // 掛載到全域 (方便其他模組使用)
+        window.customDialog = customDialog;
+
         // 結算卡片
         this.balanceCard = new BalanceCard();
 
@@ -174,7 +182,9 @@ function initializeApp() {
                 }
             } catch (error) {
                 console.error('❌ 應用初始化失敗:', error);
-                alert('初始化失敗，請重新整理頁面');
+                if (window.customDialog) {
+                    await window.customDialog.error('初始化失敗，請重新整理頁面');
+                }
             }
         },
 

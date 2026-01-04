@@ -431,7 +431,7 @@
                 </div>
             </div>
 
-            <form id="transactionForm" class="flex-1 overflow-y-auto no-scrollbar px-6 pb-32 pt-2 relative">
+            <form id="transactionForm" class="flex-1 overflow-y-auto no-scrollbar px-6 pb-6 pt-2 relative">
                 <div class="absolute inset-0 opacity-20 pointer-events-none book-texture"></div>
 
                 <!-- 金額輸入 -->
@@ -528,7 +528,7 @@
                 </div>
 
                 <!-- 分類 -->
-                <div class="mb-10 pb-24">
+                <div class="mb-10">
                     <label class="block text-warm-brown text-lg font-hand font-bold mb-4 ml-2">哪一章？</label>
                     <div class="grid grid-cols-4 gap-y-6 gap-x-4" id="categoryTags">
                         <button type="button" class="tag-btn group flex flex-col items-center gap-2" data-category="吃吃">
@@ -595,7 +595,7 @@
                 </div>
 
                 <!-- 日期 -->
-                <div class="mb-8">
+                <div class="mb-6">
                     <label class="block text-warm-brown text-lg font-hand font-bold mb-3 ml-2">日期</label>
                     <div class="flex items-center bg-white/50 rounded-xl border-b-[3px] border-macaron-rose shadow-sm">
                         <div class="pl-4 text-[#E27D60]/70">
@@ -605,17 +605,18 @@
                     </div>
                 </div>
 
-                <!-- 提交按鈕 -->
-                <div class="absolute bottom-0 left-0 right-0 p-6 z-30">
-                    <div class="absolute bottom-full left-0 right-0 h-12 bg-gradient-to-t from-paper to-transparent pointer-events-none"></div>
-                    <button type="submit" class="w-full h-16 bg-gradient-to-r from-[#E27D60] to-[#E8A87C] hover:from-[#d66c4f] hover:to-[#db996d] text-white rounded-xl font-hand font-bold text-2xl shadow-watercolor-layered flex items-center justify-center gap-3 transition-transform transform active:scale-[0.98] relative overflow-hidden group border-b-[6px] border-[#BF5D42]">
-                        <div class="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                        <span class="material-symbols-outlined">auto_stories</span>
-                        <span>記入日記</span>
-                        <span class="material-symbols-outlined text-sm opacity-60">edit</span>
-                    </button>
-                </div>
             </form>
+
+            <!-- 提交按鈕（移到 form 外部，固定在底部）-->
+            <div class="shrink-0 p-6 bg-paper border-t border-macaron-rose/20 relative">
+                <div class="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-paper to-transparent pointer-events-none -translate-y-full"></div>
+                <button type="submit" form="transactionForm" class="w-full h-16 bg-gradient-to-r from-[#E27D60] to-[#E8A87C] hover:from-[#d66c4f] hover:to-[#db996d] text-white rounded-xl font-hand font-bold text-2xl shadow-watercolor-layered flex items-center justify-center gap-3 transition-transform transform active:scale-[0.98] relative overflow-hidden group border-b-[6px] border-[#BF5D42]">
+                    <div class="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                    <span class="material-symbols-outlined">auto_stories</span>
+                    <span>記入日記</span>
+                    <span class="material-symbols-outlined text-sm opacity-60">edit</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -785,6 +786,59 @@
                 </button>
                 <button id="btnApplyRange" class="flex-1 h-12 rounded-xl bg-gradient-to-r from-macaron-pink to-[#E8A87C] hover:from-[#FFD4C9] hover:to-[#EBB08C] text-white font-hand font-bold transition-all">
                     確定
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 自訂輸入框模態框 (童話風格) -->
+    <div id="customPromptModal" class="fixed inset-0 z-[120] hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="customPromptOverlay"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm bg-paper rounded-3xl shadow-2xl p-6 border-2 border-macaron-pink/30">
+            <!-- 裝飾元素 -->
+            <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-20 h-6 bg-gradient-to-r from-macaron-pink to-macaron-rose rounded-full shadow-md"></div>
+            <div class="absolute top-2 right-4 text-shimmer-gold text-xl animate-pulse">✨</div>
+            <div class="absolute top-2 left-4 text-shimmer-gold text-xl animate-pulse" style="animation-delay: 0.5s;">✦</div>
+
+            <div class="text-center mb-6 mt-2">
+                <h3 id="customPromptTitle" class="text-2xl font-hand font-bold text-soft-ink mb-2">請輸入</h3>
+                <p id="customPromptMessage" class="text-sm text-warm-brown/70 font-hand"></p>
+            </div>
+
+            <div class="mb-6">
+                <div class="relative">
+                    <input type="text" id="customPromptInput" class="w-full bg-white/80 border-2 border-macaron-rose/40 rounded-xl px-4 py-3 text-soft-ink placeholder-warm-brown/40 focus:ring-0 focus:border-[#E27D60] font-hand text-lg transition-all" placeholder="輸入內容...">
+                    <div class="absolute -right-2 -top-3 text-2xl filter drop-shadow-sm transform rotate-12 pointer-events-none">📝</div>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button id="customPromptCancel" class="flex-1 h-12 rounded-xl bg-warm-brown/10 hover:bg-warm-brown/20 font-hand font-bold text-warm-brown transition-all active:scale-95">
+                    取消
+                </button>
+                <button id="customPromptConfirm" class="flex-1 h-12 rounded-xl bg-gradient-to-r from-macaron-pink to-[#E8A87C] hover:from-[#FFD4C9] hover:to-[#EBB08C] text-white font-hand font-bold transition-all active:scale-95 shadow-watercolor-layered">
+                    確定
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 自訂通知框模態框 (童話風格) -->
+    <div id="customAlertModal" class="fixed inset-0 z-[120] hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="customAlertOverlay"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm bg-paper rounded-3xl shadow-2xl p-6 border-2 border-macaron-blue/30">
+            <!-- 裝飾元素 -->
+            <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-20 h-6 bg-gradient-to-r from-macaron-blue to-macaron-purple rounded-full shadow-md"></div>
+            <div class="absolute top-3 right-5 text-2xl" id="customAlertIcon">💫</div>
+
+            <div class="text-center mb-6 mt-2">
+                <h3 id="customAlertTitle" class="text-2xl font-hand font-bold text-soft-ink mb-3">通知</h3>
+                <p id="customAlertMessage" class="text-base text-warm-brown font-hand leading-relaxed"></p>
+            </div>
+
+            <div class="flex justify-center">
+                <button id="customAlertConfirm" class="px-8 h-12 rounded-xl bg-gradient-to-r from-macaron-blue to-macaron-purple hover:from-macaron-blue/80 hover:to-macaron-purple/80 text-white font-hand font-bold transition-all active:scale-95 shadow-watercolor-layered">
+                    知道了
                 </button>
             </div>
         </div>

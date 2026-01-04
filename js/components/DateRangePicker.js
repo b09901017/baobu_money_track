@@ -70,12 +70,12 @@ export class DateRangePicker {
      * 設定快速範圍
      * @param {string|number} days - 天數或 'all'
      */
-    setQuickRange(days) {
+    async setQuickRange(days) {
         if (days === 'all') {
             // 全部：選擇所有交易
             const transactions = window.DataManager.getTransactions();
             if (transactions.length === 0) {
-                alert('目前沒有任何交易記錄');
+                await window.customDialog.info('目前沒有任何交易記錄');
                 return;
             }
 
@@ -252,12 +252,12 @@ export class DateRangePicker {
     /**
      * 套用日期範圍
      */
-    applyRange() {
+    async applyRange() {
         const startStr = document.getElementById('rangeStartDate').value;
         const endStr = document.getElementById('rangeEndDate').value;
 
         if (!startStr || !endStr) {
-            alert('請選擇開始和結束日期');
+            await window.customDialog.info('請選擇開始和結束日期');
             return;
         }
 
@@ -265,7 +265,7 @@ export class DateRangePicker {
         const end = new Date(endStr + 'T00:00:00');
 
         if (start > end) {
-            alert('開始日期不能晚於結束日期');
+            await window.customDialog.error('開始日期不能晚於結束日期');
             return;
         }
 

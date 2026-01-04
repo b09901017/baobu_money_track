@@ -112,19 +112,20 @@ export class NotebooksPage {
             }
         } catch (error) {
             console.error('❌ 切換帳本失敗:', error);
-            alert('切換帳本失敗：' + error.message);
+            await window.customDialog.error('切換帳本失敗：' + error.message);
         }
     }
 
     async addNewNotebook() {
-        const name = prompt('請輸入帳本名稱：');
+        const name = await window.customDialog.prompt('請輸入帳本名稱', '', '新增故事本');
         if (name && name.trim()) {
             try {
                 await window.DataManager.addNotebook(name.trim());
                 this.update();
+                await window.customDialog.success(`成功新增故事本「${name.trim()}」！`);
             } catch (error) {
                 console.error('❌ 新增帳本失敗:', error);
-                alert('新增帳本失敗：' + error.message);
+                await window.customDialog.error('新增帳本失敗：' + error.message);
             }
         }
     }
