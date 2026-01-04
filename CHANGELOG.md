@@ -7,6 +7,58 @@
 
 ---
 
+## [2.2.0] - 2026-01-04
+
+### 🌐 部署 (Deployment)
+
+#### Firebase Hosting 上線
+- ✅ 成功部署到 Firebase Hosting
+- ✅ 網站上線：https://baobu-app.web.app
+- ✅ HTTPS 加密連線
+- ✅ 全球 CDN 加速
+
+#### 部署配置
+- 新增 `firebase.json` - Firebase Hosting 配置文件
+- 新增 `.firebaserc` - Firebase 專案配置
+- 新增 `.firebaseignore` - 部署排除文件列表
+- 新增 `firestore.rules` - Firestore 安全規則
+
+#### 安全規則部署
+- ✅ 部署 Firestore 安全規則到雲端
+- ✅ 只允許登入用戶存取資料
+- ✅ 用戶只能讀寫自己的帳本和交易
+- ✅ 防止未授權存取
+
+#### 部署優化
+- 設定圖片快取策略（1 年）
+- 設定 CSS/JS 快取策略（1 天）
+- 排除 `example/` 資料夾（GitHub 範例用）
+- 排除 `.claude/`、`.md` 等開發文件
+- 確保 `config/firebase.config.js` 正確部署（網站運作必需）
+
+### 🔐 安全性 (Security)
+
+#### Firebase Config 部署策略
+- ✅ GitHub: 透過 `.gitignore` 排除 `firebase.config.js`（避免公開在代碼庫）
+- ✅ Firebase Hosting: 確保 `firebase.config.js` 被部署（網站需要）
+- 📚 說明：Firebase 的 `apiKey` 是公開的，真正的安全靠 Firestore 安全規則
+
+#### Firestore 安全規則
+- 實作帳本權限控制（只能存取自己的帳本）
+- 實作交易權限控制（只能操作自己的交易）
+- 實作自訂分類權限控制（只能管理自己的分類）
+
+### 📚 文檔 (Documentation)
+- 更新 README.md 包含部署資訊和線上網站連結
+- 更新 CHANGELOG.md 記錄部署流程
+- 新增 Firebase Hosting 部署步驟說明
+
+### 🛠️ 建置工具 (Build Tools)
+- 安裝 Firebase CLI 工具
+- 配置自動部署流程
+
+---
+
 ## [2.1.0] - 2024-01-15
 
 ### 🔥 新增 (Added)

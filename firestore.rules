@@ -1,0 +1,76 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ==================== 輔助函數 ====================
+
+    // 檢查用戶是否已登入
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // 檢查是否為帳本成員
+    function isNotebookMember(notebookId) {
+      return isSignedIn() &&
+             request.auth.uid in get(/databases/$(database)/documents/notebooks/$(notebookId)).data.member_ids;
+    }
+
+    // ==================== 帳本 (notebooks) ====================
+
+    match /notebooks/{notebookId} {
+      // 讀取：只能讀取自己是成員的帳本
+      allow read: if isSignedIn() &&
+                     request.auth.uid in resource.data.member_ids;
+
+      // 新增：只能新增自己是成員的帳本
+      allow create: if isSignedIn() &&
+                       request.auth.uid in request.resource.data.member_ids &&
+                       request.resource.data.member_ids is list &&
+                       request.resource.data.member_names is map;
+
+      // 更新/刪除：只能修改/刪除自己是成員的帳本
+      allow update, delete: if isSignedIn() &&
+                               request.auth.uid in resource.data.member_ids;
+    }
+
+    // ==================== 交易記錄 (transactions) ====================
+
+    match /transactions/{transactionId} {
+      // 讀取：只能讀取自己的交易（透過 user_id 或 notebook_id 判斷）
+      allow read: if isSignedIn();
+
+      // 新增：只能新增自己的交易，且必須包含 user_id
+      allow create: if isSignedIn() &&
+                       request.resource.data.user_id == request.auth.uid &&
+                       request.resource.data.notebook_id is string &&
+                       request.resource.data.amount is number &&
+                       request.resource.data.item_name is string;
+
+      // 更新：只能更新自己的交易
+      allow update: if isSignedIn() &&
+                       resource.data.user_id == request.auth.uid;
+
+      // 刪除：只能刪除自己的交易
+      allow delete: if isSignedIn() &&
+                       resource.data.user_id == request.auth.uid;
+    }
+
+    // ==================== 自訂分類 (custom_categories) ====================
+
+    match /custom_categories/{categoryId} {
+      // 讀取：只能讀取自己的分類
+      allow read: if isSignedIn() &&
+                     resource.data.user_id == request.auth.uid;
+
+      // 新增：只能新增自己的分類
+      allow create: if isSignedIn() &&
+                       request.resource.data.user_id == request.auth.uid &&
+                       request.resource.data.name is string;
+
+      // 更新/刪除：只能修改/刪除自己的分類
+      allow update, delete: if isSignedIn() &&
+                               resource.data.user_id == request.auth.uid;
+    }
+  }
+}

@@ -2,10 +2,20 @@
 
 > 一個童話風格的情侶共同記帳應用，支援多帳本管理、彈性付款記錄、智能結算功能。
 
-![Version](https://img.shields.io/badge/version-2.1.0-pink)
+![Version](https://img.shields.io/badge/version-2.2.0-pink)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow)
 ![Firebase](https://img.shields.io/badge/Firebase-Integrated-orange)
+![Live](https://img.shields.io/badge/Live-Online-brightgreen)
+
+## 🌐 線上演示
+
+**網站已上線！立即體驗：** [https://baobu-app.web.app](https://baobu-app.web.app)
+
+- ✅ 使用 Google 帳號登入即可開始使用
+- ✅ HTTPS 加密連線，安全可靠
+- ✅ 全球 CDN 加速，快速載入
+- ✅ 即時雲端同步，隨時隨地記帳
 
 ## ✨ 專案特色
 
@@ -466,33 +476,104 @@ service cloud.firestore {
 
 ## 📦 部署
 
-### 靜態網站部署
+### 🌐 線上網站
 
-本專案是純靜態網站，可部署到：
+本專案已部署到 Firebase Hosting：
 
-- **Firebase Hosting**（推薦）
+**正式網站：** [https://baobu-app.web.app](https://baobu-app.web.app)
+
+### 部署架構
+
+本專案使用 **Firebase Hosting + Firestore** 架構：
+
+- **前端**: Firebase Hosting（全球 CDN）
+- **資料庫**: Firebase Firestore（即時同步）
+- **認證**: Firebase Authentication（Google 登入）
+- **安全**: Firestore Security Rules（權限控制）
+
+### 🚀 自行部署步驟
+
+如果你想部署自己的版本：
+
+#### 1. 安裝 Firebase CLI
+
+```bash
+npm install -g firebase-tools
+```
+
+#### 2. 登入 Firebase
+
+```bash
+firebase login
+```
+
+#### 3. 建立 Firebase 專案
+
+1. 前往 [Firebase Console](https://console.firebase.google.com/)
+2. 建立新專案
+3. 啟用 **Authentication**（Google 登入）
+4. 啟用 **Firestore Database**
+5. 啟用 **Hosting**
+
+#### 4. 配置專案
+
+編輯 `.firebaserc`，將 `baobu-app` 改為你的專案 ID：
+
+```json
+{
+  "projects": {
+    "default": "your-project-id"
+  }
+}
+```
+
+#### 5. 部署
+
+```bash
+# 部署 Firestore 安全規則 + Hosting
+firebase deploy
+
+# 或只部署 Hosting
+firebase deploy --only hosting
+
+# 或只部署 Firestore 規則
+firebase deploy --only firestore:rules
+```
+
+#### 6. 更新部署
+
+當你修改代碼後，重新執行：
+
+```bash
+firebase deploy
+```
+
+### 📋 部署配置文件
+
+專案已包含完整的部署配置：
+
+- **`firebase.json`** - Firebase Hosting 和 Firestore 配置
+- **`.firebaserc`** - Firebase 專案設定
+- **`.firebaseignore`** - 部署時排除的文件
+- **`firestore.rules`** - Firestore 安全規則
+
+### 🔐 安全規則
+
+`firestore.rules` 已設定完善的權限控制：
+
+- ✅ 只允許登入用戶存取
+- ✅ 用戶只能讀寫自己的帳本和交易
+- ✅ 防止未授權存取
+
+### 🌍 其他部署選項
+
+本專案也可部署到其他平台：
+
 - **GitHub Pages**
 - **Netlify**
 - **Vercel**
 
-### 部署步驟（以 Firebase Hosting 為例）
-
-```bash
-# 1. 安裝 Firebase CLI
-npm install -g firebase-tools
-
-# 2. 登入 Firebase
-firebase login
-
-# 3. 初始化專案
-firebase init hosting
-
-# 4. 選擇你的 Firebase 專案
-# 5. 設定 public directory 為當前目錄
-
-# 6. 部署
-firebase deploy --only hosting
-```
+但需要自行配置 Firebase 相關設定。
 
 ## 🔧 開發指南
 

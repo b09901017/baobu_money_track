@@ -1,0 +1,67 @@
+# ==================== Firebase Hosting 部署忽略檔案 ====================
+# 此檔案定義哪些檔案不會被部署到 Firebase Hosting
+
+# Git 相關
+.git
+.gitignore
+.gitattributes
+
+# Firebase 相關
+.firebaserc
+firebase.json
+.firebase/
+firebase-debug.log
+firestore-debug.log
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# 文檔（不需要部署）
+*.md
+!README.md
+CHANGELOG.md
+CLAUDE.md
+DESIGN.md
+
+# 配置範例檔案（不需要部署）
+config/firebase.config.example.js
+
+# Example 範例資料夾（給 GitHub 用戶參考，不需要部署）
+example/
+
+# Claude Code 相關（不需要部署）
+.claude/
+
+# 編輯器/IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# 作業系統
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# 測試與建置
+coverage/
+dist/
+build/
+*.test.js
+*.spec.js
+
+# 其他
+.env
+.env.local
+secrets.json
+credentials.json
+service-account.json
+note.txt
+notes/
+TODO.txt
