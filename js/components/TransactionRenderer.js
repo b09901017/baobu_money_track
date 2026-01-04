@@ -63,6 +63,13 @@ export class TransactionRenderer {
             ? 'bg-macaron-pink/20 text-macaron-rose'
             : 'bg-macaron-blue/20 text-blue-600';
 
+        // 照片圖標（如果有照片）
+        const photoIcon = tx.photo_url ? `
+            <div class="absolute -bottom-1 -left-1 w-5 h-5 rounded-full bg-antique-gold flex items-center justify-center text-white text-xs shadow-sm">
+                📸
+            </div>
+        ` : '';
+
         return `
             <div class="transaction-item bg-white rounded-2xl p-4 shadow-watercolor-layered hover:shadow-floating transition-all cursor-pointer group ${payerBorderClass}" data-transaction-id="${tx.id}">
                 <div class="flex items-center gap-4">
@@ -72,6 +79,8 @@ export class TransactionRenderer {
                         <div class="absolute -top-1 -right-1 w-5 h-5 rounded-full ${payerBadgeClass} flex items-center justify-center text-xs font-bold shadow-sm">
                             ${tx.payer === 'me' ? '寶' : '步'}
                         </div>
+                        <!-- 照片圖標 -->
+                        ${photoIcon}
                     </div>
                     <div class="flex-1 min-w-0">
                         <h4 class="font-hand font-bold text-lg text-soft-ink truncate">${tx.item_name}</h4>
@@ -127,6 +136,9 @@ export class TransactionRenderer {
         const time = new Date(tx.created_at);
         const timeStr = `${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`;
 
+        // 照片圖標（如果有照片）
+        const photoIndicator = tx.photo_url ? `<span class="text-xs">📸</span>` : '';
+
         // 寶寶付款：卡片偏左，圓點在左邊
         // 步步付款：卡片偏右，圓點在右邊
         if (isBaobao) {
@@ -148,7 +160,10 @@ export class TransactionRenderer {
 
                             <!-- 名稱 -->
                             <div class="flex-1 min-w-0">
-                                <h4 class="font-hand font-bold text-base text-soft-ink truncate">${tx.item_name}</h4>
+                                <div class="flex items-center gap-1">
+                                    <h4 class="font-hand font-bold text-base text-soft-ink truncate">${tx.item_name}</h4>
+                                    ${photoIndicator}
+                                </div>
                                 ${tx.note ? `<p class="text-xs text-warm-brown/60 italic truncate">📝 ${tx.note}</p>` : ''}
                             </div>
                         </div>
@@ -174,7 +189,10 @@ export class TransactionRenderer {
 
                             <!-- 名稱 -->
                             <div class="flex-1 min-w-0">
-                                <h4 class="font-hand font-bold text-base text-soft-ink truncate">${tx.item_name}</h4>
+                                <div class="flex items-center gap-1">
+                                    <h4 class="font-hand font-bold text-base text-soft-ink truncate">${tx.item_name}</h4>
+                                    ${photoIndicator}
+                                </div>
                                 ${tx.note ? `<p class="text-xs text-warm-brown/60 italic truncate">📝 ${tx.note}</p>` : ''}
                             </div>
                         </div>

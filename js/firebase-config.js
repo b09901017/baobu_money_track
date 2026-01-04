@@ -4,7 +4,7 @@
 const {
     initializeApp,
     getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp,
-    getStorage, ref, uploadBytes, getDownloadURL,
+    getStorage, ref, uploadBytes, getDownloadURL, deleteObject,
     getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
 } = window.firebaseModules;
 
@@ -299,18 +299,141 @@ async function deleteCustomCategory(categoryId) {
     }
 }
 
-// ==================== Storage（Phase 3 將實作）====================
+// ==================== Storage ====================
 
 /**
- * 上傳照片（Phase 3 實作）
+ * 壓縮圖片
+ * @param {File} file - 原始圖片檔案
+ * @param {number} maxWidth - 最大寬度
+ * @param {number} maxHeight - 最大高度
+ * @param {number} quality - 壓縮品質 (0-1)
+ * @returns {Promise<Blob>} - 壓縮後的圖片 Blob
+ */
+async function compressImage(file, maxWidth = 1200, maxHeight = 1200, quality = 0.8) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                // 計算縮放比例
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height = height * (maxWidth / width);
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width = width * (maxHeight / height);
+                        height = maxHeight;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob(
+                    (blob) => {
+                        if (blob) {
+                            console.log(`✅ 圖片已壓縮: ${(file.size / 1024).toFixed(2)}KB → ${(blob.size / 1024).toFixed(2)}KB`);
+                            resolve(blob);
+                        } else {
+                            reject(new Error('圖片壓縮失敗'));
+                        }
+                    },
+                    'image/jpeg',
+                    quality
+                );
+            };
+            img.onerror = () => reject(new Error('圖片載入失敗'));
+        };
+        reader.onerror = () => reject(new Error('檔案讀取失敗'));
+    });
+}
+
+/**
+ * 上傳照片
  * @param {File} file - 圖片檔案
  * @param {string} userId - 用戶 ID
- * @returns {Promise<string>} - 圖片 URL
+ * @param {string} transactionId - 交易 ID（可選）
+ * @returns {Promise<Object>} - { url: 下載 URL, path: 儲存路徑 }
  */
-async function uploadPhoto(file, userId) {
-    // Phase 3 將實作完整上傳邏輯
-    console.log('📸 uploadPhoto 預留（Phase 3 實作）:', file.name);
-    return Promise.resolve(null);
+async function uploadPhoto(file, userId, transactionId = null) {
+    try {
+        console.log('📸 開始上傳照片:', file.name);
+
+        // 1. 驗證檔案類型
+        const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+        if (!validTypes.includes(file.type)) {
+            throw new Error('不支援的圖片格式，請使用 JPG、PNG 或 WEBP');
+        }
+
+        // 2. 驗證檔案大小（最大 10MB）
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        if (file.size > maxSize) {
+            throw new Error('圖片大小超過 10MB，請選擇較小的圖片');
+        }
+
+        // 3. 壓縮圖片
+        const compressedBlob = await compressImage(file);
+
+        // 4. 生成唯一檔名
+        const timestamp = Date.now();
+        const randomStr = Math.random().toString(36).substring(2, 8);
+        const fileName = `${timestamp}_${randomStr}.jpg`;
+
+        // 5. 設定儲存路徑（按用戶 ID 分類）
+        const storagePath = transactionId
+            ? `receipts/${userId}/${transactionId}/${fileName}`
+            : `receipts/${userId}/${fileName}`;
+
+        // 6. 上傳到 Firebase Storage
+        const storageRef = ref(storage, storagePath);
+        await uploadBytes(storageRef, compressedBlob);
+
+        // 7. 取得下載 URL
+        const downloadURL = await getDownloadURL(storageRef);
+
+        console.log('✅ 照片上傳成功:', downloadURL);
+        return {
+            url: downloadURL,
+            path: storagePath,
+            fileName: fileName
+        };
+    } catch (error) {
+        console.error('❌ 照片上傳失敗:', error);
+        throw error;
+    }
+}
+
+/**
+ * 刪除照片
+ * @param {string} storagePath - 儲存路徑
+ * @returns {Promise<void>}
+ */
+async function deletePhoto(storagePath) {
+    try {
+        console.log('🗑️ 刪除照片:', storagePath);
+        const storageRef = ref(storage, storagePath);
+        await deleteObject(storageRef);
+        console.log('✅ 照片已刪除');
+    } catch (error) {
+        // 如果檔案不存在，忽略錯誤
+        if (error.code === 'storage/object-not-found') {
+            console.warn('⚠️ 照片不存在，已忽略');
+            return;
+        }
+        console.error('❌ 刪除照片失敗:', error);
+        throw error;
+    }
 }
 
 // ==================== 導出 API ====================
@@ -334,7 +457,8 @@ window.FirebaseAPI = {
     deleteCustomCategory,
 
     // Storage
-    uploadPhoto
+    uploadPhoto,
+    deletePhoto
 };
 
 console.log('✅ FirebaseAPI 已掛載到 window');

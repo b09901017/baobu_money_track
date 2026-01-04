@@ -570,6 +570,46 @@ class DataManager {
     reset() {
         console.warn('⚠️ Firebase 版本不支援 reset 功能');
     }
+
+    // ==================== 照片管理 ====================
+
+    /**
+     * 上傳交易照片
+     * @param {File} file - 圖片檔案
+     * @param {string} transactionId - 交易 ID
+     * @returns {Promise<Object>} - { url, path, fileName }
+     */
+    async uploadTransactionPhoto(file, transactionId) {
+        try {
+            console.log('📸 上傳交易照片...');
+            const result = await window.FirebaseAPI.uploadPhoto(
+                file,
+                this.currentUser.uid,
+                transactionId
+            );
+            console.log('✅ 交易照片上傳成功');
+            return result;
+        } catch (error) {
+            console.error('❌ 上傳交易照片失敗:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 刪除交易照片
+     * @param {string} photoPath - 照片儲存路徑
+     * @returns {Promise<void>}
+     */
+    async deleteTransactionPhoto(photoPath) {
+        try {
+            console.log('🗑️ 刪除交易照片...');
+            await window.FirebaseAPI.deletePhoto(photoPath);
+            console.log('✅ 交易照片已刪除');
+        } catch (error) {
+            console.error('❌ 刪除交易照片失敗:', error);
+            throw error;
+        }
+    }
 }
 
 // 建立全域資料管理實例

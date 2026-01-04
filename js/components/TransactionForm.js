@@ -9,6 +9,7 @@ export class TransactionForm {
 
         this.sheet = document.getElementById('addTransactionSheet');
         this.form = document.getElementById('transactionForm');
+        this.selectedPhoto = null;  // 儲存選中的照片檔案
     }
 
     /**
@@ -64,6 +65,7 @@ export class TransactionForm {
         }
 
         this.state.selectedCategories = [];
+        this.selectedPhoto = null;  // 清除選中的照片
 
         // 重置分類選擇視覺效果
         document.querySelectorAll('.tag-btn > div').forEach(div => {
@@ -71,10 +73,7 @@ export class TransactionForm {
         });
 
         // 清除照片預覽
-        const photoPreview = document.getElementById('photoPreview');
-        if (photoPreview) {
-            photoPreview.innerHTML = '';
-        }
+        this.clearPhotoPreview();
     }
 
     /**
@@ -103,16 +102,83 @@ export class TransactionForm {
         if (files.length === 0) return;
 
         const file = files[0];
+
+        // 驗證檔案類型
+        const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+        if (!validTypes.includes(file.type)) {
+            window.customDialog?.error('請選擇圖片檔案（JPG、PNG 或 WEBP）');
+            return;
+        }
+
+        // 驗證檔案大小（最大 10MB）
+        const maxSize = 10 * 1024 * 1024;
+        if (file.size > maxSize) {
+            window.customDialog?.error('圖片大小超過 10MB，請選擇較小的圖片');
+            return;
+        }
+
+        // 儲存檔案
+        this.selectedPhoto = file;
+
+        // 顯示預覽
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            this.showPhotoPreview(e.target.result);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    /**
+     * 顯示照片預覽
+     * @param {string} dataUrl - 圖片 Data URL
+     */
+    showPhotoPreview(dataUrl) {
         const preview = document.getElementById('photoPreview');
         if (!preview) return;
 
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            preview.innerHTML = `
-                <img src="${e.target.result}" alt="Preview" class="w-20 h-20 rounded-xl object-cover shadow-watercolor-layered border-2 border-white">
-            `;
-        };
-        reader.readAsDataURL(file);
+        preview.innerHTML = `
+            <div class="relative inline-block group">
+                <img src="${dataUrl}" alt="預覽" class="w-24 h-24 rounded-2xl object-cover shadow-watercolor-layered border-4 border-white">
+                <!-- 刪除按鈕 -->
+                <button type="button" class="absolute -top-2 -right-2 w-7 h-7 bg-gradient-to-br from-[#E27D60] to-[#E8A87C] text-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all opacity-0 group-hover:opacity-100" data-action="remove-photo">
+                    <span class="material-symbols-outlined text-sm">close</span>
+                </button>
+                <!-- 照片標籤 -->
+                <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-antique-gold text-white text-xs font-bold rounded-full shadow-sm">
+                    📸 已選擇
+                </div>
+            </div>
+        `;
+
+        // 綁定刪除按鈕事件
+        const removeBtn = preview.querySelector('[data-action="remove-photo"]');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', () => this.removePhoto());
+        }
+    }
+
+    /**
+     * 刪除照片
+     */
+    removePhoto() {
+        this.selectedPhoto = null;
+        this.clearPhotoPreview();
+
+        // 清除 file input
+        const photoInput = document.getElementById('photoInput');
+        if (photoInput) {
+            photoInput.value = '';
+        }
+    }
+
+    /**
+     * 清除照片預覽
+     */
+    clearPhotoPreview() {
+        const preview = document.getElementById('photoPreview');
+        if (preview) {
+            preview.innerHTML = '';
+        }
     }
 
     /**
@@ -214,7 +280,8 @@ export class TransactionForm {
                 categories: [...this.state.selectedCategories],
                 note: document.getElementById('note').value.trim(),
                 date: document.getElementById('transactionDate').value,
-                photo_url: null
+                photo_url: null,
+                photo_path: null
             };
 
             console.log('📝 交易資料:', transactionData);
@@ -225,8 +292,36 @@ export class TransactionForm {
                 return;
             }
 
+            // 先新增交易（取得交易 ID）
             const result = await window.DataManager.addTransaction(transactionData);
             console.log('✅ 交易已新增:', result);
+
+            // 如果有選擇照片，上傳照片
+            if (this.selectedPhoto && result.id) {
+                try {
+                    console.log('📸 開始上傳照片...');
+
+                    // 顯示上傳進度提示（可選）
+                    const uploadResult = await window.DataManager.uploadTransactionPhoto(
+                        this.selectedPhoto,
+                        result.id
+                    );
+
+                    console.log('✅ 照片上傳成功:', uploadResult);
+
+                    // 更新交易的照片資訊
+                    await window.DataManager.updateTransaction(result.id, {
+                        photo_url: uploadResult.url,
+                        photo_path: uploadResult.path
+                    });
+
+                    console.log('✅ 交易照片資訊已更新');
+                } catch (photoError) {
+                    console.error('❌ 照片上傳失敗:', photoError);
+                    // 照片上傳失敗不影響交易本身，顯示警告即可
+                    await window.customDialog.error('照片上傳失敗：' + photoError.message);
+                }
+            }
 
             this.close();
 

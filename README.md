@@ -2,7 +2,7 @@
 
 > 一個童話風格的情侶共同記帳應用，支援多帳本管理、彈性付款記錄、智能結算功能。
 
-![Version](https://img.shields.io/badge/version-2.2.0-pink)
+![Version](https://img.shields.io/badge/version-2.3.0-pink)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow)
 ![Firebase](https://img.shields.io/badge/Firebase-Integrated-orange)
@@ -43,8 +43,8 @@
 - **BaaS**: Firebase
   - **Authentication** - Google 登入
   - **Firestore** - NoSQL 雲端資料庫
-  - **Storage** - 圖片儲存（預留）
-  - **Hosting** - 部署（預留）
+  - **Storage** - 照片儲存（收據、發票）
+  - **Hosting** - 網站部署
 
 ## 📁 專案結構
 
@@ -151,7 +151,10 @@ cd baobu_money_track
 
 1. 啟用 **Authentication** → Google 登入
 2. 啟用 **Firestore Database** → 測試模式（或設定安全規則）
-3. （可選）啟用 **Storage** → 測試模式
+3. 啟用 **Storage** → 測試模式（用於照片上傳）
+   - 前往 Firebase Console → Storage
+   - 點擊「Get Started」開始使用
+   - 選擇測試模式或設定安全規則（建議設定規則）
 
 **步驟 3：取得 Firebase 配置**
 
@@ -267,6 +270,43 @@ service cloud.firestore {
 }
 ```
 
+## 🔥 Firebase Storage 安全規則
+
+前往 Firebase Console → Storage → Rules，設定以下安全規則：
+
+```javascript
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // 收據照片：只能存取自己上傳的照片
+    match /receipts/{userId}/{allPaths=**} {
+      // 允許讀取和寫入自己的照片
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && request.resource.contentType.matches('image/.*')
+                   && request.resource.size < 10 * 1024 * 1024;  // 最大 10MB
+
+      // 允許刪除自己的照片
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // 拒絕其他路徑
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
+```
+
+**安全規則說明：**
+- ✅ 只有登入用戶可以上傳照片
+- ✅ 用戶只能存取自己上傳的照片
+- ✅ 限制檔案類型為圖片（image/*）
+- ✅ 限制檔案大小最大 10MB
+- ✅ 用戶可以刪除自己的照片
+
 ## 🎯 重構成果
 
 本專案經過完整的模組化重構，大幅提升代碼品質和可維護性。
@@ -343,7 +383,17 @@ service cloud.firestore {
 - ✅ 自訂分類管理
 - ✅ 備註功能
 - ✅ 日期選擇
+- ✅ **照片上傳**（收據、發票、截圖）
 - ✅ 資料即時同步到 Firebase
+
+#### 📸 照片管理
+- ✅ 上傳照片（支援 JPG、PNG、WEBP）
+- ✅ 自動壓縮圖片（最大 1200x1200，品質 80%）
+- ✅ 照片預覽與刪除
+- ✅ 點擊放大查看（全螢幕燈箱）
+- ✅ 時間軸顯示照片圖標（📸）
+- ✅ 照片儲存在 Firebase Storage
+- ✅ 刪除交易時同步刪除照片
 
 #### 💳 結算功能
 - ✅ 自動計算誰欠誰多少錢
@@ -368,13 +418,13 @@ service cloud.firestore {
 
 ### 🚧 待實作功能
 
-- [ ] 照片上傳功能（Firebase Storage）
-- [ ] 視覺化圖表（圓餅圖、長條圖）
-- [ ] 預算追蹤功能
-- [ ] 匯出報表（CSV、PDF）
-- [ ] PWA 支援（離線使用）
-- [ ] 多人共同帳本（邀請伴侶）
-- [ ] 推播通知
+- [ ] 視覺化圖表（圓餅圖、長條圖、趨勢圖）
+- [ ] 預算追蹤功能（每月預算、分類預算）
+- [ ] 匯出報表（CSV、PDF、Excel）
+- [ ] PWA 支援（離線使用、安裝到桌面）
+- [ ] 多人共同帳本（邀請伴侶加入）
+- [ ] 推播通知（超支提醒、每日記帳提醒）
+- [ ] 搜尋與篩選（按關鍵字、金額區間）
 
 ## 🎨 設計系統
 
@@ -449,8 +499,10 @@ service cloud.firestore {
   categories: ["吃吃", "生活"],
   note: "好好吃",
   date: "2024-01-15",
-  photo_url: null,
-  created_at: Timestamp
+  photo_url: "https://storage.googleapis.com/...",  // Firebase Storage 下載 URL
+  photo_path: "receipts/user_uid/transaction_id/photo.jpg",  // Storage 儲存路徑
+  created_at: Timestamp,
+  updated_at: Timestamp
 }
 
 // 自訂分類 (custom_categories)

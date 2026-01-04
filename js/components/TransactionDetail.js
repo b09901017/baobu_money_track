@@ -74,7 +74,41 @@ export class TransactionDetail {
         const photoContent = document.getElementById('detailPhoto');
         if (tx.photo_url) {
             photoSection.classList.remove('hidden');
-            photoContent.innerHTML = `<img src="${tx.photo_url}" alt="照片" class="w-full h-auto rounded-lg">`;
+            photoContent.innerHTML = `
+                <div class="relative group">
+                    <img src="${tx.photo_url}" alt="收據照片" class="w-full h-auto rounded-2xl shadow-watercolor-layered border-4 border-white cursor-pointer hover:shadow-floating transition-all" data-action="view-photo" data-photo-url="${tx.photo_url}">
+                    <!-- 放大提示 -->
+                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-2xl transition-all flex items-center justify-center pointer-events-none">
+                        <div class="bg-white/90 px-3 py-1.5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span class="text-sm font-hand font-bold text-soft-ink">🔍 點擊放大</span>
+                        </div>
+                    </div>
+                    <!-- 刪除按鈕 -->
+                    <button type="button" class="absolute top-2 right-2 w-8 h-8 bg-gradient-to-br from-[#E27D60] to-[#E8A87C] text-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all opacity-0 group-hover:opacity-100" data-action="delete-photo" data-transaction-id="${tx.id}" data-photo-path="${tx.photo_path || ''}">
+                        <span class="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                </div>
+            `;
+
+            // 綁定照片點擊事件（放大查看）
+            const photoImg = photoContent.querySelector('[data-action="view-photo"]');
+            if (photoImg) {
+                photoImg.addEventListener('click', (e) => {
+                    const photoUrl = e.currentTarget.dataset.photoUrl;
+                    this.showPhotoLightbox(photoUrl);
+                });
+            }
+
+            // 綁定刪除按鈕事件
+            const deleteBtn = photoContent.querySelector('[data-action="delete-photo"]');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const txId = e.currentTarget.dataset.transactionId;
+                    const photoPath = e.currentTarget.dataset.photoPath;
+                    await this.deletePhoto(txId, photoPath);
+                });
+            }
         } else {
             photoSection.classList.add('hidden');
         }
@@ -82,6 +116,85 @@ export class TransactionDetail {
         // 顯示模態框
         if (this.modal) {
             this.modal.classList.remove('hidden');
+        }
+    }
+
+    /**
+     * 顯示照片燈箱（放大查看）
+     * @param {string} photoUrl - 照片 URL
+     */
+    showPhotoLightbox(photoUrl) {
+        // 建立燈箱元素
+        const lightbox = document.createElement('div');
+        lightbox.className = 'fixed inset-0 z-[200] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4';
+        lightbox.innerHTML = `
+            <div class="relative max-w-4xl w-full">
+                <!-- 關閉按鈕 -->
+                <button class="absolute -top-12 right-0 w-10 h-10 bg-white/20 hover:bg-white/30 text-white rounded-full flex items-center justify-center transition-all hover:scale-110" data-action="close-lightbox">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+                <!-- 照片 -->
+                <img src="${photoUrl}" alt="照片" class="w-full h-auto rounded-2xl shadow-2xl">
+            </div>
+        `;
+
+        document.body.appendChild(lightbox);
+
+        // 綁定關閉事件
+        const closeBtn = lightbox.querySelector('[data-action="close-lightbox"]');
+        const closeLightbox = () => {
+            lightbox.remove();
+        };
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', closeLightbox);
+        }
+
+        // 點擊背景關閉
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) {
+                closeLightbox();
+            }
+        });
+
+        // ESC 鍵關閉
+        const handleEsc = (e) => {
+            if (e.key === 'Escape') {
+                closeLightbox();
+                document.removeEventListener('keydown', handleEsc);
+            }
+        };
+        document.addEventListener('keydown', handleEsc);
+    }
+
+    /**
+     * 刪除照片
+     * @param {string} txId - 交易 ID
+     * @param {string} photoPath - 照片儲存路徑
+     */
+    async deletePhoto(txId, photoPath) {
+        const confirmed = await window.customDialog.confirm('確定要刪除這張照片嗎？', '刪除照片');
+        if (!confirmed) return;
+
+        try {
+            // 從 Storage 刪除照片
+            if (photoPath) {
+                await window.DataManager.deleteTransactionPhoto(photoPath);
+            }
+
+            // 更新交易資料
+            await window.DataManager.updateTransaction(txId, {
+                photo_url: null,
+                photo_path: null
+            });
+
+            // 重新載入交易詳情
+            this.show(txId);
+
+            await window.customDialog.success('照片已刪除！');
+        } catch (error) {
+            console.error('❌ 刪除照片失敗:', error);
+            await window.customDialog.error('刪除照片失敗：' + error.message);
         }
     }
 
