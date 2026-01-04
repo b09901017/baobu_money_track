@@ -7,6 +7,139 @@
 
 ---
 
+## [2.3.0] - 2026-01-04
+
+### ✨ 新增 (Added)
+
+#### 📸 照片上傳功能（Firebase Storage 整合）
+- ✅ 完整的照片上傳功能
+- ✅ 支援 JPG、PNG、WEBP 格式
+- ✅ 自動壓縮圖片（最大 1200x1200，品質 80%）
+- ✅ 照片即時預覽與刪除
+- ✅ 點擊放大查看（全螢幕燈箱效果）
+- ✅ 時間軸顯示照片圖標（📸）
+- ✅ 照片儲存在 Firebase Storage
+
+#### 🔧 後端 API
+- 新增 `uploadPhoto()` - 照片上傳 API
+  - 自動壓縮圖片節省空間
+  - 生成唯一檔名避免衝突
+  - 按用戶 ID 分類儲存
+- 新增 `deletePhoto()` - 照片刪除 API
+  - 刪除交易時同步刪除照片
+  - 安全驗證確保只能刪除自己的照片
+- 新增 `compressImage()` - 圖片壓縮工具
+  - 使用 Canvas API 壓縮圖片
+  - 自動計算最佳縮放比例
+  - 輸出 JPEG 格式（品質 80%）
+
+#### 💎 前端 UI 組件更新
+
+**TransactionForm.js**
+- 新增照片選擇器（點擊上傳）
+- 新增照片預覽功能（24x24 縮圖）
+- 新增刪除照片按鈕（hover 顯示）
+- 新增「📸 已選擇」金色標籤
+- 檔案驗證（類型、大小）
+- 提交時自動上傳照片到 Firebase
+
+**TransactionDetail.js**
+- 新增照片顯示功能
+- 新增照片放大燈箱（全螢幕查看）
+- 新增 Hover 提示「🔍 點擊放大」
+- 新增刪除照片功能（含確認對話框）
+- ESC 鍵或點擊背景關閉燈箱
+
+**TransactionRenderer.js**
+- 列表模式：左下角顯示金色「📸」圖標
+- 時間軸模式：名稱旁顯示「📸」小圖標
+- 童話風格設計（金色圓形圖標）
+
+#### 🔐 安全規則
+- 新增 `storage.rules` - Firebase Storage 安全規則
+  - 只有登入用戶可以上傳照片
+  - 用戶只能存取自己上傳的照片
+  - 限制檔案類型為圖片（image/*）
+  - 限制檔案大小最大 10MB
+  - 用戶可以刪除自己的照片
+
+#### 📚 資料結構更新
+- `transactions` 集合新增欄位：
+  - `photo_url`: 照片下載 URL
+  - `photo_path`: Storage 儲存路徑
+  - `updated_at`: 更新時間戳記
+
+### 🔄 變更 (Changed)
+
+#### DataManager 擴展
+- `js/data.js` 新增照片管理方法
+  - `uploadTransactionPhoto()` - 上傳交易照片
+  - `deleteTransactionPhoto()` - 刪除交易照片
+- 整合 Firebase Storage API 呼叫
+
+#### Firebase 配置更新
+- `firebase.json` 新增 Storage Rules 配置
+- `index.html` 導入 `deleteObject` 模組
+
+### 📚 文檔 (Documentation)
+
+#### README.md 更新
+- 版本號更新：v2.2.0 → v2.3.0
+- 新增「📸 照片管理」功能說明
+- 更新 Firebase Storage 啟用步驟
+- 新增 Storage Security Rules 完整說明
+- 更新資料結構文檔（添加 photo_url 和 photo_path）
+- 從「待實作功能」移除照片上傳
+
+### 🚀 部署 (Deployment)
+- ✅ 部署到 Firebase Hosting
+- ✅ 更新線上網站：https://baobu-app.web.app
+- ⚠️ Firebase Storage 需要手動啟用（見 README.md）
+
+### 💡 技術亮點
+
+#### 圖片壓縮算法
+- 自動計算最佳縮放比例（保持長寬比）
+- 使用 Canvas API 進行客戶端壓縮
+- 壓縮率約 70-80%（視原圖而定）
+- 範例：3MB → 500KB
+
+#### 童話風格設計
+- 圓潤的照片預覽（rounded-2xl）
+- 柔和的陰影（shadow-watercolor-layered）
+- 馬卡龍色系邊框（border-4 border-white）
+- 金色標籤（bg-antique-gold）
+- 流暢的 Hover 動畫
+
+#### 使用者體驗
+- 拖拉上傳（未來可擴展）
+- 即時預覽（無需等待上傳）
+- 友善的錯誤訊息
+- 確認對話框（刪除照片時）
+
+### 🔧 相關檔案變更
+```
+Modified:
+- README.md
+- firebase.json
+- index.html
+- js/firebase-config.js
+- js/data.js
+- js/components/TransactionForm.js
+- js/components/TransactionDetail.js
+- js/components/TransactionRenderer.js
+
+Added:
+- storage.rules
+
+Statistics:
+- 9 files changed
+- 523 insertions(+)
+- 37 deletions(-)
+```
+
+---
+
 ## [2.2.0] - 2026-01-04
 
 ### 🌐 部署 (Deployment)
