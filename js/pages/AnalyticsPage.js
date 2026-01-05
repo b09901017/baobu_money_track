@@ -248,9 +248,17 @@ export class AnalyticsPage {
 
         // 再根據分類篩選
         if (this.currentFilter.category) {
-            filtered = filtered.filter(tx =>
-                tx.categories && tx.categories.includes(this.currentFilter.category)
-            );
+            if (this.currentFilter.category === '未分類') {
+                // 篩選出沒有分類或分類為空的交易
+                filtered = filtered.filter(tx =>
+                    !tx.categories || tx.categories.length === 0
+                );
+            } else {
+                // 篩選出包含指定分類的交易
+                filtered = filtered.filter(tx =>
+                    tx.categories && tx.categories.includes(this.currentFilter.category)
+                );
+            }
         }
 
         // 生成篩選標籤
