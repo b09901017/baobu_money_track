@@ -18,6 +18,51 @@ export class CalendarPage {
         // 區間模式的臨時選中日期
         this.tempRangeStart = null;
         this.tempRangeEnd = null;
+
+        // 滑動手勢相關
+        this.touchStartX = 0;
+        this.touchEndX = 0;
+
+        // 綁定滑動手勢
+        this.initSwipeGesture();
+    }
+
+    /**
+     * 初始化滑動手勢
+     */
+    initSwipeGesture() {
+        const calendarView = document.getElementById('calendarView');
+        if (!calendarView) return;
+
+        calendarView.addEventListener('touchstart', (e) => {
+            this.touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        calendarView.addEventListener('touchend', (e) => {
+            this.touchEndX = e.changedTouches[0].screenX;
+            this.handleSwipe();
+        }, { passive: true });
+    }
+
+    /**
+     * 處理滑動手勢
+     */
+    handleSwipe() {
+        // 只在單日模式下啟用滑動
+        if (this.calendarMode !== 'single') return;
+        if (!this.currentSelectedDate) return;
+
+        const swipeThreshold = 50; // 滑動觸發閾值（像素）
+        const diff = this.touchStartX - this.touchEndX;
+
+        // 向左滑（顯示下一天）
+        if (diff > swipeThreshold) {
+            this.changeSingleDay(1);
+        }
+        // 向右滑（顯示前一天）
+        else if (diff < -swipeThreshold) {
+            this.changeSingleDay(-1);
+        }
     }
 
     renderCalendar() {
@@ -210,7 +255,7 @@ export class CalendarPage {
     }
 
     /**
-     * 顯示區間交易
+     * 顯示區間交易（卡片式清單佈局）
      */
     showRangeTransactions(startDateStr, endDateStr) {
         const transactions = window.DataManager.getTransactionsByDateRange(startDateStr, endDateStr);
@@ -233,20 +278,123 @@ export class CalendarPage {
                 grouped[tx.date].push(tx);
             });
 
-            // 渲染分組交易
+            // 渲染每日卡片
             let html = '';
-            Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a)).forEach(date => {
-                html += `<div class="mb-4">`;
-                html += `<h5 class="text-xs font-bold text-warm-brown/70 mb-2 font-hand">${formatDisplayDate(date)}</h5>`;
-                html += `<div class="space-y-2">`;
-                grouped[date].forEach(tx => {
-                    html += TransactionRenderer.renderTransactionItem(tx);
-                });
-                html += `</div></div>`;
+            Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a)).forEach((date, index) => {
+                const txList = grouped[date];
+                html += this.renderDayCard(date, txList, index === 0);
             });
             container.innerHTML = html;
             TransactionRenderer.bindClickEvents(container, this.onTransactionClickCallback);
         }
+    }
+
+    /**
+     * 渲染每日卡片（清單式）
+     */
+    renderDayCard(dateStr, transactions, isFirst) {
+        const date = new Date(dateStr);
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        let displayText = '';
+        if (this.isSameDay(date, today)) {
+            displayText = '今天';
+        } else if (this.isSameDay(date, yesterday)) {
+            displayText = '昨天';
+        } else {
+            const weekdays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            const weekday = weekdays[date.getDay()];
+            displayText = `${month}月${day}日 ${weekday}`;
+        }
+
+        // 計算總計
+        let baobaoTotal = 0;
+        let bubuTotal = 0;
+        transactions.forEach(tx => {
+            const amount = parseFloat(tx.amount);
+            if (tx.payer === 'me') baobaoTotal += amount;
+            else bubuTotal += amount;
+        });
+        const total = baobaoTotal + bubuTotal;
+
+        // 渲染清單項目
+        const listItems = transactions.map(tx => this.renderListItem(tx)).join('');
+
+        return `
+            <div class="mb-4 ${isFirst ? '' : 'mt-4'}">
+                <!-- 卡片 -->
+                <div class="bg-white rounded-2xl shadow-watercolor-layered overflow-hidden border border-macaron-pink/20">
+                    <!-- 卡片頭部 -->
+                    <div class="bg-gradient-to-r from-macaron-cream/50 to-macaron-pink/20 px-4 py-3 border-b border-macaron-pink/20">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-hand font-bold text-soft-ink text-base">${displayText}</h3>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-hand text-warm-brown/70">${transactions.length} 筆</span>
+                                <span class="text-sm font-display font-bold text-[#E27D60]">$${Math.round(total)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 清單 -->
+                    <div class="divide-y divide-macaron-pink/10">
+                        ${listItems}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * 渲染清單項目（簡化版）
+     */
+    renderListItem(tx) {
+        // 簡化的付款文字
+        let payText = '';
+        if (tx.payer === 'me') {
+            // 寶寶付
+            if (tx.beneficiary === 'self') payText = '寶付寶用';
+            else if (tx.beneficiary === 'partner') payText = '寶幫步付';
+            else payText = '寶幫共付';
+        } else {
+            // 步步付
+            if (tx.beneficiary === 'self') payText = '步付步用';
+            else if (tx.beneficiary === 'partner') payText = '步幫寶付';
+            else payText = '步幫共付';
+        }
+
+        const payerColor = tx.payer === 'me' ? 'text-macaron-rose' : 'text-blue-600';
+        const photoIcon = tx.photo_url ? '<span class="text-xs">📸</span>' : '';
+
+        return `
+            <div class="transaction-item px-4 py-3 hover:bg-macaron-cream/20 cursor-pointer transition-colors" data-transaction-id="${tx.id}">
+                <div class="flex items-center gap-3">
+                    <!-- 付款標籤 -->
+                    <span class="text-xs font-hand font-bold ${payerColor} shrink-0 w-16">${payText}</span>
+
+                    <!-- 項目名稱 -->
+                    <div class="flex-1 min-w-0 flex items-center gap-1">
+                        <span class="font-hand text-sm text-soft-ink truncate">${tx.item_name}</span>
+                        ${photoIcon}
+                    </div>
+
+                    <!-- 金額 -->
+                    <span class="font-display font-bold text-base text-[#E27D60] shrink-0">$${tx.amount}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * 判斷兩個日期是否為同一天
+     */
+    isSameDay(date1, date2) {
+        return date1.getFullYear() === date2.getFullYear() &&
+               date1.getMonth() === date2.getMonth() &&
+               date1.getDate() === date2.getDate();
     }
 
     /**

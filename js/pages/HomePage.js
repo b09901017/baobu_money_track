@@ -11,9 +11,17 @@ export class HomePage {
     /**
      * 更新首頁
      */
-    update() {
+    async update() {
         this.balanceCard.update();
-        this.timelineView.update();
+        await this.timelineView.refresh();
+    }
+
+    /**
+     * 初始化首頁
+     */
+    async init() {
+        this.balanceCard.update();
+        await this.timelineView.init();
     }
 
     /**

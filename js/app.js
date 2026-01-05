@@ -32,8 +32,7 @@ class CoupleApp {
         // 初始化核心系統
         this.initCore();
 
-        // 啟動應用
-        this.init();
+        // 注意：this.init() 已移到外部調用，因為它是 async
     }
 
     initComponents() {
@@ -111,15 +110,15 @@ class CoupleApp {
         this.eventBinder = new EventBinder(this);
     }
 
-    init() {
+    async init() {
         // 綁定所有事件
         this.eventBinder.bindAll();
 
         // 更新帳本標題
         this.homePage.updateNotebookTitle();
 
-        // 載入首頁
-        this.homePage.update();
+        // 載入首頁（使用 init 初次載入）
+        await this.homePage.init();
 
         // 載入帳本頁面
         this.notebooksPage.update();
@@ -179,6 +178,7 @@ function initializeApp() {
                 // 初始化 CoupleApp
                 if (!window.app) {
                     window.app = new CoupleApp();
+                    await window.app.init();
                 }
             } catch (error) {
                 console.error('❌ 應用初始化失敗:', error);

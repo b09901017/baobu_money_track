@@ -205,34 +205,7 @@ export class EventBinder {
             });
         }
 
-        // 單日模式導航
-        const btnCalendarPrevDay = document.getElementById('btnCalendarPrevDay');
-        const btnCalendarNextDay = document.getElementById('btnCalendarNextDay');
-        const btnCalendarToday = document.getElementById('btnCalendarToday');
-
-        if (btnCalendarPrevDay) {
-            btnCalendarPrevDay.addEventListener('click', () => {
-                if (this.app.calendarPage) {
-                    this.app.calendarPage.changeSingleDay(-1);
-                }
-            });
-        }
-
-        if (btnCalendarNextDay) {
-            btnCalendarNextDay.addEventListener('click', () => {
-                if (this.app.calendarPage) {
-                    this.app.calendarPage.changeSingleDay(1);
-                }
-            });
-        }
-
-        if (btnCalendarToday) {
-            btnCalendarToday.addEventListener('click', () => {
-                if (this.app.calendarPage) {
-                    this.app.calendarPage.goToToday();
-                }
-            });
-        }
+        // 單日模式：使用滑動手勢，不需要按鈕綁定
     }
 
     /**
@@ -255,56 +228,8 @@ export class EventBinder {
     }
 
     bindTimeline() {
-        // 時間軸日期切換
-        const prevDayBtn = document.getElementById('prevDayBtn');
-        const nextDayBtn = document.getElementById('nextDayBtn');
-        const btnToday = document.getElementById('btnToday');
-        const btnPickDate = document.getElementById('btnPickDate');
-        const datePickerInput = document.getElementById('datePickerInput');
+        // 從空狀態新增按鈕
         const btnAddFromEmpty = document.getElementById('btnAddFromEmpty');
-
-        if (prevDayBtn) {
-            prevDayBtn.addEventListener('click', () => {
-                if (this.app.timelineView) {
-                    this.app.timelineView.changeDay(-1);
-                }
-            });
-        }
-
-        if (nextDayBtn) {
-            nextDayBtn.addEventListener('click', () => {
-                if (this.app.timelineView) {
-                    this.app.timelineView.changeDay(1);
-                }
-            });
-        }
-
-        if (btnToday) {
-            btnToday.addEventListener('click', () => {
-                if (this.app.timelineView) {
-                    this.app.timelineView.goToToday();
-                }
-            });
-        }
-
-        if (btnPickDate && datePickerInput) {
-            btnPickDate.addEventListener('click', () => {
-                datePickerInput.value = window.DataManager.formatDate(this.app.state.currentDayView);
-                datePickerInput.showPicker ? datePickerInput.showPicker() : datePickerInput.click();
-            });
-
-            datePickerInput.addEventListener('change', (e) => {
-                if (e.target.value) {
-                    const selectedDate = new Date(e.target.value + 'T00:00:00');
-                    this.app.state.currentDayView = selectedDate;
-                    this.app.state.isRangeMode = false;
-                    if (this.app.timelineView) {
-                        this.app.timelineView.update();
-                    }
-                }
-            });
-        }
-
         if (btnAddFromEmpty) {
             btnAddFromEmpty.addEventListener('click', () => {
                 if (this.app.transactionForm) {
@@ -313,22 +238,12 @@ export class EventBinder {
             });
         }
 
-        // 時間軸模式切換按鈕
-        const btnTimelineDetail = document.getElementById('btnTimelineDetail');
-        const btnTimelineSummary = document.getElementById('btnTimelineSummary');
-
-        if (btnTimelineDetail) {
-            btnTimelineDetail.addEventListener('click', () => {
+        // 載入更多按鈕
+        const btnLoadMore = document.getElementById('btnLoadMore');
+        if (btnLoadMore) {
+            btnLoadMore.addEventListener('click', async () => {
                 if (this.app.timelineView) {
-                    this.app.timelineView.toggleMode('detail');
-                }
-            });
-        }
-
-        if (btnTimelineSummary) {
-            btnTimelineSummary.addEventListener('click', () => {
-                if (this.app.timelineView) {
-                    this.app.timelineView.toggleMode('summary');
+                    await this.app.timelineView.loadMore();
                 }
             });
         }

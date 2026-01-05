@@ -215,72 +215,15 @@
                     </button>
                 </div>
 
-                <!-- 列表視圖 -->
+                <!-- 時間軸視圖 -->
                 <div id="listView" class="view-container active">
-                    <!-- 日期選擇器 -->
-                    <div class="bg-white rounded-2xl p-4 shadow-watercolor-layered mb-6">
-                        <div class="flex items-center justify-between mb-3">
-                            <button id="prevDayBtn" class="w-10 h-10 rounded-full bg-macaron-pink/20 hover:bg-macaron-pink/40 flex items-center justify-center transition-colors">
-                                <span class="material-symbols-outlined">chevron_left</span>
-                            </button>
-                            <div class="flex flex-col items-center">
-                                <div class="text-2xl font-hand font-bold text-soft-ink" id="currentDayDisplay">今天</div>
-                                <div class="text-xs text-warm-brown/80" id="currentDateDisplay">2026-01-03</div>
-                            </div>
-                            <button id="nextDayBtn" class="w-10 h-10 rounded-full bg-macaron-pink/20 hover:bg-macaron-pink/40 flex items-center justify-center transition-colors">
-                                <span class="material-symbols-outlined">chevron_right</span>
-                            </button>
-                        </div>
-                        <div class="flex gap-2 justify-center">
-                            <button id="btnToday" class="px-4 py-1.5 rounded-full bg-macaron-cream/40 hover:bg-macaron-cream text-sm font-hand font-bold text-warm-brown transition-all">
-                                回到今天
-                            </button>
-                            <button id="btnPickDate" class="px-4 py-1.5 rounded-full bg-macaron-cream/40 hover:bg-macaron-cream text-sm font-hand font-bold text-warm-brown transition-all">
-                                選擇日期
-                            </button>
-                            <button id="btnDateRange" class="px-4 py-1.5 rounded-full bg-macaron-pink/30 hover:bg-macaron-pink/50 text-sm font-hand font-bold text-soft-ink transition-all">
-                                區間查看
-                            </button>
-                        </div>
-                        <!-- 隱藏的日期輸入 -->
-                        <input type="date" id="datePickerInput" class="hidden">
-                    </div>
-
-                    <!-- 當天花費統計 -->
-                    <div id="dayExpenseStats" class="bg-white rounded-2xl p-4 shadow-watercolor-layered mb-6 hidden">
-                        <div class="grid grid-cols-3 gap-3">
-                            <div class="text-center" id="baobaoExpenseCard">
-                                <div class="text-xs text-warm-brown/80 mb-1">寶寶</div>
-                                <div class="text-lg font-hand font-bold text-soft-ink" id="baobaoExpense">$0</div>
-                            </div>
-                            <div class="text-center" id="bubuExpenseCard">
-                                <div class="text-xs text-warm-brown/80 mb-1">步步</div>
-                                <div class="text-lg font-hand font-bold text-soft-ink" id="bubuExpense">$0</div>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-xs text-warm-brown/80 mb-1">共同</div>
-                                <div class="text-lg font-hand font-bold text-[#E27D60]" id="totalDayExpense">$0</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 時間軸標題與模式切換 -->
-                    <div class="mb-4 px-2">
-                        <div class="flex items-center gap-3 mb-4">
+                    <!-- 時間軸標題 -->
+                    <div class="mb-6 px-2">
+                        <div class="flex items-center gap-3">
                             <div class="h-px flex-1 bg-gradient-to-r from-transparent via-warm-brown/20 to-transparent border-t border-dashed border-warm-brown/30"></div>
                             <span class="material-symbols-outlined text-antique-gold text-xl">schedule</span>
-                            <span class="text-xs font-bold uppercase tracking-widest text-warm-brown">時間軸</span>
+                            <span class="text-base font-bold uppercase tracking-widest text-warm-brown font-hand">時間軸</span>
                             <div class="h-px flex-1 bg-gradient-to-r from-transparent via-warm-brown/20 to-transparent border-t border-dashed border-warm-brown/30"></div>
-                        </div>
-
-                        <!-- 模式切換按鈕 -->
-                        <div class="flex gap-2">
-                            <button id="btnTimelineDetail" class="flex-1 py-2 px-3 rounded-xl border-2 border-transparent bg-gradient-to-br from-macaron-pink to-macaron-rose text-white shadow-watercolor-layered font-hand font-bold text-sm hover:scale-105 transition-all">
-                                <span class="material-symbols-outlined text-xs inline-block mr-1">view_timeline</span>詳情
-                            </button>
-                            <button id="btnTimelineSummary" class="flex-1 py-2 px-3 rounded-xl border-2 border-macaron-rose/50 bg-white/60 font-hand font-bold text-sm text-soft-ink hover:scale-105 transition-all">
-                                <span class="material-symbols-outlined text-xs inline-block mr-1">summarize</span>摘要
-                            </button>
                         </div>
                     </div>
 
@@ -294,12 +237,22 @@
                         </div>
                     </div>
 
+                    <!-- 載入更多按鈕 -->
+                    <div id="loadMoreContainer" class="text-center py-6 hidden">
+                        <button id="btnLoadMore" class="px-6 py-2.5 rounded-full bg-gradient-to-br from-macaron-cream to-white border-2 border-macaron-pink/30 text-soft-ink font-hand font-bold transition-all hover:scale-105 hover:shadow-watercolor-layered">
+                            <span class="material-symbols-outlined text-sm inline-block mr-1">expand_more</span>
+                            載入更多記錄 ✨
+                        </button>
+                    </div>
+
                     <!-- 空狀態 -->
-                    <div id="emptyDayState" class="hidden text-center py-12">
+                    <div id="emptyTimelineState" class="hidden text-center py-12">
                         <div class="text-6xl mb-4 opacity-60">📖</div>
-                        <p class="text-warm-brown/60 font-hand text-lg">這天還沒有記錄呢</p>
-                        <button id="btnAddFromEmpty" class="mt-4 px-6 py-2 rounded-full bg-macaron-pink/20 hover:bg-macaron-pink/40 text-soft-ink font-hand font-bold transition-all">
-                            寫下第一筆 ✨
+                        <p class="text-warm-brown/60 font-hand text-lg mb-2">還沒有任何記錄呢</p>
+                        <p class="text-warm-brown/40 font-hand text-sm mb-4">開始記錄你們的美好生活吧 ✨</p>
+                        <button id="btnAddFromEmpty" class="mt-4 px-6 py-2.5 rounded-full bg-macaron-pink/20 hover:bg-macaron-pink/40 text-soft-ink font-hand font-bold transition-all hover:scale-105">
+                            <span class="material-symbols-outlined text-sm inline-block mr-1">add</span>
+                            寫下第一筆
                         </button>
                     </div>
                 </div>
@@ -328,19 +281,11 @@
                         </div>
                     </div>
 
-                    <!-- 單日模式導航 -->
-                    <div id="singleDayNav" class="bg-white rounded-2xl p-3 shadow-watercolor-layered mb-4">
-                        <div class="flex items-center justify-between">
-                            <button id="btnCalendarPrevDay" class="w-10 h-10 rounded-full bg-macaron-pink/20 hover:bg-macaron-pink/40 flex items-center justify-center transition-all hover:scale-110">
-                                <span class="material-symbols-outlined">chevron_left</span>
-                            </button>
-                            <button id="btnCalendarToday" class="px-4 py-1.5 rounded-full bg-macaron-cream/40 hover:bg-macaron-cream text-sm font-hand font-bold text-warm-brown transition-all hover:scale-105">
-                                回到今天 ✨
-                            </button>
-                            <button id="btnCalendarNextDay" class="w-10 h-10 rounded-full bg-macaron-pink/20 hover:bg-macaron-pink/40 flex items-center justify-center transition-all hover:scale-110">
-                                <span class="material-symbols-outlined">chevron_right</span>
-                            </button>
-                        </div>
+                    <!-- 單日模式提示 -->
+                    <div id="singleDayNav" class="bg-gradient-to-br from-macaron-cream/40 to-white rounded-2xl p-3 shadow-watercolor-layered mb-4 border border-antique-gold/20">
+                        <p class="text-xs text-warm-brown/80 font-hand text-center">
+                            <span class="text-antique-gold">👆</span> 左右滑動切換日期，點擊月曆選擇 <span class="text-antique-gold">👆</span>
+                        </p>
                     </div>
 
                     <!-- 月曆 -->
