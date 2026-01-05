@@ -240,7 +240,9 @@ export class CalendarPage {
         if (transactions.length === 0) {
             container.innerHTML = '<p class="text-center text-warm-brown/60 py-4 font-hand">當天無交易記錄 ✨</p>';
         } else {
-            container.innerHTML = transactions.map(tx => TransactionRenderer.renderTransactionItem(tx)).join('');
+            // 使用卡片式清單佈局（與區間選擇一致）
+            const html = this.renderDayCard(dateStr, transactions, true);
+            container.innerHTML = html;
             TransactionRenderer.bindClickEvents(container, this.onTransactionClickCallback);
         }
     }
@@ -352,16 +354,14 @@ export class CalendarPage {
      * 渲染清單項目（簡化版）
      */
     renderListItem(tx) {
-        // 簡化的付款文字
+        // 使用「誰幫誰付」表達方式
         let payText = '';
         if (tx.payer === 'me') {
-            // 寶寶付
-            if (tx.beneficiary === 'self') payText = '寶付寶用';
+            if (tx.beneficiary === 'self') payText = '寶幫寶付';
             else if (tx.beneficiary === 'partner') payText = '寶幫步付';
             else payText = '寶幫共付';
         } else {
-            // 步步付
-            if (tx.beneficiary === 'self') payText = '步付步用';
+            if (tx.beneficiary === 'self') payText = '步幫步付';
             else if (tx.beneficiary === 'partner') payText = '步幫寶付';
             else payText = '步幫共付';
         }

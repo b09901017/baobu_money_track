@@ -34,6 +34,23 @@ const TIMELINE_COLORS = {
     '其他': 'bg-warm-brown/10 border-warm-brown'
 };
 
+/**
+ * 獲取付款描述文字（誰幫誰付）
+ * @param {Object} tx - 交易物件
+ * @returns {string} - 付款描述文字
+ */
+function getPaymentText(tx) {
+    if (tx.payer === 'me') {
+        if (tx.beneficiary === 'self') return '寶幫寶付';
+        if (tx.beneficiary === 'partner') return '寶幫步付';
+        return '寶幫共付';
+    } else {
+        if (tx.beneficiary === 'self') return '步幫步付';
+        if (tx.beneficiary === 'partner') return '步幫寶付';
+        return '步幫共付';
+    }
+}
+
 export class TransactionRenderer {
     /**
      * 渲染交易項目（列表模式）
@@ -49,10 +66,8 @@ export class TransactionRenderer {
             ? CATEGORY_COLORS[tx.categories[0]] || 'bg-warm-brown/10'
             : 'bg-warm-brown/10';
 
-        const payerText = tx.payer === 'me' ? '寶寶' : '步步';
-        const beneficiaryText = tx.beneficiary === 'self' ? '寶寶'
-            : tx.beneficiary === 'partner' ? '步步'
-            : '寶步';
+        // 使用 getPaymentText 獲取付款描述
+        const paymentText = getPaymentText(tx);
 
         // 根據付款人決定邊框顏色和標記
         const payerBorderClass = tx.payer === 'me'
@@ -62,6 +77,8 @@ export class TransactionRenderer {
         const payerBadgeClass = tx.payer === 'me'
             ? 'bg-macaron-pink/20 text-macaron-rose'
             : 'bg-macaron-blue/20 text-blue-600';
+
+        const payerTextColor = tx.payer === 'me' ? 'text-macaron-rose' : 'text-blue-600';
 
         // 照片圖標（如果有照片）
         const photoIcon = tx.photo_url ? `
@@ -85,7 +102,7 @@ export class TransactionRenderer {
                     <div class="flex-1 min-w-0">
                         <h4 class="font-hand font-bold text-lg text-soft-ink truncate">${tx.item_name}</h4>
                         <p class="text-sm text-warm-brown/80 truncate mt-0.5">
-                            <span class="font-bold ${tx.payer === 'me' ? 'text-macaron-rose' : 'text-blue-600'}">${payerText} 付</span> · ${beneficiaryText} · ${formatDisplayDate(tx.date)}
+                            <span class="font-bold ${payerTextColor}">${paymentText}</span> · ${formatDisplayDate(tx.date)}
                         </p>
                     </div>
                     <div class="text-right">
@@ -103,11 +120,8 @@ export class TransactionRenderer {
      * @returns {string} - HTML 字串
      */
     static renderTimelineItemWithTime(tx, index) {
-        const icon = tx.categories && tx.categories.length > 0
-            ? CATEGORY_ICONS[tx.categories[0]] || 'auto_stories'
-            : 'auto_stories';
-
-        const payerText = tx.payer === 'me' ? '寶寶' : '步步';
+        // 使用 getPaymentText 獲取付款描述
+        const paymentText = getPaymentText(tx);
 
         // 判斷是否為寶寶付款
         const isBaobao = tx.payer === 'me';
@@ -121,10 +135,6 @@ export class TransactionRenderer {
             ? 'border-l-4 border-macaron-pink'
             : 'border-r-4 border-macaron-blue';
 
-        const payerDotClass = isBaobao
-            ? 'border-macaron-pink bg-macaron-pink/20'
-            : 'border-macaron-blue bg-macaron-blue/20';
-
         // 計算時間（使用 created_at）
         const time = new Date(tx.created_at);
         const timeStr = `${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`;
@@ -132,22 +142,17 @@ export class TransactionRenderer {
         // 照片圖標（如果有照片）
         const photoIndicator = tx.photo_url ? `<span class="text-xs">📸</span>` : '';
 
-        // 寶寶付款：卡片偏左
-        // 步步付款：卡片偏右
+        // 對話框風格佈局
+        // 寶寶付款：卡片靠左，時間在右側（中間偏右）
+        // 步步付款：時間在左側（中間偏左），卡片靠右
         if (isBaobao) {
             return `
-                <div class="relative mb-4 flex justify-start items-start gap-2">
-                    <!-- 時間軸點 - 寶寶（左邊）-->
-                    <div class="absolute -left-8 top-3 w-4 h-4 rounded-full ${payerDotClass} border-[3px] shadow-sm z-10"></div>
-
-                    <!-- 時間標記 -->
-                    <div class="shrink-0 mt-3 text-xs text-warm-brown/60 font-hand font-bold min-w-[40px]">${timeStr}</div>
-
-                    <!-- 交易卡片 - 偏左 -->
-                    <div class="transaction-item flex-1 max-w-[80%] bg-white rounded-2xl p-3 shadow-watercolor-layered hover:shadow-floating transition-all cursor-pointer group ${payerBorderClass}" data-transaction-id="${tx.id}">
+                <div class="mb-3 flex items-start gap-2">
+                    <!-- 交易卡片 - 靠左 -->
+                    <div class="transaction-item max-w-[70%] bg-white rounded-2xl p-3 shadow-watercolor-layered hover:shadow-floating transition-all cursor-pointer group ${payerBorderClass}" data-transaction-id="${tx.id}">
                         <div class="flex items-center gap-3">
-                            <!-- 寶寶付標籤 -->
-                            <span class="px-2 py-0.5 rounded-full ${payerBadgeClass} text-xs font-bold shrink-0">寶寶付</span>
+                            <!-- 付款標籤 -->
+                            <span class="px-2 py-0.5 rounded-full ${payerBadgeClass} text-xs font-bold shrink-0">${paymentText}</span>
 
                             <!-- 價錢 -->
                             <div class="shrink-0">
@@ -164,16 +169,22 @@ export class TransactionRenderer {
                             </div>
                         </div>
                     </div>
+
+                    <!-- 時間標記 - 中間偏右 -->
+                    <div class="shrink-0 mt-3 text-xs text-warm-brown/60 font-hand">${timeStr}</div>
                 </div>
             `;
         } else {
             return `
-                <div class="relative mb-4 flex justify-end items-start gap-2">
-                    <!-- 交易卡片 - 偏右 -->
-                    <div class="transaction-item flex-1 max-w-[80%] bg-white rounded-2xl p-3 shadow-watercolor-layered hover:shadow-floating transition-all cursor-pointer group ${payerBorderClass}" data-transaction-id="${tx.id}">
+                <div class="mb-3 flex items-start gap-2 justify-end">
+                    <!-- 時間標記 - 中間偏左 -->
+                    <div class="shrink-0 mt-3 text-xs text-warm-brown/60 font-hand">${timeStr}</div>
+
+                    <!-- 交易卡片 - 靠右 -->
+                    <div class="transaction-item max-w-[70%] bg-white rounded-2xl p-3 shadow-watercolor-layered hover:shadow-floating transition-all cursor-pointer group ${payerBorderClass}" data-transaction-id="${tx.id}">
                         <div class="flex items-center gap-3">
-                            <!-- 步步付標籤 -->
-                            <span class="px-2 py-0.5 rounded-full ${payerBadgeClass} text-xs font-bold shrink-0">步步付</span>
+                            <!-- 付款標籤 -->
+                            <span class="px-2 py-0.5 rounded-full ${payerBadgeClass} text-xs font-bold shrink-0">${paymentText}</span>
 
                             <!-- 價錢 -->
                             <div class="shrink-0">
@@ -190,12 +201,6 @@ export class TransactionRenderer {
                             </div>
                         </div>
                     </div>
-
-                    <!-- 時間標記 -->
-                    <div class="shrink-0 mt-3 text-xs text-warm-brown/60 font-hand font-bold min-w-[40px] text-right">${timeStr}</div>
-
-                    <!-- 時間軸點 - 步步（右邊）-->
-                    <div class="absolute -right-8 top-3 w-4 h-4 rounded-full ${payerDotClass} border-[3px] shadow-sm z-10"></div>
                 </div>
             `;
         }
