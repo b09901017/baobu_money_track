@@ -7,6 +7,51 @@
 
 ---
 
+## [2.9.5] - 2026-01-05
+
+### 🐛 修復 (Fixed)
+
+#### 📊 徹底修復分析頁面交易明細對齊問題
+- ✅ **使用 inline style 強制固定寬度** - 確保左右欄位不會被壓縮
+  - 左欄：`width: 70px; min-width: 70px; max-width: 70px;`
+  - 右欄：`width: 70px; min-width: 70px; max-width: 70px;`
+  - 中欄：`flex: 1 1 0; min-width: 0; overflow: hidden;`
+  - 文字截斷：`overflow: hidden; text-overflow: ellipsis; white-space: nowrap;`
+  - 即使花費名稱很長，金額也不會被推出視窗
+
+#### 🔍 建立 Firestore 複合索引
+- ✅ **新增 firestore.indexes.json** - 定義所需的複合索引
+  - `notebook_id + created_at (DESC)` - 用於載入最近記錄
+  - `notebook_id + date (DESC)` - 用於日期排序查詢
+  - `notebook_id + date (ASC)` - 用於日期範圍查詢
+- ✅ **部署索引到 Firebase** - 修復查詢錯誤
+  - 解決 "The query requires an index" 錯誤
+  - 提升查詢效能
+
+### 🔧 相關檔案變更
+```
+Modified:
+- js/pages/AnalyticsPage.js
+  - renderCardListItem() - 使用 inline style 強制固定寬度
+
+Added:
+- firestore.indexes.json
+  - 定義三個複合索引
+
+Statistics:
+- 2 files changed
+- 1 file added
+- 48 insertions(+)
+- 19 deletions(-)
+```
+
+### 🚀 部署 (Deployment)
+- ✅ 部署 Firestore 索引
+- ✅ 部署到 Firebase Hosting
+- ✅ 更新線上網站：https://baobu-app.web.app
+
+---
+
 ## [2.9.4] - 2026-01-05
 
 ### 🐛 修復 (Fixed)
