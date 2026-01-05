@@ -164,7 +164,14 @@ function initializeApp() {
                 window.currentUser = user;
 
                 // 1. 檢查用戶是否已配對
-                const couple = await window.FirebaseAPI.getUserCouple(user.uid);
+                let couple = null;
+                try {
+                    couple = await window.FirebaseAPI.getUserCouple(user.uid);
+                } catch (error) {
+                    console.error('⚠️ 查詢配對失敗:', error);
+                    // 如果查詢失敗，視為未配對
+                    couple = null;
+                }
 
                 if (!couple) {
                     // 2. 未配對 → 顯示配對頁面
@@ -195,7 +202,28 @@ function initializeApp() {
 
                 // 3. 已配對 → 初始化主應用
                 console.log('✅ 用戶已配對，初始化主應用');
-                await initMainApp(user, couple);
+                try {
+                    await initMainApp(user, couple);
+                } catch (error) {
+                    console.error('❌ 初始化主應用失敗:', error);
+
+                    // 如果是權限錯誤，可能是舊資料不相容
+                    if (error.code === 'permission-denied' || error.message.includes('permissions')) {
+                        console.warn('⚠️ 偵測到舊資料不相容，需要重新配對');
+                        if (window.customDialog) {
+                            await window.customDialog.error(
+                                '偵測到舊版資料不相容，請清除 Firebase 資料後重新配對。\n\n' +
+                                '步驟：\n' +
+                                '1. 前往 Firebase Console\n' +
+                                '2. 刪除 couples、notebooks、transactions\n' +
+                                '3. 重新整理頁面'
+                            );
+                        }
+                        return;
+                    }
+
+                    throw error;
+                }
             } catch (error) {
                 console.error('❌ 應用初始化失敗:', error);
                 if (window.customDialog) {
