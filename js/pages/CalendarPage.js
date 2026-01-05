@@ -190,7 +190,7 @@ export class CalendarPage {
         return cell;
     }
 
-    selectCalendarDay(dateStr, cell) {
+    async selectCalendarDay(dateStr, cell) {
         if (this.calendarMode === 'single') {
             // 單日模式：選中一天，顯示該天的交易
             document.querySelectorAll('#calendarGrid > div').forEach(day => {
@@ -201,7 +201,7 @@ export class CalendarPage {
             this.currentSelectedDate = dateStr;
             this.state.selectedDate = dateStr;
 
-            this.showDayTransactions(dateStr);
+            await this.showDayTransactions(dateStr);
         } else {
             // 區間模式：選擇開始和結束日期
             if (!this.tempRangeStart || this.tempRangeEnd) {
@@ -222,14 +222,14 @@ export class CalendarPage {
                     this.tempRangeEnd = dateStr;
                 }
 
-                this.showRangeTransactions(this.tempRangeStart, this.tempRangeEnd);
+                await this.showRangeTransactions(this.tempRangeStart, this.tempRangeEnd);
                 this.renderCalendar();
             }
         }
     }
 
-    showDayTransactions(dateStr) {
-        const transactions = window.DataManager.getTransactionsByDate(dateStr);
+    async showDayTransactions(dateStr) {
+        const transactions = await window.DataManager.getTransactionsByDate(dateStr);
         const container = document.getElementById('dayTransactions');
         const header = document.getElementById('selectedDate');
 
@@ -257,8 +257,8 @@ export class CalendarPage {
     /**
      * 顯示區間交易（卡片式清單佈局）
      */
-    showRangeTransactions(startDateStr, endDateStr) {
-        const transactions = window.DataManager.getTransactionsByDateRange(startDateStr, endDateStr);
+    async showRangeTransactions(startDateStr, endDateStr) {
+        const transactions = await window.DataManager.getTransactionsByDateRange(startDateStr, endDateStr);
         const container = document.getElementById('dayTransactions');
         const header = document.getElementById('selectedDate');
 
@@ -433,7 +433,7 @@ export class CalendarPage {
     /**
      * 單日模式下切換日期
      */
-    changeSingleDay(delta) {
+    async changeSingleDay(delta) {
         if (this.calendarMode !== 'single' || !this.currentSelectedDate) return;
 
         const currentDate = new Date(this.currentSelectedDate);
@@ -450,13 +450,13 @@ export class CalendarPage {
         }
 
         this.renderCalendar();
-        this.showDayTransactions(newDateStr);
+        await this.showDayTransactions(newDateStr);
     }
 
     /**
      * 回到今天（單日模式）
      */
-    goToToday() {
+    async goToToday() {
         if (this.calendarMode !== 'single') {
             this.toggleMode('single');
         }
@@ -469,6 +469,6 @@ export class CalendarPage {
         this.state.currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
         this.renderCalendar();
-        this.showDayTransactions(todayStr);
+        await this.showDayTransactions(todayStr);
     }
 }
