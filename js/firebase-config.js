@@ -464,6 +464,184 @@ async function deletePhoto(storagePath) {
     }
 }
 
+// ==================== 配對系統 (Couples) ====================
+
+/**
+ * 生成配對碼（6位大寫字母+數字）
+ * @returns {string} - 配對碼
+ */
+function generatePairingCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 排除易混淆字符 (0,O,1,I)
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+}
+
+/**
+ * 建立新配對
+ * @param {string} userId - 用戶 ID
+ * @param {string} role - 角色 ('baobao' | 'bubu')
+ * @param {string} userName - 用戶名稱
+ * @returns {Promise<Object>} - 配對資料
+ */
+async function createCouple(userId, role, userName) {
+    try {
+        const pairingCode = generatePairingCode();
+
+        const coupleData = {
+            member_ids: [userId],
+            member_roles: {
+                [userId]: role
+            },
+            member_names: {
+                [userId]: userName
+            },
+            created_at: serverTimestamp(),
+            pairing_code: pairingCode,
+            is_complete: false  // 是否已完成配對（兩人都加入）
+        };
+
+        const docRef = await addDoc(collection(db, "couples"), coupleData);
+        console.log('✅ 已建立配對:', docRef.id, '配對碼:', pairingCode);
+
+        return {
+            id: docRef.id,
+            pairing_code: pairingCode,
+            ...coupleData
+        };
+    } catch (error) {
+        console.error('❌ 建立配對失敗:', error);
+        throw error;
+    }
+}
+
+/**
+ * 透過配對碼查找配對
+ * @param {string} pairingCode - 配對碼
+ * @returns {Promise<Object|null>} - 配對資料
+ */
+async function findCoupleByCode(pairingCode) {
+    try {
+        const q = query(
+            collection(db, "couples"),
+            where("pairing_code", "==", pairingCode.toUpperCase())
+        );
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            return null;
+        }
+
+        const doc = querySnapshot.docs[0];
+        return {
+            id: doc.id,
+            ...doc.data()
+        };
+    } catch (error) {
+        console.error('❌ 查找配對失敗:', error);
+        throw error;
+    }
+}
+
+/**
+ * 加入現有配對
+ * @param {string} coupleId - 配對 ID
+ * @param {string} userId - 用戶 ID
+ * @param {string} role - 角色 ('baobao' | 'bubu')
+ * @param {string} userName - 用戶名稱
+ * @returns {Promise<void>}
+ */
+async function joinCouple(coupleId, userId, role, userName) {
+    try {
+        const coupleRef = doc(db, "couples", coupleId);
+
+        await updateDoc(coupleRef, {
+            member_ids: [userId, ...[]],  // 會被 Firebase 合併
+            [`member_roles.${userId}`]: role,
+            [`member_names.${userId}`]: userName,
+            is_complete: true,
+            updated_at: serverTimestamp()
+        });
+
+        // 需要先取得現有資料再更新
+        const coupleDoc = await getDocs(query(collection(db, "couples"), where("__name__", "==", coupleId)));
+        if (!coupleDoc.empty) {
+            const currentData = coupleDoc.docs[0].data();
+            const updatedMemberIds = [...new Set([...currentData.member_ids, userId])];
+
+            await updateDoc(coupleRef, {
+                member_ids: updatedMemberIds
+            });
+        }
+
+        console.log('✅ 已加入配對:', coupleId);
+    } catch (error) {
+        console.error('❌ 加入配對失敗:', error);
+        throw error;
+    }
+}
+
+/**
+ * 取得用戶的配對資料
+ * @param {string} userId - 用戶 ID
+ * @returns {Promise<Object|null>} - 配對資料
+ */
+async function getUserCouple(userId) {
+    try {
+        const q = query(
+            collection(db, "couples"),
+            where("member_ids", "array-contains", userId)
+        );
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            return null;
+        }
+
+        const doc = querySnapshot.docs[0];
+        return {
+            id: doc.id,
+            ...doc.data()
+        };
+    } catch (error) {
+        console.error('❌ 取得配對資料失敗:', error);
+        throw error;
+    }
+}
+
+/**
+ * 更新用戶資料
+ * @param {string} userId - 用戶 ID
+ * @param {Object} userData - 用戶資料
+ * @returns {Promise<void>}
+ */
+async function updateUserData(userId, userData) {
+    try {
+        const userRef = doc(db, "users", userId);
+        await updateDoc(userRef, {
+            ...userData,
+            updated_at: serverTimestamp()
+        });
+        console.log('✅ 用戶資料已更新');
+    } catch (error) {
+        // 如果文檔不存在，建立新文檔
+        if (error.code === 'not-found') {
+            const userRef = doc(db, "users", userId);
+            await addDoc(collection(db, "users"), {
+                uid: userId,
+                ...userData,
+                created_at: serverTimestamp()
+            });
+            console.log('✅ 用戶資料已建立');
+        } else {
+            console.error('❌ 更新用戶資料失敗:', error);
+            throw error;
+        }
+    }
+}
+
 // ==================== 導出 API ====================
 
 window.FirebaseAPI = {
@@ -487,7 +665,14 @@ window.FirebaseAPI = {
 
     // Storage
     uploadPhoto,
-    deletePhoto
+    deletePhoto,
+
+    // 配對系統
+    createCouple,
+    findCoupleByCode,
+    joinCouple,
+    getUserCouple,
+    updateUserData
 };
 
 console.log('✅ FirebaseAPI 已掛載到 window');
