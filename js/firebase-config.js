@@ -3,7 +3,7 @@
 // 從 index.html 中載入的 Firebase 模組
 const {
     initializeApp,
-    getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp,
+    getFirestore, collection, addDoc, getDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp,
     getStorage, ref, uploadBytes, getDownloadURL, deleteObject,
     getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
 } = window.firebaseModules;
@@ -230,6 +230,8 @@ async function deleteTransaction(transactionId) {
  */
 async function getNotebooks(coupleId) {
     try {
+        console.log('🔍 查詢配對帳本，coupleId:', coupleId);
+
         const q = query(
             collection(db, "notebooks"),
             where("couple_id", "==", coupleId)
@@ -244,6 +246,9 @@ async function getNotebooks(coupleId) {
         return notebooks;
     } catch (error) {
         console.error('❌ 取得帳本失敗:', error);
+        console.error('   錯誤代碼:', error.code);
+        console.error('   錯誤訊息:', error.message);
+        console.error('   coupleId:', coupleId);
         throw error;
     }
 }
@@ -563,24 +568,35 @@ async function joinCouple(coupleId, userId, role, userName) {
     try {
         const coupleRef = doc(db, "couples", coupleId);
 
+        // 先取得現有配對資料
+        const coupleSnap = await getDoc(coupleRef);
+        if (!coupleSnap.exists()) {
+            throw new Error('配對不存在');
+        }
+
+        const currentData = coupleSnap.data();
+
+        // 檢查配對是否已完成
+        if (currentData.is_complete) {
+            throw new Error('此配對已滿，無法加入');
+        }
+
+        // 檢查角色是否衝突
+        const existingRoles = Object.values(currentData.member_roles);
+        if (existingRoles.includes(role)) {
+            throw new Error('此角色已被選擇，請選擇其他角色');
+        }
+
+        // 更新配對資料
+        const updatedMemberIds = [...new Set([...currentData.member_ids, userId])];
+
         await updateDoc(coupleRef, {
-            member_ids: [userId, ...[]],  // 會被 Firebase 合併
+            member_ids: updatedMemberIds,
             [`member_roles.${userId}`]: role,
             [`member_names.${userId}`]: userName,
             is_complete: true,
             updated_at: serverTimestamp()
         });
-
-        // 需要先取得現有資料再更新
-        const coupleDoc = await getDocs(query(collection(db, "couples"), where("__name__", "==", coupleId)));
-        if (!coupleDoc.empty) {
-            const currentData = coupleDoc.docs[0].data();
-            const updatedMemberIds = [...new Set([...currentData.member_ids, userId])];
-
-            await updateDoc(coupleRef, {
-                member_ids: updatedMemberIds
-            });
-        }
 
         console.log('✅ 已加入配對:', coupleId);
     } catch (error) {
@@ -596,6 +612,8 @@ async function joinCouple(coupleId, userId, role, userName) {
  */
 async function getUserCouple(userId) {
     try {
+        console.log('🔍 查詢用戶配對，userId:', userId);
+
         const q = query(
             collection(db, "couples"),
             where("member_ids", "array-contains", userId)
@@ -603,16 +621,27 @@ async function getUserCouple(userId) {
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
+            console.log('⚠️ 未找到配對資料');
             return null;
         }
 
         const doc = querySnapshot.docs[0];
-        return {
+        const coupleData = {
             id: doc.id,
             ...doc.data()
         };
+
+        console.log('✅ 找到配對資料:', {
+            id: coupleData.id,
+            member_ids: coupleData.member_ids,
+            is_complete: coupleData.is_complete
+        });
+
+        return coupleData;
     } catch (error) {
         console.error('❌ 取得配對資料失敗:', error);
+        console.error('   錯誤代碼:', error.code);
+        console.error('   錯誤訊息:', error.message);
         throw error;
     }
 }

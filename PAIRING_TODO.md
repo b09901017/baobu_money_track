@@ -212,12 +212,34 @@ Google 登入成功
 
 ---
 
+## 🔧 最新修復（2026-01-05）
+
+### 已修復的問題
+
+1. **✅ joinCouple 函數錯誤**
+   - 問題：使用了錯誤的查詢語法 `where("__name__", "==", coupleId)`
+   - 修復：改用 `getDoc(doc(db, "couples", coupleId))`
+   - 新增：角色衝突檢查、配對已滿檢查
+
+2. **✅ 缺少 getDoc 導入**
+   - 問題：index.html 未導入 `getDoc` 函數
+   - 修復：在 Firebase imports 中添加 `getDoc`
+
+3. **✅ 錯誤處理增強**
+   - getUserCouple：添加詳細日誌和錯誤訊息
+   - getNotebooks：添加 coupleId 追蹤日誌
+   - joinCouple：添加驗證和友善錯誤訊息
+
+4. **✅ 建立測試指南**
+   - 新增：`TESTING_GUIDE.md`
+   - 包含：完整的診斷步驟和測試流程
+
 ## 🐛 已知問題與注意事項
 
-1. **角色衝突**：需要檢查兩人不能選擇相同角色
+1. ✅ **角色衝突**：已在 joinCouple 中添加檢查
 2. **配對碼唯一性**：雖然機率低，但仍需處理配對碼重複情況
 3. **已配對用戶**：需要防止已配對用戶重新配對
-4. **配對完成狀態**：`is_complete` 需正確更新
+4. ✅ **配對完成狀態**：joinCouple 已正確設定 `is_complete`
 
 ---
 
