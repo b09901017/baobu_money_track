@@ -378,24 +378,27 @@ class DataManager {
             const amount = parseFloat(tx.amount);
             const isPaidByMe = tx.payer === 'me' || tx.user_id === myId;
 
-            if (tx.beneficiary === 'both') {
-                // 兩人平分
-                const half = amount / 2;
-                if (isPaidByMe) {
-                    myTotal += half;  // 我多付了一半
-                } else {
-                    partnerTotal += half;  // 對方多付了一半
+            // 根據「誰幫誰付」計算欠款
+            if (isPaidByMe) {
+                // 我付的錢
+                if (tx.beneficiary === 'both') {
+                    // 我幫共付 → 對方欠我一半
+                    myTotal += amount / 2;
+                } else if (tx.beneficiary === 'partner') {
+                    // 我幫對方付 → 對方欠我全額
+                    myTotal += amount;
                 }
-            } else if (tx.beneficiary === 'partner') {
-                // 幫對方付
-                if (isPaidByMe) {
-                    myTotal += amount;  // 我幫對方付，對方欠我
+                // else: 我幫我付 (beneficiary === 'self') → 不影響欠款
+            } else {
+                // 對方付的錢
+                if (tx.beneficiary === 'both') {
+                    // 對方幫共付 → 我欠對方一半
+                    partnerTotal += amount / 2;
+                } else if (tx.beneficiary === 'self') {
+                    // 對方幫我付 → 我欠對方全額
+                    partnerTotal += amount;
                 }
-            } else if (tx.beneficiary === 'self') {
-                // 自己付自己的
-                if (!isPaidByMe) {
-                    partnerTotal += amount;  // 對方幫我付，我欠對方
-                }
+                // else: 對方幫對方付 (beneficiary === 'partner') → 不影響欠款
             }
         });
 

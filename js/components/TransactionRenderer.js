@@ -136,7 +136,17 @@ export class TransactionRenderer {
             : 'border-r-4 border-macaron-blue';
 
         // 計算時間（使用 created_at）
-        const time = new Date(tx.created_at);
+        let time;
+        if (tx.created_at && tx.created_at.toDate) {
+            // Firebase Timestamp 物件
+            time = tx.created_at.toDate();
+        } else if (tx.created_at) {
+            // 一般日期字串
+            time = new Date(tx.created_at);
+        } else {
+            // 沒有 created_at，使用當前時間
+            time = new Date();
+        }
         const timeStr = `${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`;
 
         // 照片圖標（如果有照片）
@@ -243,7 +253,17 @@ export class TransactionRenderer {
             : 'border-r-4 border-macaron-blue';
 
         // 計算時間（使用 created_at）
-        const time = new Date(tx.created_at);
+        let time;
+        if (tx.created_at && tx.created_at.toDate) {
+            // Firebase Timestamp 物件
+            time = tx.created_at.toDate();
+        } else if (tx.created_at) {
+            // 一般日期字串
+            time = new Date(tx.created_at);
+        } else {
+            // 沒有 created_at，使用當前時間
+            time = new Date();
+        }
         const timeStr = `${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`;
 
         // 照片圖標（如果有照片）

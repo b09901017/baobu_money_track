@@ -107,7 +107,7 @@ export class TimelineView {
     }
 
     /**
-     * 渲染可愛的日期分隔線
+     * 渲染可愛的日期分隔線（軟萌風格）
      */
     renderDateDivider(dateStr, isFirst = false) {
         const date = new Date(dateStr);
@@ -131,19 +131,17 @@ export class TimelineView {
         }
 
         return `
-            <div class="relative flex items-center justify-center ${isFirst ? 'mt-0' : 'mt-8'} mb-6">
+            <div class="relative flex items-center justify-center ${isFirst ? 'mt-0' : 'mt-6'} mb-4">
                 <!-- 左側裝飾線 -->
-                <div class="flex-1 h-px bg-gradient-to-r from-transparent via-macaron-pink/40 to-macaron-pink/60"></div>
+                <div class="flex-1 h-px bg-gradient-to-r from-transparent via-macaron-pink/20 to-macaron-pink/30"></div>
 
-                <!-- 日期標籤 -->
-                <div class="relative mx-4 px-4 py-2 bg-gradient-to-br from-macaron-cream to-white rounded-full border-2 border-macaron-pink/30 shadow-watercolor-layered">
-                    <div class="absolute -top-2 -left-1 text-lg">✨</div>
-                    <div class="absolute -bottom-2 -right-1 text-lg">🌸</div>
-                    <span class="font-hand font-bold text-soft-ink text-base">${displayText}</span>
+                <!-- 日期標籤 - 更細小軟萌 -->
+                <div class="relative mx-3 px-3 py-1 bg-white/80 rounded-full border border-macaron-pink/20 shadow-sm backdrop-blur-sm">
+                    <span class="font-hand text-soft-ink text-xs opacity-70">${displayText}</span>
                 </div>
 
                 <!-- 右側裝飾線 -->
-                <div class="flex-1 h-px bg-gradient-to-r from-macaron-pink/60 via-macaron-pink/40 to-transparent"></div>
+                <div class="flex-1 h-px bg-gradient-to-r from-macaron-pink/30 via-macaron-pink/20 to-transparent"></div>
             </div>
         `;
     }
