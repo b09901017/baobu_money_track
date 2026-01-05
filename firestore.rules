@@ -27,9 +27,14 @@ service cloud.firestore {
       allow create: if isSignedIn() &&
                        request.auth.uid in request.resource.data.member_ids;
 
-      // 更新：只能更新自己是成員的配對
-      allow update: if isSignedIn() &&
-                       request.auth.uid in resource.data.member_ids;
+      // 更新：允許成員更新，或允許新用戶加入未完成的配對
+      allow update: if isSignedIn() && (
+                       // 情況1：已經是成員
+                       request.auth.uid in resource.data.member_ids ||
+                       // 情況2：加入配對（配對未完成且更新後會包含自己）
+                       (resource.data.is_complete == false &&
+                        request.auth.uid in request.resource.data.member_ids)
+                     );
 
       // 刪除：暫不允許刪除配對
       allow delete: if false;

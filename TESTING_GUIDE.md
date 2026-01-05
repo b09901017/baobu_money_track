@@ -18,7 +18,15 @@
 ```javascript
 match /couples/{coupleId} {
   allow read: if isSignedIn();
-  // ...
+
+  // 更新：允許成員更新，或允許新用戶加入未完成的配對
+  allow update: if isSignedIn() && (
+    // 情況1：已經是成員
+    request.auth.uid in resource.data.member_ids ||
+    // 情況2：加入配對（配對未完成且更新後會包含自己）
+    (resource.data.is_complete == false &&
+     request.auth.uid in request.resource.data.member_ids)
+  );
 }
 
 match /notebooks/{notebookId} {
@@ -26,6 +34,11 @@ match /notebooks/{notebookId} {
   // ...
 }
 ```
+
+**重要提醒（2026-01-05 更新）**：
+- ✅ 已修復用戶二無法加入配對的權限問題
+- ✅ 安全規則已部署到 Firebase
+- ✅ 配對功能現在可正常使用
 
 ---
 

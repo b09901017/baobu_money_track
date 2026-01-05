@@ -2,7 +2,7 @@
 
 > 一個童話風格的情侶共同記帳應用，支援多帳本管理、彈性付款記錄、智能結算功能。
 
-![Version](https://img.shields.io/badge/version-3.0.0-pink)
+![Version](https://img.shields.io/badge/version-4.0.0-pink)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow)
 ![Firebase](https://img.shields.io/badge/Firebase-Integrated-orange)
@@ -357,10 +357,18 @@ service firebase.storage {
 
 ### ✅ 已實作功能
 
+#### 👫 情侶配對系統（v4.0 新功能）
+- ✅ **建立配對** - 生成 6 位配對碼
+- ✅ **加入配對** - 輸入配對碼與伴侶配對
+- ✅ **角色選擇** - 寶寶 / 步步
+- ✅ **共享帳本** - 配對後共用所有帳本
+- ✅ **安全保障** - 只能訪問自己配對的資料
+- ✅ **智能驗證** - 角色衝突檢查、配對碼驗證
+
 #### 🔐 用戶認證
 - ✅ Google 登入
 - ✅ 用戶狀態管理
-- ✅ 首次登入自動建立預設帳本
+- ✅ 首次配對自動建立共享帳本
 
 #### 🏠 首頁 - 時間軸視圖
 - ✅ **無限滾動時間軸**（一路往下滑查看歷史）

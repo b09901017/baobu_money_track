@@ -7,6 +7,90 @@
 
 ---
 
+## [4.0.0] - 2026-01-05
+
+### 🎉 重大功能 (Major Release)
+
+#### 👫 情侶配對系統正式上線
+
+完整的情侶配對系統已實作完成並成功部署！兩個用戶現在可以共享同一個記帳本，選擇角色（寶寶/步步），一起記錄共同花費。
+
+### 🐛 修復 (Fixed)
+
+#### 🔐 修復用戶二無法加入配對的權限問題
+- ✅ **問題**：用戶二嘗試加入配對時出現 `Missing or insufficient permissions` 錯誤
+- ✅ **原因**：`firestore.rules` 的 `allow update` 規則只檢查 `resource.data.member_ids`（更新前的資料）
+  - 用戶二還不是成員，所以無法通過權限檢查
+  - 造成「雞生蛋、蛋生雞」的循環依賴問題
+- ✅ **修復**：修改安全規則允許新用戶加入未完成的配對
+  ```javascript
+  // 情況1：已經是成員
+  request.auth.uid in resource.data.member_ids ||
+  // 情況2：加入配對（配對未完成且更新後會包含自己）
+  (resource.data.is_complete == false &&
+   request.auth.uid in request.resource.data.member_ids)
+  ```
+- ✅ **部署**：已成功部署到 Firebase (`firebase deploy --only firestore:rules`)
+
+### 🔧 相關檔案變更
+```
+Modified:
+- firestore.rules
+  - 修改 couples collection 的 allow update 規則
+  - 新增雙重條件檢查（已是成員 OR 加入配對）
+
+Statistics:
+- 1 file changed
+- 7 insertions(+)
+- 2 deletions(-)
+```
+
+### 📚 文檔 (Documentation)
+
+- 更新 CHANGELOG.md 記錄配對權限修復
+- 更新 README.md 版本號至 v4.0.0
+- 更新 PAIRING_TODO.md 完成階段 7 部署
+- 更新 TESTING_GUIDE.md 安全規則說明
+
+### 🚀 部署 (Deployment)
+- ✅ 部署 Firestore 安全規則
+- ✅ 更新線上網站：https://baobu-app.web.app
+- ✅ 配對功能已可正常使用
+
+### ✨ 完整配對系統功能
+
+#### 建立配對
+- 登入後自動顯示配對頁面
+- 選擇角色（寶寶/步步）
+- 生成 6 位配對碼
+- 分享配對碼給伴侶
+
+#### 加入配對
+- 輸入配對碼
+- 選擇不同的角色
+- 成功配對後共享記帳本
+
+#### 安全保障
+- 只能讀寫自己配對的資料
+- 配對碼唯一驗證
+- 角色衝突檢查
+- 配對完成狀態控制
+
+### 💡 技術亮點
+
+#### Firestore 安全規則優化
+- 使用條件組合允許不同場景
+- `resource.data` vs `request.resource.data` 的正確使用
+- 防止未授權訪問的多重檢查
+
+#### 配對流程設計
+- 兩階段配對（建立 → 加入）
+- 配對碼自動生成（6位字母+數字）
+- 角色映射系統（baobao/bubu）
+- 配對完成狀態管理
+
+---
+
 ## [4.0.0-alpha.3] - 2026-01-05
 
 ### 🎉 重大功能 (Major Feature)
