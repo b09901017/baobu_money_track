@@ -36,7 +36,7 @@ export class BarChart {
                             <span class="font-hand font-bold text-sm text-soft-ink">${item.category}</span>
                         </div>
                         <!-- 百分比 -->
-                        <span class="font-hand font-bold text-xs text-warm-brown/70">${item.percentage.toFixed(1)}%</span>
+                        <span class="font-hand font-bold text-xs text-warm-brown/70">${item.percentage}%</span>
                     </div>
 
                     <!-- 長條圖背景與進度條 -->
