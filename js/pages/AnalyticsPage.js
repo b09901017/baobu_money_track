@@ -444,26 +444,26 @@ export class AnalyticsPage {
 
         return `
             <div class="transaction-item px-4 py-3 hover:bg-macaron-cream/20 cursor-pointer transition-colors" data-transaction-id="${tx.id}">
-                <div class="flex items-start gap-3">
-                    <!-- 付款標籤（固定寬度 68px） -->
-                    <div class="shrink-0" style="width: 68px;">
-                        <span class="text-xs font-hand font-bold ${payerColor} block">${payText}</span>
+                <div class="flex items-center gap-3">
+                    <!-- 付款標籤（固定寬度 70px） -->
+                    <div class="shrink-0 flex items-center" style="width: 70px;">
+                        <span class="text-xs font-hand font-bold ${payerColor}">${payText}</span>
                     </div>
 
-                    <!-- 項目資訊（彈性區域） -->
-                    <div class="flex-1 min-w-0 overflow-hidden">
+                    <!-- 項目資訊（彈性區域，置中） -->
+                    <div class="flex-1 min-w-0 overflow-hidden flex flex-col justify-center">
                         <!-- 名稱 -->
-                        <div class="flex items-center">
-                            <span class="font-hand text-sm text-soft-ink truncate font-bold">${tx.item_name}</span>
+                        <div class="flex items-center justify-center">
+                            <span class="font-hand text-sm text-soft-ink truncate font-bold text-center">${tx.item_name}</span>
                             ${photoIcon}
                         </div>
                         <!-- 備註/分類 -->
-                        ${note ? `<div class="text-xs text-warm-brown/60 truncate mt-0.5">${note}</div>` : ''}
+                        ${note ? `<div class="text-xs text-warm-brown/60 truncate mt-0.5 text-center">${note}</div>` : ''}
                     </div>
 
                     <!-- 金額（固定寬度 70px，右對齊） -->
-                    <div class="shrink-0" style="width: 70px;">
-                        <span class="font-display font-bold text-base text-[#E27D60] block text-right">$${tx.amount}</span>
+                    <div class="shrink-0 flex items-center justify-end" style="width: 70px;">
+                        <span class="font-display font-bold text-base text-[#E27D60]">$${tx.amount}</span>
                     </div>
                 </div>
             </div>

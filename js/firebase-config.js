@@ -133,6 +133,34 @@ async function getTransactions(notebookId, limitCount = 50) {
 }
 
 /**
+ * 取得最近的交易記錄（按建立時間排序）
+ * @param {string} notebookId - 帳本 ID
+ * @param {number} limitCount - 限制筆數
+ * @returns {Promise<Array>} - 交易列表
+ */
+async function getRecentTransactions(notebookId, limitCount = 30) {
+    try {
+        const q = query(
+            collection(db, "transactions"),
+            where("notebook_id", "==", notebookId),
+            orderBy("created_at", "desc"),
+            limit(limitCount)
+        );
+        const querySnapshot = await getDocs(q);
+        const transactions = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        console.log(`✅ 已取得最近 ${transactions.length} 筆交易`);
+        return transactions;
+    } catch (error) {
+        console.error('❌ 取得最近交易失敗:', error);
+        throw error;
+    }
+}
+
+/**
  * 取得日期範圍內的交易
  * @param {string} notebookId - 帳本 ID
  * @param {string} startDate - 開始日期 (YYYY-MM-DD)
@@ -447,6 +475,7 @@ window.FirebaseAPI = {
     // Firestore
     addTransaction,
     getTransactions,
+    getRecentTransactions,
     getTransactionsByDateRange,
     updateTransaction,
     deleteTransaction,

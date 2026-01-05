@@ -7,6 +7,86 @@
 
 ---
 
+## [2.9.4] - 2026-01-05
+
+### 🐛 修復 (Fixed)
+
+#### 📊 分析頁面交易明細對齊優化
+- ✅ **修正左中右三欄式布局** - 確保內容不會擠壓
+  - 左欄：固定寬度 70px，顯示「誰幫誰付」（4個字）
+  - 中欄：彈性區域，內容置中對齊，過長自動截斷
+  - 右欄：固定寬度 70px，金額右對齊
+  - 使用 `items-center` 確保垂直置中
+  - 使用 `justify-center` 和 `text-center` 確保內容置中
+  - 使用 `shrink-0` 防止固定欄位被壓縮
+
+### 🔄 變更 (Changed)
+
+#### 📜 時間軸載入邏輯優化
+- ✅ **改為載入最近 N 筆記錄** - 而非最近 N 天
+  - 初始載入最近 30 筆記錄
+  - 點擊「載入更多」每次增加 30 筆
+  - 按建立時間（`created_at`）排序，而非交易日期（`date`）
+  - 更符合用戶查看最新記錄的需求
+
+- **新增 API 方法**
+  - `FirebaseAPI.getRecentTransactions(notebookId, limit)` - 從 Firestore 載入最近 N 筆記錄
+  - `DataManager.getRecentTransactions(limit)` - 包裝方法，支援 fallback
+
+- **修改 TimelineView.js**
+  - 改為使用 `transactionsLoaded` 追蹤已載入筆數（取代 `daysLoaded`）
+  - 更新 `loadTransactions()` 使用新的 API
+  - 更新 `loadMore()` 和 `refresh()` 方法
+
+#### 📚 帳本頁面統一設計
+- ✅ **所有帳本統一大小** - 移除第一個帳本特殊樣式
+  - 移除第一個帳本的 `col-span-2` 樣式
+  - 統一所有帳本標題為 `text-xl` 大小
+  - 所有帳本現在都是相同大小和佈局
+  - 視覺更一致，使用者體驗更統一
+
+### ✨ 改善 (Improved)
+
+#### 使用者體驗
+- 📊 **分析頁面明細更清晰** - 三欄式布局不會擠壓，內容置中易讀
+- 📜 **時間軸載入更快速** - 載入固定筆數比載入固定天數更可預測
+- 📚 **帳本頁面更整齊** - 所有帳本統一大小，視覺更平衡
+
+### 🔧 相關檔案變更
+```
+Modified:
+- js/pages/AnalyticsPage.js
+  - renderCardListItem() - 修正三欄式布局對齊問題
+
+- js/firebase-config.js
+  - 新增 getRecentTransactions() 方法
+  - 按 created_at 排序，支援 limit 參數
+
+- js/data.js
+  - 新增 getRecentTransactions() 包裝方法
+  - 支援 fallback 到快取資料
+
+- js/components/TimelineView.js
+  - 改為追蹤 transactionsLoaded（筆數）而非 daysLoaded（天數）
+  - 使用 getRecentTransactions() 載入記錄
+  - 更新所有相關方法
+
+- js/pages/NotebooksPage.js
+  - 移除第一個帳本的 col-span-2 樣式
+  - 統一所有帳本標題大小
+
+Statistics:
+- 5 files changed
+- 89 insertions(+)
+- 47 deletions(-)
+```
+
+### 🚀 部署 (Deployment)
+- ✅ 部署到 Firebase Hosting
+- ✅ 更新線上網站：https://baobu-app.web.app
+
+---
+
 ## [2.8.0] - 2026-01-05
 
 ### ✨ 新增 (Added)

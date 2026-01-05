@@ -182,6 +182,28 @@ class DataManager {
     }
 
     /**
+     * 取得最近的交易記錄
+     * @param {number} limit - 限制筆數
+     * @returns {Promise<Array>} - 交易列表
+     */
+    async getRecentTransactions(limit = 30) {
+        try {
+            const transactions = await window.FirebaseAPI.getRecentTransactions(
+                this.currentNotebook,
+                limit
+            );
+            return transactions;
+        } catch (error) {
+            console.error('❌ 取得最近交易失敗:', error);
+            // Fallback 到快取資料（按建立時間排序）
+            return this.transactions
+                .filter(tx => tx.notebook_id === this.currentNotebook)
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                .slice(0, limit);
+        }
+    }
+
+    /**
      * 取得日期範圍內的交易
      * @param {string} startDate - 開始日期 (YYYY-MM-DD)
      * @param {string} endDate - 結束日期 (YYYY-MM-DD)

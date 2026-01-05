@@ -51,13 +51,13 @@ export class NotebooksPage {
             }
 
             return `
-                <div class="group relative cursor-pointer ${isFirst ? 'col-span-2' : ''}" data-notebook-id="${nb.id}">
+                <div class="group relative cursor-pointer" data-notebook-id="${nb.id}">
                     <div class="relative w-full aspect-[3/4] rounded-r-xl rounded-l-md shadow-book bg-white transition-all duration-300 transform ${isActive ? '-translate-y-2 scale-105 shadow-floating ring-2 ring-antique-gold' : 'hover:-translate-y-2 hover:rotate-1'} overflow-visible">
                         <div class="absolute top-0 bottom-0 left-0 w-3 bg-gradient-to-r ${colorScheme.spine} rounded-l-md z-20 shadow-md"></div>
                         <div class="absolute inset-0 left-2 bg-gradient-to-br ${colorScheme.gradient} rounded-r-xl overflow-hidden flex flex-col justify-end p-4">
                             <div class="absolute inset-0 book-texture opacity-20"></div>
                             <div class="relative z-10">
-                                <h3 class="text-soft-ink ${isFirst ? 'text-2xl' : 'text-xl'} font-hand font-bold leading-tight mb-2">${nb.name}</h3>
+                                <h3 class="text-soft-ink text-xl font-hand font-bold leading-tight mb-2">${nb.name}</h3>
                                 ${statsHTML}
                             </div>
                         </div>

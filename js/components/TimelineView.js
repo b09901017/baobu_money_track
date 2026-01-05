@@ -14,8 +14,8 @@ export class TimelineView {
         this.loadMoreContainer = document.getElementById('loadMoreContainer');
 
         // 無限滾動參數
-        this.daysLoaded = 30; // 初始載入 30 天
-        this.loadMoreDays = 30; // 每次載入更多 30 天
+        this.transactionsLoaded = 30; // 初始載入 30 筆
+        this.loadMoreCount = 30; // 每次載入更多 30 筆
     }
 
     /**
@@ -30,16 +30,8 @@ export class TimelineView {
      * @param {boolean} append - 是否追加到現有記錄
      */
     async loadTransactions(append = false) {
-        // 獲取日期範圍：從今天開始往前 N 天
-        const today = new Date();
-        const endDate = window.DataManager.formatDate(today);
-
-        const startDate = new Date(today);
-        startDate.setDate(startDate.getDate() - this.daysLoaded);
-        const startDateStr = window.DataManager.formatDate(startDate);
-
-        // 獲取交易記錄
-        const transactions = await window.DataManager.getTransactionsByDateRange(startDateStr, endDate);
+        // 獲取最近 N 筆交易記錄
+        const transactions = await window.DataManager.getRecentTransactions(this.transactionsLoaded);
 
         // 檢查是否有記錄
         if (transactions.length === 0 && !append) {
@@ -52,14 +44,13 @@ export class TimelineView {
         if (this.timelineContainer) this.timelineContainer.classList.remove('hidden');
         if (this.emptyState) this.emptyState.classList.add('hidden');
 
-        // 按日期和時間排序（最新的在上面）
-        transactions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        // 記錄已經按 created_at 排序（由 getRecentTransactions 完成）
 
         // 渲染交易記錄
         this.renderTimeline(transactions, append);
 
         // 顯示或隱藏「載入更多」按鈕
-        if (transactions.length >= this.daysLoaded) {
+        if (transactions.length >= this.transactionsLoaded) {
             if (this.loadMoreContainer) this.loadMoreContainer.classList.remove('hidden');
         } else {
             if (this.loadMoreContainer) this.loadMoreContainer.classList.add('hidden');
@@ -70,7 +61,7 @@ export class TimelineView {
      * 載入更多記錄
      */
     async loadMore() {
-        this.daysLoaded += this.loadMoreDays;
+        this.transactionsLoaded += this.loadMoreCount;
         await this.loadTransactions(false);
     }
 
@@ -170,7 +161,7 @@ export class TimelineView {
      * 刷新時間軸（在新增/編輯/刪除交易後）
      */
     async refresh() {
-        this.daysLoaded = 30; // 重置為初始天數
+        this.transactionsLoaded = 30; // 重置為初始筆數
         await this.loadTransactions(false);
     }
 }
