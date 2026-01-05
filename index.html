@@ -442,12 +442,13 @@
             </div>
         </div>
 
-        <!-- 浮動新增按鈕 -->
-        <button id="fabAdd" class="fixed bottom-24 right-6 z-[60] w-16 h-16 bg-gradient-to-tr from-[#E27D60] to-[#E8A87C] text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 border-4 border-white relative group">
-            <span class="material-symbols-outlined text-3xl group-hover:rotate-90 transition-transform">edit</span>
-            <span class="absolute -top-2 -right-2 text-2xl" style="animation: sparkle 1.5s ease-in-out infinite;">✨</span>
-        </button>
     </div>
+
+    <!-- 浮動新增按鈕（移到 mainContainer 外面以確保 fixed 定位正確） -->
+    <button id="fabAdd" class="fixed bottom-24 right-6 z-[60] w-16 h-16 bg-gradient-to-tr from-[#E27D60] to-[#E8A87C] text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 border-4 border-white relative group">
+        <span class="material-symbols-outlined text-3xl group-hover:rotate-90 transition-transform">edit</span>
+        <span class="absolute -top-2 -right-2 text-2xl" style="animation: sparkle 1.5s ease-in-out infinite;">✨</span>
+    </button>
 
     <!-- 記帳表單 Bottom Sheet -->
     <div id="addTransactionSheet" class="bottom-sheet fixed inset-0 z-[100] hidden">
