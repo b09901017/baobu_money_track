@@ -11,23 +11,26 @@
 
 ## 開發策略
 
-### 🎯 當前階段: 維護與優化
-1. **前端已完成模組化重構**
+### 🎯 當前階段: 已上線運行 (v4.2.0)
+1. **已完成模組化重構與 Firebase 整合**
    - ✅ 完成 16 個 JS 模組化檔案（總計 2,241 行）
    - ✅ 完成 20 個 CSS 模組化檔案（按 ITCSS 架構組織）
-   - ✅ 使用 `DataManager` + `localStorage` 管理資料
+   - ✅ 整合 Firebase（Authentication, Firestore, Storage, Hosting）
+   - ✅ 部署上線：https://baobu-app.web.app
    - ✅ 所有核心功能已實作完成
+   - ✅ **絕對角色系統**：使用 baobao/bubu 固定角色，不依賴相對邏輯
 
-2. **目前可進行的工作**
+2. **角色系統說明**
+   - 🎭 **絕對角色設計**：寶寶（baobao）和步步（bubu）為固定角色
+   - 👫 **配對機制**：兩個 Gmail 帳號綁定兩個角色，共同經營記帳本
+   - 📝 **資料結構**：所有交易使用絕對角色（payer 和 beneficiary）
+   - 🔄 **無相對邏輯**：不使用 me/partner/self 等相對值，避免混淆
+
+3. **目前可進行的工作**
    - 🔧 優化現有功能與使用者體驗
    - ➕ 擴展新功能（如：預算追蹤、視覺化圖表）
    - 🧪 添加單元測試
-   - 🔥 未來整合 Firebase（已預留接口）
-
-3. **未來串接 Firebase**
-   - 替換 `DataManager` 為真實 Firebase 呼叫
-   - 不需要大幅修改邏輯
-   - 平滑過渡到後端整合
+   - 📱 PWA 支援（離線使用）
 
 ### 📱 頁面構想 (初步,可調整)
 - **底部三個浮動按鈕**: 📖 帳本總覽 | 💰 記帳 | 📊 分析
@@ -265,12 +268,19 @@ window.DataManager.getTransactions('notebook_1');
 - [x] 結算卡片（智能計算欠款）
 - [x] 童話風格設計系統（馬卡龍色系）
 - [x] 響應式設計（手機優先）
-- [x] DataManager + localStorage 資料管理
+- [x] Firebase 整合與部署
+  - Firebase Authentication（Google 登入）
+  - Firestore 資料庫
+  - Firebase Storage（照片儲存）
+  - Firebase Hosting（已部署：https://baobu-app.web.app）
+- [x] **絕對角色系統（v4.2.0）**：完全修復付款人邏輯
+  - 統一使用絕對角色（baobao/bubu）
+  - 修復表單、資料層、顯示層的一致性
+  - 解決配對系統與角色綁定問題
 
 🔜 **下一步可做:**
 - [ ] 實作分析頁面的視覺化圖表（如：圓餅圖、長條圖）
 - [ ] 新增預算追蹤功能
-- [ ] 實作照片上傳功能（目前已預留欄位）
 - [ ] 添加單元測試
 - [ ] 優化動畫與互動體驗
 - [ ] 新增更多分類圖標
@@ -278,12 +288,10 @@ window.DataManager.getTransactions('notebook_1');
 - [ ] 匯出報表功能（CSV、PDF）
 
 ⏰ **未來整合:**
-- [ ] Firebase 設定與串接
-- [ ] 替換 DataManager 為 Firebase
-- [ ] 圖片上傳至 Firebase Storage
-- [ ] 多使用者認證
 - [ ] PWA 支援（離線使用）
-- [ ] 部署上線（Firebase Hosting / Vercel）
+- [ ] 通知功能（提醒結算）
+- [ ] 多語言支援
+- [ ] 資料匯出與備份
 
 ---
 

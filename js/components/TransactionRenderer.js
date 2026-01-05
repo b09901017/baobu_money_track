@@ -42,12 +42,12 @@ const TIMELINE_COLORS = {
 function getPaymentText(tx) {
     // 使用絕對角色判斷（baobao 或 bubu）
     if (tx.payer === 'baobao') {
-        if (tx.beneficiary === 'self') return '寶幫寶付';
-        if (tx.beneficiary === 'partner') return '寶幫步付';
+        if (tx.beneficiary === 'baobao') return '寶幫寶付';
+        if (tx.beneficiary === 'bubu') return '寶幫步付';
         return '寶幫共付';
     } else if (tx.payer === 'bubu') {
-        if (tx.beneficiary === 'self') return '步幫步付';
-        if (tx.beneficiary === 'partner') return '步幫寶付';
+        if (tx.beneficiary === 'bubu') return '步幫步付';
+        if (tx.beneficiary === 'baobao') return '步幫寶付';
         return '步幫共付';
     }
     // 容錯：如果 payer 不是預期的值，返回預設文字
@@ -235,8 +235,8 @@ export class TransactionRenderer {
             : 'bg-warm-brown/10 border-warm-brown';
 
         const payerText = tx.payer === 'baobao' ? '寶寶' : '步步';
-        const beneficiaryText = tx.beneficiary === 'self' ? '寶寶'
-            : tx.beneficiary === 'partner' ? '步步'
+        const beneficiaryText = tx.beneficiary === 'baobao' ? '寶寶'
+            : tx.beneficiary === 'bubu' ? '步步'
             : '寶步';
 
         // 判斷是否為寶寶付款（使用絕對角色）

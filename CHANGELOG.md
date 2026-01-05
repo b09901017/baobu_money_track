@@ -7,6 +7,84 @@
 
 ---
 
+## [4.2.0] - 2026-01-06
+
+### 🐛 重大修復 (Critical Fix)
+
+#### 💸 修復付款人角色錯亂的致命 Bug
+
+**問題**：新增交易時，無論選擇哪個付款人，都會被錯誤儲存為「步步」
+
+- ❌ **錯誤現象**：
+  - 選擇「寶寶付款」→ 實際儲存為「步步付款」
+  - 寶幫步出 → 錯誤變成 步幫步出
+  - 寶幫共付 → 錯誤變成 步幫共付
+  - 如果是「步出」（步步為自己付款），會出現 Firebase 錯誤：`payer` 欄位值為 `undefined`
+  - 導致整個欠款邏輯和分析頁面計算錯誤
+
+- 🔍 **根本原因**：
+  - 表單 HTML 使用**相對值**（`value="me"` / `value="partner"`）
+  - 但表單**顯示固定的絕對角色**（「寶寶」/「步步」）
+  - 造成邏輯混亂：
+    - 不管誰登入，選「寶寶」都提交 `value="me"`
+    - 如果**步步**登入，`me` 會被轉換為 `bubu`
+    - 如果**寶寶**登入，`partner` 會被轉換為 `bubu`（如果伴侶是步步）
+    - 未配對時，`partner.role` 為 `undefined`，導致 Firebase 錯誤
+
+- ✅ **修復方案**：
+  1. **統一使用絕對角色**（`'baobao'` | `'bubu'`）
+     - 表單 `value` 從 `me/partner` 改為 `baobao/bubu`
+     - `beneficiary` 從 `self/partner/both` 改為 `baobao/bubu/both`
+  2. **移除不必要的轉換邏輯**
+     - 簡化 `DataManager.addTransaction()`
+     - 更新 `calculateBalance()` 中的 beneficiary 判斷
+  3. **修復所有顯示層的判斷邏輯**
+     - 4 個顯示相關檔案全部改用絕對角色判斷
+
+### 🔧 修改的檔案
+
+1. **`index.html`** - 表單元素
+   - ✅ 付款人 `payer` 改為 `value="baobao"` / `value="bubu"`
+   - ✅ 受益人 `beneficiary` 改為 `value="baobao"` / `value="bubu"` / `value="both"`
+
+2. **`js/data.js`** - 資料管理
+   - ✅ `addTransaction()` - 移除相對值轉換邏輯
+   - ✅ `calculateBalance()` - 更新 beneficiary 判斷（從 `'self'`/`'partner'` 改為 `'baobao'`/`'bubu'`）
+
+3. **`js/components/TransactionRenderer.js`** - 交易渲染器
+   - ✅ `getPaymentText()` - 付款描述邏輯
+   - ✅ 時間軸視圖的 beneficiary 文字判斷
+
+4. **`js/pages/CalendarPage.js`** - 日曆頁面
+   - ✅ `renderListItem()` - 交易項目渲染邏輯
+
+5. **`js/pages/AnalyticsPage.js`** - 分析頁面
+   - ✅ `renderCardListItem()` - 卡片列表項目渲染邏輯
+
+6. **`js/components/TransactionDetail.js`** - 交易詳情
+   - ✅ 受益人文字判斷邏輯
+
+### 📊 測試結果
+
+- ✅ 新增交易時，付款人正確儲存為選擇的角色
+- ✅ 寶幫寶付 / 寶幫步付 / 寶幫共付 → 正確顯示
+- ✅ 步幫步付 / 步幫寶付 / 步幫共付 → 正確顯示
+- ✅ 欠款計算邏輯正確
+- ✅ 分析頁面統計正確
+- ✅ 未配對時不會出現 undefined 錯誤
+
+### 🎯 重要性
+
+此修復解決了一個會嚴重影響使用體驗的關鍵 Bug：
+- ❌ 修復前：無法正確記帳，所有交易都被記錄為「步步」
+- ✅ 修復後：絕對角色系統完全正確運作
+
+### 🚀 部署
+
+- ✅ 已部署到 Firebase Hosting: https://baobu-app.web.app
+
+---
+
 ## [4.1.1] - 2026-01-06
 
 ### 🐛 關鍵修復 (Critical Fix)

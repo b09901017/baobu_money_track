@@ -358,12 +358,12 @@ export class CalendarPage {
         // 使用「誰幫誰付」表達方式（使用絕對角色）
         let payText = '';
         if (tx.payer === 'baobao') {
-            if (tx.beneficiary === 'self') payText = '寶幫寶付';
-            else if (tx.beneficiary === 'partner') payText = '寶幫步付';
+            if (tx.beneficiary === 'baobao') payText = '寶幫寶付';
+            else if (tx.beneficiary === 'bubu') payText = '寶幫步付';
             else payText = '寶幫共付';
         } else if (tx.payer === 'bubu') {
-            if (tx.beneficiary === 'self') payText = '步幫步付';
-            else if (tx.beneficiary === 'partner') payText = '步幫寶付';
+            if (tx.beneficiary === 'bubu') payText = '步幫步付';
+            else if (tx.beneficiary === 'baobao') payText = '步幫寶付';
             else payText = '步幫共付';
         }
 

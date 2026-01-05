@@ -160,22 +160,12 @@ class DataManager {
      */
     async addTransaction(transactionData) {
         try {
-            // 將相對值 (me/partner) 轉換為絕對角色 (baobao/bubu)
-            let absolutePayer;
-            if (transactionData.payer === 'me') {
-                absolutePayer = this.myRole;  // 我的角色 (baobao | bubu)
-            } else if (transactionData.payer === 'partner') {
-                absolutePayer = this.partner?.role;  // 對方的角色 (baobao | bubu)
-            } else {
-                absolutePayer = transactionData.payer;  // 已經是絕對值
-            }
-
+            // 直接使用絕對角色，不需要轉換
             const transaction = {
                 notebook_id: this.currentNotebook,
                 couple_id: this.coupleId,  // 配對 ID
                 user_id: this.currentUser.uid,
-                ...transactionData,
-                payer: absolutePayer  // 覆蓋為絕對角色
+                ...transactionData
             };
 
             const transactionId = await window.FirebaseAPI.addTransaction(transaction);
@@ -415,8 +405,8 @@ class DataManager {
 
         transactions.forEach(tx => {
             const amount = parseFloat(tx.amount);
-            const payer = tx.payer;  // 現在是絕對角色 ('baobao' | 'bubu')
-            const beneficiary = tx.beneficiary;  // 'self' | 'partner' | 'both'
+            const payer = tx.payer;  // 絕對角色 ('baobao' | 'bubu')
+            const beneficiary = tx.beneficiary;  // 絕對角色 ('baobao' | 'bubu' | 'both')
 
             // 根據「誰幫誰付」計算欠款
             if (payer === 'baobao') {
@@ -424,21 +414,21 @@ class DataManager {
                 if (beneficiary === 'both') {
                     // 寶幫共付 → 步步欠寶寶一半
                     baobaoOwed += amount / 2;
-                } else if (beneficiary === 'partner') {
+                } else if (beneficiary === 'bubu') {
                     // 寶幫步付 → 步步欠寶寶全額
                     baobaoOwed += amount;
                 }
-                // else: 寶幫寶付 (beneficiary === 'self') → 不影響欠款
+                // else: 寶幫寶付 (beneficiary === 'baobao') → 不影響欠款
             } else if (payer === 'bubu') {
                 // 步步付的錢
                 if (beneficiary === 'both') {
                     // 步幫共付 → 寶寶欠步步一半
                     bubuOwed += amount / 2;
-                } else if (beneficiary === 'self') {
+                } else if (beneficiary === 'baobao') {
                     // 步幫寶付 → 寶寶欠步步全額
                     bubuOwed += amount;
                 }
-                // else: 步幫步付 (beneficiary === 'partner') → 不影響欠款
+                // else: 步幫步付 (beneficiary === 'bubu') → 不影響欠款
             }
         });
 

@@ -36,8 +36,8 @@ export class TransactionDetail {
 
         // 設定付款人和受益人（使用絕對角色）
         const payerText = tx.payer === 'baobao' ? '寶寶' : '步步';
-        const beneficiaryText = tx.beneficiary === 'self' ? '寶寶'
-            : tx.beneficiary === 'partner' ? '步步'
+        const beneficiaryText = tx.beneficiary === 'baobao' ? '寶寶'
+            : tx.beneficiary === 'bubu' ? '步步'
             : '寶步';
 
         document.getElementById('detailPayer').textContent = payerText;
