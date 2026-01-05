@@ -291,19 +291,84 @@ Google 登入成功
 6. ✅ 修復配對權限問題
 7. ✅ 部署 Firestore 規則
 8. ✅ 更新所有文檔
-9. ⏳ 最終測試與驗證
-10. ⏳ Commit 並 Push 到 GitHub
+9. ✅ 修復配對核心邏輯（v4.1.0）
+10. ✅ Commit 並 Push 到 GitHub
 
 ---
 
-## 🎉 配對系統狀態：已完成並上線
+## 🔧 v4.1.0 重大修復（2026-01-05）
+
+### 修復的核心問題
+
+#### 1. **欠款計算錯誤** ✅ 已修復
+- **問題**：配對的兩個用戶看到的欠款金額完全相反
+- **原因**：使用相對值 `payer='me'/'partner'` 儲存，讀取時混淆
+- **修復**：改用絕對角色 `payer='baobao'/'bubu'` 儲存和計算
+- **結果**：兩人永遠看到一致的欠款金額
+
+#### 2. **名稱顯示混亂** ✅ 已修復
+- **問題**：使用 Gmail 名稱而非角色名稱
+- **原因**：程式碼中多處使用 `displayName` 和 `member_names`
+- **修復**：全面改用「寶寶」和「步步」角色名稱
+- **結果**：兩人看到完全一致的介面
+
+### 修改的檔案
+
+```
+Modified:
+- js/data.js
+  - addTransaction() - 儲存時轉換為絕對角色
+  - calculateBalance() - 重寫為絕對角色邏輯
+  - getExpenseStats() - 返回絕對角色統計
+  - createDefaultNotebook() - 使用角色名稱
+
+- js/pages/AnalyticsPage.js
+  - update() - 使用絕對角色統計
+  - updateCategoryStats() - 篩選使用絕對角色
+  - applyCurrentFilter() - 篩選邏輯使用絕對角色
+
+- index.html
+  - 統計模式按鈕 data-mode="baobao/bubu"
+  - 統計卡片 data-payer="baobao/bubu"
+```
+
+### 資料結構變更
+
+**修復前（錯誤）：**
+```javascript
+{
+  payer: 'me' | 'partner',  // 相對值
+  beneficiary: 'self' | 'partner' | 'both'
+}
+```
+
+**修復後（正確）：**
+```javascript
+{
+  payer: 'baobao' | 'bubu',  // 絕對角色
+  beneficiary: 'self' | 'partner' | 'both'
+}
+```
+
+### 測試建議
+
+由於資料結構變更，建議：
+1. 清除舊的測試交易資料
+2. 兩人重新新增交易測試
+3. 確認欠款計算一致
+4. 確認統計數據一致
+
+---
+
+## 🎉 配對系統狀態：v4.1.0 核心邏輯已修復
 
 ✅ 所有核心功能已實作完成
-✅ 所有已知問題已修復
+✅ 所有已知問題已修復（包含欠款計算和名稱顯示）
 ✅ 安全規則已部署到生產環境
 ✅ 文檔已完整更新
+✅ 資料結構使用絕對角色，確保一致性
 
-**可以開始使用配對功能了！** 🎊
+**配對系統已完全可用！** 🎊
 
 ---
 

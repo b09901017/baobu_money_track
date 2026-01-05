@@ -2,7 +2,7 @@
 
 > 一個童話風格的情侶共同記帳應用，支援多帳本管理、彈性付款記錄、智能結算功能。
 
-![Version](https://img.shields.io/badge/version-4.0.0-pink)
+![Version](https://img.shields.io/badge/version-4.1.0-pink)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow)
 ![Firebase](https://img.shields.io/badge/Firebase-Integrated-orange)
@@ -21,6 +21,7 @@
 
 - 🎨 **童話風格設計** - 溫暖柔和的粉彩色系，圓潤可愛的設計元素
 - 💕 **情侶共同記帳** - 清楚記錄誰付錢、幫誰付，自動計算欠款
+- 👫 **角色統一設計** - 整個 App 統一使用「寶寶」和「步步」，兩人看到完全一致的介面
 - 📖 **多帳本管理** - 支援日常、旅遊等不同帳本，各自獨立結算
 - 📱 **響應式設計** - 針對手機優化，電腦也能正常使用
 - 🚀 **模組化架構** - 經過完整重構，代碼清晰易維護

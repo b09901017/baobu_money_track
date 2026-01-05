@@ -30,15 +30,15 @@ export class AnalyticsPage {
         // 儲存完整交易列表（用於篩選）
         this.allTransactions = transactions;
 
-        // 更新支出統計
+        // 更新支出統計（使用絕對角色，不分誰登入）
         const stats = window.DataManager.getExpenseStats(transactions);
         const totalExpenseEl = document.getElementById('totalExpense');
-        const myExpenseEl = document.getElementById('myExpense');
-        const partnerExpenseEl = document.getElementById('partnerExpense');
+        const baobaoExpenseEl = document.getElementById('myExpense');      // HTML 中對應寶寶
+        const bubuExpenseEl = document.getElementById('partnerExpense');   // HTML 中對應步步
 
         if (totalExpenseEl) totalExpenseEl.textContent = `$${Math.round(stats.totalExpense)}`;
-        if (myExpenseEl) myExpenseEl.textContent = `$${Math.round(stats.myExpense)}`;
-        if (partnerExpenseEl) partnerExpenseEl.textContent = `$${Math.round(stats.partnerExpense)}`;
+        if (baobaoExpenseEl) baobaoExpenseEl.textContent = `$${Math.round(stats.baobaoExpense)}`;
+        if (bubuExpenseEl) bubuExpenseEl.textContent = `$${Math.round(stats.bubuExpense)}`;
 
         // 更新分類統計（根據當前統計模式）
         this.updateCategoryStats();
@@ -56,11 +56,11 @@ export class AnalyticsPage {
     updateCategoryStats() {
         let transactions = this.allTransactions;
 
-        // 根據統計模式篩選
-        if (this.statMode === 'me') {
-            transactions = transactions.filter(tx => tx.payer === 'me');
-        } else if (this.statMode === 'partner') {
-            transactions = transactions.filter(tx => tx.payer === 'partner');
+        // 根據統計模式篩選（使用絕對角色）
+        if (this.statMode === 'baobao') {
+            transactions = transactions.filter(tx => tx.payer === 'baobao');
+        } else if (this.statMode === 'bubu') {
+            transactions = transactions.filter(tx => tx.payer === 'bubu');
         }
 
         const categoryStats = window.DataManager.getCategoryStats(transactions);
@@ -226,11 +226,11 @@ export class AnalyticsPage {
     }
 
     /**
-     * 按付款人篩選（從統計卡片點擊，不再使用）
+     * 按付款人篩選（從統計卡片點擊）
      */
     filterByPayer(payer) {
-        // 改為切換統計模式
-        this.toggleStatMode(payer === 'me' ? 'me' : 'partner');
+        // 改為切換統計模式（payer 現在是 'baobao' 或 'bubu'）
+        this.toggleStatMode(payer);
     }
 
     /**
@@ -239,11 +239,11 @@ export class AnalyticsPage {
     applyCurrentFilter() {
         let filtered = this.allTransactions;
 
-        // 先根據統計模式篩選付款人
-        if (this.statMode === 'me') {
-            filtered = filtered.filter(tx => tx.payer === 'me');
-        } else if (this.statMode === 'partner') {
-            filtered = filtered.filter(tx => tx.payer === 'partner');
+        // 先根據統計模式篩選付款人（使用絕對角色）
+        if (this.statMode === 'baobao') {
+            filtered = filtered.filter(tx => tx.payer === 'baobao');
+        } else if (this.statMode === 'bubu') {
+            filtered = filtered.filter(tx => tx.payer === 'bubu');
         }
 
         // 再根據分類篩選
@@ -263,8 +263,8 @@ export class AnalyticsPage {
 
         // 生成篩選標籤
         const labels = [];
-        if (this.statMode === 'me') labels.push('寶寶');
-        else if (this.statMode === 'partner') labels.push('步步');
+        if (this.statMode === 'baobao') labels.push('寶寶');
+        else if (this.statMode === 'bubu') labels.push('步步');
         if (this.currentFilter.category) labels.push(this.currentFilter.category);
 
         const filterLabel = labels.length > 0 ? labels.join(' · ') : null;

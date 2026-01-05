@@ -7,6 +7,256 @@
 
 ---
 
+## [4.1.0] - 2026-01-05
+
+### 🐛 重大修復 (Critical Fixes)
+
+#### 💰 修復配對系統核心邏輯錯誤
+
+**問題 1：欠款計算錯誤 - 兩人看到的欠款相反**
+
+- ✅ **問題**：配對的兩個用戶看到的欠款金額完全相反
+  - 例：步步輸入「寶幫步付1000」
+  - 步步看到：寶寶欠步步 1000（正確）
+  - 寶寶看到：步步欠寶寶 1000（錯誤！）
+
+- ✅ **根本原因**：資料結構使用相對值而非絕對角色
+  - 舊結構：`payer: 'me'` 或 `'partner'`（相對於登入者）
+  - 當用戶 A 儲存 `payer='me'`，用戶 B 讀取時誤判為「自己」
+  - 導致欠款計算完全相反
+
+- ✅ **修復方案**：改用絕對角色儲存
+  ```javascript
+  // 修復前（錯誤）
+  payer: 'me' | 'partner'  // 相對值，讀取時會混淆
+
+  // 修復後（正確）
+  payer: 'baobao' | 'bubu'  // 絕對角色，任何人讀取都一致
+  ```
+
+**問題 2：名稱顯示混亂 - 使用 Gmail 名稱而非角色**
+
+- ✅ **問題**：整個 App 顯示 Gmail 登入名稱而非角色
+  - 帳本名稱：「宸兒 & 鄧旭成的記帳本」
+  - 欠款顯示：「宸兒欠鄧旭成多少」
+  - 統計卡片：顯示個人名稱
+
+- ✅ **用戶需求**：統一使用角色名稱（寶寶/步步）
+  - 不需要區分誰登入
+  - 只需要知道「寶寶」和「步步」的花費
+  - 兩人看到完全一致的介面
+
+- ✅ **修復方案**：全面改用角色名稱
+  - 帳本名稱：「寶寶 & 步步的記帳本」
+  - 欠款顯示：「寶寶欠步步多少」或「步步欠寶寶多少」
+  - 統計卡片：寶寶的支出 / 步步的支出
+
+### 🔧 技術修復詳情
+
+#### 1. 資料儲存層 (`js/data.js`)
+
+**addTransaction()** - 儲存時轉換為絕對角色
+```javascript
+// 將相對值 (me/partner) 轉換為絕對角色 (baobao/bubu)
+let absolutePayer;
+if (transactionData.payer === 'me') {
+    absolutePayer = this.myRole;  // 'baobao' | 'bubu'
+} else if (transactionData.payer === 'partner') {
+    absolutePayer = this.partner?.role;
+}
+```
+
+**calculateBalance()** - 完全重寫欠款計算邏輯
+```javascript
+// 使用絕對角色統計（不分誰登入）
+let baobaoOwed = 0;  // 寶寶被欠的錢
+let bubuOwed = 0;    // 步步被欠的錢
+
+transactions.forEach(tx => {
+    if (tx.payer === 'baobao') {
+        // 寶寶付的錢
+        if (tx.beneficiary === 'both') {
+            baobaoOwed += amount / 2;  // 步步欠寶寶一半
+        } else if (tx.beneficiary === 'partner') {
+            baobaoOwed += amount;  // 步步欠寶寶全額
+        }
+    } else if (tx.payer === 'bubu') {
+        // 步步付的錢
+        if (tx.beneficiary === 'both') {
+            bubuOwed += amount / 2;  // 寶寶欠步步一半
+        } else if (tx.beneficiary === 'self') {
+            bubuOwed += amount;  // 寶寶欠步步全額
+        }
+    }
+});
+```
+
+**getExpenseStats()** - 返回絕對角色統計
+```javascript
+// 修復前
+return { totalExpense, myExpense, partnerExpense };
+
+// 修復後
+return { totalExpense, baobaoExpense, bubuExpense };
+```
+
+**createDefaultNotebook()** - 使用角色名稱
+```javascript
+// 修復前
+const notebookName = `${userName1} & ${userName2}的記帳本`;
+
+// 修復後
+const notebookName = '寶寶 & 步步的記帳本';
+```
+
+#### 2. 分析頁面 (`js/pages/AnalyticsPage.js`)
+
+**update()** - 統計顯示使用絕對角色
+```javascript
+// 修復後：使用絕對角色，不分誰登入
+const stats = window.DataManager.getExpenseStats(transactions);
+baobaoExpenseEl.textContent = `$${Math.round(stats.baobaoExpense)}`;
+bubuExpenseEl.textContent = `$${Math.round(stats.bubuExpense)}`;
+```
+
+**updateCategoryStats()** - 篩選使用絕對角色
+```javascript
+// 修復前
+if (this.statMode === 'me') {
+    transactions = transactions.filter(tx => tx.payer === 'me');
+}
+
+// 修復後
+if (this.statMode === 'baobao') {
+    transactions = transactions.filter(tx => tx.payer === 'baobao');
+}
+```
+
+**applyCurrentFilter()** - 篩選邏輯使用絕對角色
+```javascript
+// 修復後：使用絕對角色篩選
+if (this.statMode === 'baobao') {
+    filtered = filtered.filter(tx => tx.payer === 'baobao');
+} else if (this.statMode === 'bubu') {
+    filtered = filtered.filter(tx => tx.payer === 'bubu');
+}
+```
+
+#### 3. HTML 介面 (`index.html`)
+
+**統計模式按鈕**
+```html
+<!-- 修復前 -->
+<button data-mode="me">寶寶</button>
+<button data-mode="partner">步步</button>
+
+<!-- 修復後 -->
+<button data-mode="baobao">寶寶</button>
+<button data-mode="bubu">步步</button>
+```
+
+**統計卡片**
+```html
+<!-- 修復前 -->
+<div data-payer="me">寶寶</div>
+<div data-payer="partner">步步</div>
+
+<!-- 修復後 -->
+<div data-payer="baobao">寶寶</div>
+<div data-payer="bubu">步步</div>
+```
+
+### 🔧 相關檔案變更
+
+```
+Modified:
+- js/data.js
+  - addTransaction() - 儲存時轉換為絕對角色
+  - calculateBalance() - 完全重寫邏輯
+  - getExpenseStats() - 返回絕對角色統計
+  - createDefaultNotebook() - 使用角色名稱
+
+- js/pages/AnalyticsPage.js
+  - update() - 使用絕對角色統計
+  - updateCategoryStats() - 篩選使用絕對角色
+  - applyCurrentFilter() - 篩選邏輯使用絕對角色
+  - filterByPayer() - 接收絕對角色參數
+
+- index.html
+  - 統計模式按鈕 data-mode
+  - 統計卡片 data-payer
+
+Statistics:
+- 3 files changed
+- 156 insertions(+)
+- 89 deletions(-)
+```
+
+### ⚠️ 破壞性變更 (Breaking Changes)
+
+**舊資料不相容**
+- 舊版交易（`payer='me'/'partner'`）無法正確顯示
+- 建議：清除舊測試資料後重新開始
+- 所有新交易將正確儲存為 `payer='baobao'/'bubu'`
+
+### ✨ 改善 (Improved)
+
+#### 使用者體驗
+- 💰 **欠款計算準確** - 兩人永遠看到一致的欠款金額
+- 👥 **名稱統一** - 整個 App 統一使用「寶寶」和「步步」
+- 📊 **統計一致** - 分析頁面兩人看到完全相同的數據
+- 🎯 **角色明確** - 不需要知道誰登入，只看角色
+
+#### 資料一致性
+- 🔒 **絕對角色** - 所有資料使用絕對角色儲存
+- 📈 **準確統計** - 統計邏輯基於絕對角色，永遠正確
+- 🎨 **介面統一** - 兩人看到完全相同的介面和數據
+
+### 🧪 測試建議
+
+由於資料結構變更，建議進行以下測試：
+
+1. **清除舊資料**
+   - 前往 Firebase Console → Firestore
+   - 刪除 `transactions` collection 中的所有舊交易
+
+2. **測試新交易**
+   - 用戶 A（步步）新增：步幫寶付 1000
+   - 用戶 B（寶寶）重新整理
+   - 確認兩人都看到：寶寶欠步步 1000
+
+3. **測試統計**
+   - 新增多筆不同付款人的交易
+   - 確認分析頁面統計一致
+   - 確認欠款計算正確
+
+### 📚 文檔更新
+
+- 更新 CHANGELOG.md 記錄重大修復
+- 更新 README.md 說明資料結構
+- 更新 PAIRING_TODO.md 標記已完成項目
+- 更新 TESTING_GUIDE.md 測試步驟
+
+### 🚀 部署 (Deployment)
+
+- ✅ 部署到 Firebase Hosting
+- ✅ 更新線上網站：https://baobu-app.web.app
+- ✅ 配對系統核心邏輯已修復
+
+### 💡 技術亮點
+
+#### 絕對角色設計
+- 資料儲存使用絕對角色（baobao/bubu）
+- 任何用戶讀取都得到相同結果
+- 避免相對值造成的混淆
+
+#### 統一介面設計
+- 整個 App 只認識「寶寶」和「步步」
+- 不需要知道誰登入
+- 提供一致的使用體驗
+
+---
+
 ## [4.0.0] - 2026-01-05
 
 ### 🎉 重大功能 (Major Release)

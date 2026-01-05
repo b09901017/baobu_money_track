@@ -131,15 +131,8 @@ class DataManager {
      * 建立預設帳本（首次配對時）
      */
     async createDefaultNotebook() {
-        // 取得兩人的角色名稱
-        const baobaoName = this.myRole === 'baobao'
-            ? (this.currentUser.displayName || '我')
-            : (this.partner?.name || '伴侶');
-        const bubuName = this.myRole === 'bubu'
-            ? (this.currentUser.displayName || '我')
-            : (this.partner?.name || '伴侶');
-
-        const notebookName = `${baobaoName} & ${bubuName}的記帳本`;
+        // 統一使用角色名稱（寶寶 & 步步）
+        const notebookName = '寶寶 & 步步的記帳本';
 
         try {
             const notebookId = await window.FirebaseAPI.addNotebook(
@@ -167,11 +160,22 @@ class DataManager {
      */
     async addTransaction(transactionData) {
         try {
+            // 將相對值 (me/partner) 轉換為絕對角色 (baobao/bubu)
+            let absolutePayer;
+            if (transactionData.payer === 'me') {
+                absolutePayer = this.myRole;  // 我的角色 (baobao | bubu)
+            } else if (transactionData.payer === 'partner') {
+                absolutePayer = this.partner?.role;  // 對方的角色 (baobao | bubu)
+            } else {
+                absolutePayer = transactionData.payer;  // 已經是絕對值
+            }
+
             const transaction = {
                 notebook_id: this.currentNotebook,
-                couple_id: this.coupleId,  // 新增：配對 ID
+                couple_id: this.coupleId,  // 配對 ID
                 user_id: this.currentUser.uid,
-                ...transactionData
+                ...transactionData,
+                payer: absolutePayer  // 覆蓋為絕對角色
             };
 
             const transactionId = await window.FirebaseAPI.addTransaction(transaction);
@@ -400,64 +404,64 @@ class DataManager {
             return { status: 'settled', amount: 0, debtor: null, creditor: null };
         }
 
-        // 取得當前用戶和伴侶的資訊（從配對資料）
-        const myId = this.currentUser.uid;
-        const myName = this.couple.member_names[myId] || this.currentUser.displayName || '我';
-        const myRole = this.couple.member_roles[myId];  // 'baobao' | 'bubu'
+        // 使用角色名稱（寶寶/步步）
+        const baobaoName = '寶寶';
+        const bubuName = '步步';
+        const myRole = this.myRole;  // 我的角色 ('baobao' | 'bubu')
+        const partnerRole = this.partner?.role;  // 對方的角色 ('baobao' | 'bubu')
 
-        // 取得伴侶資訊
-        const partnerName = this.partner?.name || '對方';
-        const partnerRole = this.partner?.role;  // 'baobao' | 'bubu'
-
-        let myTotal = 0;
-        let partnerTotal = 0;
+        let baobaoOwed = 0;  // 寶寶被欠的錢（寶寶付出，對方應該還的）
+        let bubuOwed = 0;    // 步步被欠的錢（步步付出，對方應該還的）
 
         transactions.forEach(tx => {
             const amount = parseFloat(tx.amount);
-            // 判斷是否為我付的（優先使用 user_id，fallback 到 payer）
-            const isPaidByMe = tx.user_id === myId || tx.payer === 'me';
+            const payer = tx.payer;  // 現在是絕對角色 ('baobao' | 'bubu')
+            const beneficiary = tx.beneficiary;  // 'self' | 'partner' | 'both'
 
             // 根據「誰幫誰付」計算欠款
-            if (isPaidByMe) {
-                // 我付的錢
-                if (tx.beneficiary === 'both') {
-                    // 我幫共付 → 對方欠我一半
-                    myTotal += amount / 2;
-                } else if (tx.beneficiary === 'partner') {
-                    // 我幫對方付 → 對方欠我全額
-                    myTotal += amount;
+            if (payer === 'baobao') {
+                // 寶寶付的錢
+                if (beneficiary === 'both') {
+                    // 寶幫共付 → 步步欠寶寶一半
+                    baobaoOwed += amount / 2;
+                } else if (beneficiary === 'partner') {
+                    // 寶幫步付 → 步步欠寶寶全額
+                    baobaoOwed += amount;
                 }
-                // else: 我幫我付 (beneficiary === 'self') → 不影響欠款
-            } else {
-                // 對方付的錢
-                if (tx.beneficiary === 'both') {
-                    // 對方幫共付 → 我欠對方一半
-                    partnerTotal += amount / 2;
-                } else if (tx.beneficiary === 'self') {
-                    // 對方幫我付 → 我欠對方全額
-                    partnerTotal += amount;
+                // else: 寶幫寶付 (beneficiary === 'self') → 不影響欠款
+            } else if (payer === 'bubu') {
+                // 步步付的錢
+                if (beneficiary === 'both') {
+                    // 步幫共付 → 寶寶欠步步一半
+                    bubuOwed += amount / 2;
+                } else if (beneficiary === 'self') {
+                    // 步幫寶付 → 寶寶欠步步全額
+                    bubuOwed += amount;
                 }
-                // else: 對方幫對方付 (beneficiary === 'partner') → 不影響欠款
+                // else: 步幫步付 (beneficiary === 'partner') → 不影響欠款
             }
         });
 
-        const difference = myTotal - partnerTotal;
+        // 計算淨欠款（寶寶被欠 - 步步被欠）
+        const difference = baobaoOwed - bubuOwed;
 
         if (Math.abs(difference) < 0.01) {
             return { status: 'settled', amount: 0, debtor: null, creditor: null };
         } else if (difference > 0) {
+            // 寶寶被欠得多 → 步步欠寶寶
             return {
                 status: 'owed',
                 amount: Math.abs(difference),
-                debtor: partnerName,
-                creditor: myName
+                debtor: bubuName,
+                creditor: baobaoName
             };
         } else {
+            // 步步被欠得多 → 寶寶欠步步
             return {
                 status: 'owes',
                 amount: Math.abs(difference),
-                debtor: myName,
-                creditor: partnerName
+                debtor: baobaoName,
+                creditor: bubuName
             };
         }
     }
@@ -507,25 +511,28 @@ class DataManager {
      */
     getExpenseStats(transactions = null) {
         const txs = transactions || this.getTransactions();
-        const myId = this.currentUser.uid;
 
         let totalExpense = 0;
-        let myExpense = 0;
-        let partnerExpense = 0;
+        let baobaoExpense = 0;  // 寶寶的總支出
+        let bubuExpense = 0;    // 步步的總支出
 
         txs.forEach(tx => {
             const amount = parseFloat(tx.amount);
             totalExpense += amount;
 
-            const isPaidByMe = tx.payer === 'me' || tx.user_id === myId;
-            if (isPaidByMe) {
-                myExpense += amount;
-            } else {
-                partnerExpense += amount;
+            // 使用絕對角色統計（不分誰登入）
+            if (tx.payer === 'baobao') {
+                baobaoExpense += amount;
+            } else if (tx.payer === 'bubu') {
+                bubuExpense += amount;
             }
         });
 
-        return { totalExpense, myExpense, partnerExpense };
+        return {
+            totalExpense,
+            baobaoExpense,  // 寶寶的花費
+            bubuExpense     // 步步的花費
+        };
     }
 
     /**
