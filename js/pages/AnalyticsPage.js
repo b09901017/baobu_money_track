@@ -419,19 +419,19 @@ export class AnalyticsPage {
      * 渲染卡片清單項目
      */
     renderCardListItem(tx) {
-        // 使用「誰幫誰付」表達方式
+        // 使用「誰幫誰付」表達方式（使用絕對角色）
         let payText = '';
-        if (tx.payer === 'me') {
+        if (tx.payer === 'baobao') {
             if (tx.beneficiary === 'self') payText = '寶幫寶付';
             else if (tx.beneficiary === 'partner') payText = '寶幫步付';
             else payText = '寶幫共付';
-        } else {
+        } else if (tx.payer === 'bubu') {
             if (tx.beneficiary === 'self') payText = '步幫步付';
             else if (tx.beneficiary === 'partner') payText = '步幫寶付';
             else payText = '步幫共付';
         }
 
-        const payerColor = tx.payer === 'me' ? 'text-macaron-rose' : 'text-blue-600';
+        const payerColor = tx.payer === 'baobao' ? 'text-macaron-rose' : 'text-blue-600';
         const photoIcon = tx.photo_url ? '<span class="text-xs ml-1">📸</span>' : '';
 
         // 備註：顯示分類或一般備註

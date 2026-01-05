@@ -40,15 +40,18 @@ const TIMELINE_COLORS = {
  * @returns {string} - 付款描述文字
  */
 function getPaymentText(tx) {
-    if (tx.payer === 'me') {
+    // 使用絕對角色判斷（baobao 或 bubu）
+    if (tx.payer === 'baobao') {
         if (tx.beneficiary === 'self') return '寶幫寶付';
         if (tx.beneficiary === 'partner') return '寶幫步付';
         return '寶幫共付';
-    } else {
+    } else if (tx.payer === 'bubu') {
         if (tx.beneficiary === 'self') return '步幫步付';
         if (tx.beneficiary === 'partner') return '步幫寶付';
         return '步幫共付';
     }
+    // 容錯：如果 payer 不是預期的值，返回預設文字
+    return '未知付款';
 }
 
 export class TransactionRenderer {
@@ -69,16 +72,16 @@ export class TransactionRenderer {
         // 使用 getPaymentText 獲取付款描述
         const paymentText = getPaymentText(tx);
 
-        // 根據付款人決定邊框顏色和標記
-        const payerBorderClass = tx.payer === 'me'
+        // 根據付款人決定邊框顏色和標記（使用絕對角色）
+        const payerBorderClass = tx.payer === 'baobao'
             ? 'border-l-4 border-macaron-pink'
             : 'border-l-4 border-macaron-blue';
 
-        const payerBadgeClass = tx.payer === 'me'
+        const payerBadgeClass = tx.payer === 'baobao'
             ? 'bg-macaron-pink/20 text-macaron-rose'
             : 'bg-macaron-blue/20 text-blue-600';
 
-        const payerTextColor = tx.payer === 'me' ? 'text-macaron-rose' : 'text-blue-600';
+        const payerTextColor = tx.payer === 'baobao' ? 'text-macaron-rose' : 'text-blue-600';
 
         // 照片圖標（如果有照片）
         const photoIcon = tx.photo_url ? `
@@ -94,7 +97,7 @@ export class TransactionRenderer {
                         <span class="material-symbols-outlined text-2xl">${icon}</span>
                         <!-- 付款人標記 -->
                         <div class="absolute -top-1 -right-1 w-5 h-5 rounded-full ${payerBadgeClass} flex items-center justify-center text-xs font-bold shadow-sm">
-                            ${tx.payer === 'me' ? '寶' : '步'}
+                            ${tx.payer === 'baobao' ? '寶' : '步'}
                         </div>
                         <!-- 照片圖標 -->
                         ${photoIcon}
@@ -123,8 +126,8 @@ export class TransactionRenderer {
         // 使用 getPaymentText 獲取付款描述
         const paymentText = getPaymentText(tx);
 
-        // 判斷是否為寶寶付款
-        const isBaobao = tx.payer === 'me';
+        // 判斷是否為寶寶付款（使用絕對角色）
+        const isBaobao = tx.payer === 'baobao';
 
         // 根據付款人決定樣式
         const payerBadgeClass = isBaobao
@@ -231,13 +234,13 @@ export class TransactionRenderer {
             ? TIMELINE_COLORS[tx.categories[0]] || 'bg-warm-brown/10 border-warm-brown'
             : 'bg-warm-brown/10 border-warm-brown';
 
-        const payerText = tx.payer === 'me' ? '寶寶' : '步步';
+        const payerText = tx.payer === 'baobao' ? '寶寶' : '步步';
         const beneficiaryText = tx.beneficiary === 'self' ? '寶寶'
             : tx.beneficiary === 'partner' ? '步步'
             : '寶步';
 
-        // 判斷是否為寶寶付款
-        const isBaobao = tx.payer === 'me';
+        // 判斷是否為寶寶付款（使用絕對角色）
+        const isBaobao = tx.payer === 'baobao';
 
         // 根據付款人決定樣式
         const payerDotClass = isBaobao

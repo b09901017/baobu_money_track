@@ -7,6 +7,80 @@
 
 ---
 
+## [4.1.1] - 2026-01-06
+
+### 🐛 關鍵修復 (Critical Fix)
+
+#### 💸 修復交易顯示邏輯錯誤
+
+**問題**：列表和日曆頁面的交易顯示邏輯仍在使用舊的相對值判斷，導致所有交易都錯誤顯示為「步步」相關文字
+
+- ❌ **錯誤現象**：
+  - 記錄「寶幫寶付」→ 錯誤顯示「步幫步付」
+  - 記錄「寶幫步付」→ 錯誤顯示「步幫步付」
+  - 記錄「寶幫共付」→ 錯誤顯示「步幫共付」
+  - 所有「寶寶」相關的付款都被錯誤顯示成「步步」
+
+- 🔍 **根本原因**：
+  - v4.1.0 修復了資料儲存層，將 payer 改為絕對角色（`'baobao'` | `'bubu'`）
+  - 但顯示層的多個檔案仍在使用 `tx.payer === 'me'` 判斷
+  - 由於 payer 已經是 `'baobao'` 或 `'bubu'`，永遠不會等於 `'me'`
+  - 導致所有交易都進入 `else` 分支，顯示為「步步」
+
+- ✅ **修復方案**：將所有顯示邏輯改用絕對角色判斷
+  ```javascript
+  // 修復前（錯誤）
+  if (tx.payer === 'me') {
+      // 寶寶相關顯示
+  } else {
+      // 步步相關顯示
+  }
+
+  // 修復後（正確）
+  if (tx.payer === 'baobao') {
+      // 寶寶相關顯示
+  } else if (tx.payer === 'bubu') {
+      // 步步相關顯示
+  }
+  ```
+
+### 🔧 修改的檔案
+
+1. **`js/components/TransactionRenderer.js`** - 核心交易渲染器
+   - ✅ `getPaymentText()` - 付款描述邏輯
+   - ✅ `renderTransactionItem()` - 列表項目渲染
+   - ✅ `renderTimelineItemWithTime()` - 時間軸帶時間渲染
+   - ✅ `renderTimelineItem()` - 時間軸渲染
+
+2. **`js/components/TransactionDetail.js`** - 交易詳情頁面
+   - ✅ 付款人文字顯示邏輯
+
+3. **`js/pages/NotebooksPage.js`** - 帳本管理頁面
+   - ✅ 帳本統計計算邏輯
+
+4. **`js/pages/CalendarPage.js`** - 日曆頁面
+   - ✅ 日期統計計算邏輯
+   - ✅ `renderListItem()` - 列表項目顯示
+
+5. **`js/pages/AnalyticsPage.js`** - 分析頁面
+   - ✅ `renderCardListItem()` - 卡片列表項目顯示
+
+### ✅ 修復結果
+
+現在所有頁面都會正確顯示：
+- ✅ 寶幫寶付 → 顯示「寶幫寶付」
+- ✅ 寶幫步付 → 顯示「寶幫步付」
+- ✅ 寶幫共付 → 顯示「寶幫共付」
+- ✅ 步幫步付 → 顯示「步幫步付」
+- ✅ 步幫寶付 → 顯示「步幫寶付」
+- ✅ 步幫共付 → 顯示「步幫共付」
+
+### 📦 部署
+
+- ✅ 已部署到 Firebase Hosting: https://baobu-app.web.app
+
+---
+
 ## [4.1.0] - 2026-01-05
 
 ### 🐛 重大修復 (Critical Fixes)

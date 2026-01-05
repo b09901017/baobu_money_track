@@ -31,7 +31,8 @@ export class NotebooksPage {
             nbTransactions.forEach(tx => {
                 const amount = parseFloat(tx.amount);
                 total += amount;
-                if (tx.payer === 'me') baobaoTotal += amount;
+                // 使用絕對角色判斷
+                if (tx.payer === 'baobao') baobaoTotal += amount;
                 else bubuTotal += amount;
             });
 

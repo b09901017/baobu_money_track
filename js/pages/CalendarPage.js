@@ -318,7 +318,8 @@ export class CalendarPage {
         let bubuTotal = 0;
         transactions.forEach(tx => {
             const amount = parseFloat(tx.amount);
-            if (tx.payer === 'me') baobaoTotal += amount;
+            // 使用絕對角色判斷
+            if (tx.payer === 'baobao') baobaoTotal += amount;
             else bubuTotal += amount;
         });
         const total = baobaoTotal + bubuTotal;
@@ -354,19 +355,19 @@ export class CalendarPage {
      * 渲染清單項目（簡化版）
      */
     renderListItem(tx) {
-        // 使用「誰幫誰付」表達方式
+        // 使用「誰幫誰付」表達方式（使用絕對角色）
         let payText = '';
-        if (tx.payer === 'me') {
+        if (tx.payer === 'baobao') {
             if (tx.beneficiary === 'self') payText = '寶幫寶付';
             else if (tx.beneficiary === 'partner') payText = '寶幫步付';
             else payText = '寶幫共付';
-        } else {
+        } else if (tx.payer === 'bubu') {
             if (tx.beneficiary === 'self') payText = '步幫步付';
             else if (tx.beneficiary === 'partner') payText = '步幫寶付';
             else payText = '步幫共付';
         }
 
-        const payerColor = tx.payer === 'me' ? 'text-macaron-rose' : 'text-blue-600';
+        const payerColor = tx.payer === 'baobao' ? 'text-macaron-rose' : 'text-blue-600';
         const photoIcon = tx.photo_url ? '<span class="text-xs">📸</span>' : '';
 
         return `
