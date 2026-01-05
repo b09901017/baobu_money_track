@@ -1,6 +1,6 @@
 # 情侶配對系統實作進度
 
-> 最後更新：2026-01-05 (階段 2 完成)
+> 最後更新：2026-01-05 (階段 3 和階段 5 完成)
 > 目標：讓兩個用戶可以共享同一個記帳本，選擇角色（寶寶/步步）
 
 ---
@@ -40,110 +40,48 @@
 
 - [x] **建立 PairingManager.js**
   - 位置：`js/components/PairingManager.js`
-  - 功能：
+  - 功能：✅ 全部完成
     - 管理配對頁面顯示邏輯
     - 處理建立配對流程
     - 處理加入配對流程
     - 驗證配對碼
     - 顯示錯誤訊息
-  - 需要實作的方法：
-    ```javascript
-    class PairingManager {
-      constructor()
-      init()                        // 初始化事件綁定
-      showPairingPage()             // 顯示配對頁面
-      hidePairingPage()             // 隱藏配對頁面
-      showCreateForm()              // 顯示建立表單
-      showJoinForm()                // 顯示加入表單
-      handleCreateCouple()          // 處理建立配對
-      handleJoinCouple()            // 處理加入配對
-      validatePairingCode(code)     // 驗證配對碼格式
-    }
-    ```
 
-- [ ] **修改 app.js 初始化流程**
+- [x] **修改 app.js 初始化流程**
   - 檔案：`js/app.js`
-  - 修改 `initializeApp()` 函數：
-    ```javascript
-    // 登入成功後
-    async (user) => {
-      // 1. 檢查用戶是否已配對
-      const couple = await window.FirebaseAPI.getUserCouple(user.uid);
-
-      if (!couple) {
-        // 2. 未配對 → 顯示配對頁面
-        showPairingPage();
-        return;
-      }
-
-      // 3. 已配對 → 初始化 DataManager
-      await window.DataManager.init(user, couple);
-
-      // 4. 顯示主應用
-      showMainApp();
-    }
-    ```
+  - ✅ 已完成配對檢查邏輯
+  - ✅ 已建立 `initMainApp()` 輔助函數
+  - ✅ 未配對時顯示配對頁面
+  - ✅ 已配對時初始化主應用
 
 ---
 
-### 🔄 階段 3：資料存取邏輯修改（待辦）
+### ✅ 階段 3：資料存取邏輯修改（已完成）
 
-- [ ] **修改 DataManager.init()**
+- [x] **修改 DataManager.init()**
   - 檔案：`js/data.js`
-  - 修改內容：
-    ```javascript
-    async init(user, couple) {
-      this.currentUser = user;
-      this.couple = couple;  // 新增：儲存配對資訊
-      this.coupleId = couple.id;
-      this.myRole = couple.member_roles[user.uid];  // 'baobao' | 'bubu'
+  - ✅ 已修改為接收 `user` 和 `couple` 參數
+  - ✅ 已儲存配對資訊（coupleId, myRole, partner）
+  - ✅ 載入配對的帳本
 
-      // 載入該配對的帳本（而非個人帳本）
-      await this.loadNotebooks();
-      // ...
-    }
-    ```
-
-- [ ] **修改 getNotebooks API**
+- [x] **修改 getNotebooks API**
   - 檔案：`js/firebase-config.js`
-  - 原本：`where("user_id", "==", userId)`
-  - 改為：`where("couple_id", "==", coupleId)`
-  - 需要修改：
-    ```javascript
-    async function getNotebooks(coupleId) {
-      const q = query(
-        collection(db, "notebooks"),
-        where("couple_id", "==", coupleId)  // 改為 couple_id
-      );
-      // ...
-    }
-    ```
+  - ✅ 已改為 `where("couple_id", "==", coupleId)`
 
-- [ ] **修改 addNotebook API**
+- [x] **修改 addNotebook API**
   - 檔案：`js/firebase-config.js`
-  - 新增帳本時，改為關聯到 `couple_id`：
-    ```javascript
-    async function addNotebook(coupleId, notebookName) {
-      const notebookData = {
-        couple_id: coupleId,  // 改為 couple_id
-        name: notebookName,
-        created_at: serverTimestamp()
-      };
-      // ...
-    }
-    ```
+  - ✅ 已改為接收 `coupleId` 參數
+  - ✅ 帳本關聯到 `couple_id`
 
-- [ ] **修改 addTransaction**
-  - 檔案：`js/firebase-config.js`
-  - 記錄交易時，需要儲存：
-    - `couple_id` - 配對 ID
-    - `user_id` - 實際付款的用戶 ID
-    - `payer` - 改為使用角色（'baobao' | 'bubu'）
-
-- [ ] **修改 calculateBalance()**
+- [x] **修改 addTransaction**
   - 檔案：`js/data.js`
-  - 需要根據 `couple.member_roles` 判斷誰是寶寶/步步
-  - 顯示名稱使用 `couple.member_names`
+  - ✅ 已新增 `couple_id` 欄位
+  - ✅ 保留 `user_id` 記錄實際操作用戶
+
+- [x] **修改 calculateBalance()**
+  - 檔案：`js/data.js`
+  - ✅ 已使用 `couple.member_roles` 和 `couple.member_names`
+  - ✅ 正確顯示配對成員名稱
 
 ---
 
@@ -163,35 +101,18 @@
 
 ---
 
-### 🔐 階段 5：Firestore 安全規則更新（待辦）
+### ✅ 階段 5：Firestore 安全規則更新（已完成）
 
-- [ ] **更新 firestore.rules**
+- [x] **更新 firestore.rules**
   - 檔案：`firestore.rules`
-  - 需要新增規則：
-    ```javascript
-    // Couples collection
-    match /couples/{coupleId} {
-      allow read, write: if request.auth != null
-        && request.auth.uid in resource.data.member_ids;
-    }
-
-    // Notebooks - 改為基於 couple_id
-    match /notebooks/{notebookId} {
-      allow read, write: if request.auth != null
-        && exists(/databases/$(database)/documents/couples/$(resource.data.couple_id))
-        && request.auth.uid in get(/databases/$(database)/documents/couples/$(resource.data.couple_id)).data.member_ids;
-    }
-
-    // Transactions - 改為基於 couple_id
-    match /transactions/{transactionId} {
-      allow read, write: if request.auth != null
-        && exists(/databases/$(database)/documents/couples/$(resource.data.couple_id))
-        && request.auth.uid in get(/databases/$(database)/documents/couples/$(resource.data.couple_id)).data.member_ids;
-    }
-    ```
+  - ✅ 已新增 Couples collection 規則
+  - ✅ 已修改 Notebooks 規則（基於 couple_id）
+  - ✅ 已修改 Transactions 規則（基於 couple_id）
+  - ✅ 已新增輔助函數 `isCoupleMember()`
 
 - [ ] **部署安全規則**
   - 指令：`firebase deploy --only firestore:rules`
+  - ⚠️ 需要手動執行部署
 
 ---
 

@@ -10,50 +10,76 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // 檢查是否為帳本成員
-    function isNotebookMember(notebookId) {
+    // 檢查用戶是否為配對成員
+    function isCoupleMember(coupleId) {
       return isSignedIn() &&
-             request.auth.uid in get(/databases/$(database)/documents/notebooks/$(notebookId)).data.member_ids;
+             request.auth.uid in get(/databases/$(database)/documents/couples/$(coupleId)).data.member_ids;
+    }
+
+    // ==================== 配對 (couples) ====================
+
+    match /couples/{coupleId} {
+      // 讀取：只能讀取自己是成員的配對
+      allow read: if isSignedIn() &&
+                     request.auth.uid in resource.data.member_ids;
+
+      // 新增：只允許已登入用戶建立配對
+      allow create: if isSignedIn() &&
+                       request.auth.uid in request.resource.data.member_ids;
+
+      // 更新：只能更新自己是成員的配對
+      allow update: if isSignedIn() &&
+                       request.auth.uid in resource.data.member_ids;
+
+      // 刪除：暫不允許刪除配對
+      allow delete: if false;
     }
 
     // ==================== 帳本 (notebooks) ====================
 
     match /notebooks/{notebookId} {
-      // 讀取：只能讀取自己是成員的帳本
+      // 讀取：只能讀取自己配對的帳本
       allow read: if isSignedIn() &&
-                     request.auth.uid in resource.data.member_ids;
+                     exists(/databases/$(database)/documents/couples/$(resource.data.couple_id)) &&
+                     request.auth.uid in get(/databases/$(database)/documents/couples/$(resource.data.couple_id)).data.member_ids;
 
-      // 新增：只能新增自己是成員的帳本
+      // 新增：只能新增自己配對的帳本
       allow create: if isSignedIn() &&
-                       request.auth.uid in request.resource.data.member_ids &&
-                       request.resource.data.member_ids is list &&
-                       request.resource.data.member_names is map;
+                       exists(/databases/$(database)/documents/couples/$(request.resource.data.couple_id)) &&
+                       request.auth.uid in get(/databases/$(database)/documents/couples/$(request.resource.data.couple_id)).data.member_ids;
 
-      // 更新/刪除：只能修改/刪除自己是成員的帳本
+      // 更新/刪除：只能修改/刪除自己配對的帳本
       allow update, delete: if isSignedIn() &&
-                               request.auth.uid in resource.data.member_ids;
+                               exists(/databases/$(database)/documents/couples/$(resource.data.couple_id)) &&
+                               request.auth.uid in get(/databases/$(database)/documents/couples/$(resource.data.couple_id)).data.member_ids;
     }
 
     // ==================== 交易記錄 (transactions) ====================
 
     match /transactions/{transactionId} {
-      // 讀取：只能讀取自己的交易（透過 user_id 或 notebook_id 判斷）
-      allow read: if isSignedIn();
+      // 讀取：只能讀取自己配對的交易
+      allow read: if isSignedIn() &&
+                     exists(/databases/$(database)/documents/couples/$(resource.data.couple_id)) &&
+                     request.auth.uid in get(/databases/$(database)/documents/couples/$(resource.data.couple_id)).data.member_ids;
 
-      // 新增：只能新增自己的交易，且必須包含 user_id
+      // 新增：只能新增自己配對的交易
       allow create: if isSignedIn() &&
+                       exists(/databases/$(database)/documents/couples/$(request.resource.data.couple_id)) &&
+                       request.auth.uid in get(/databases/$(database)/documents/couples/$(request.resource.data.couple_id)).data.member_ids &&
                        request.resource.data.user_id == request.auth.uid &&
                        request.resource.data.notebook_id is string &&
                        request.resource.data.amount is number &&
                        request.resource.data.item_name is string;
 
-      // 更新：只能更新自己的交易
+      // 更新：只能更新自己配對的交易（任一成員都可更新）
       allow update: if isSignedIn() &&
-                       resource.data.user_id == request.auth.uid;
+                       exists(/databases/$(database)/documents/couples/$(resource.data.couple_id)) &&
+                       request.auth.uid in get(/databases/$(database)/documents/couples/$(resource.data.couple_id)).data.member_ids;
 
-      // 刪除：只能刪除自己的交易
+      // 刪除：只能刪除自己配對的交易（任一成員都可刪除）
       allow delete: if isSignedIn() &&
-                       resource.data.user_id == request.auth.uid;
+                       exists(/databases/$(database)/documents/couples/$(resource.data.couple_id)) &&
+                       request.auth.uid in get(/databases/$(database)/documents/couples/$(resource.data.couple_id)).data.member_ids;
     }
 
     // ==================== 自訂分類 (custom_categories) ====================

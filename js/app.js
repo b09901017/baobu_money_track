@@ -157,29 +157,45 @@ function initializeApp() {
     window.FirebaseAPI.setupAuthListener(
         // 登入成功回調
         async (user) => {
-            console.log('👤 用戶已登入，初始化 App');
+            console.log('👤 用戶已登入，檢查配對狀態');
 
             try {
-                // 初始化 DataManager
-                await window.DataManager.init(user);
+                // 儲存當前用戶到全域
+                window.currentUser = user;
 
-                // 隱藏登入頁面
-                const loginPage = document.getElementById('loginPage');
-                if (loginPage) {
-                    loginPage.style.display = 'none';
+                // 1. 檢查用戶是否已配對
+                const couple = await window.FirebaseAPI.getUserCouple(user.uid);
+
+                if (!couple) {
+                    // 2. 未配對 → 顯示配對頁面
+                    console.log('⚠️ 用戶尚未配對，顯示配對頁面');
+
+                    // 隱藏登入頁面和主容器
+                    const loginPage = document.getElementById('loginPage');
+                    if (loginPage) {
+                        loginPage.style.display = 'none';
+                    }
+                    const mainContainer = document.getElementById('mainContainer');
+                    if (mainContainer) {
+                        mainContainer.classList.add('hidden');
+                    }
+
+                    // 初始化 PairingManager 並顯示配對頁面
+                    if (!window.pairingManager) {
+                        const { PairingManager } = await import('./components/PairingManager.js');
+                        window.pairingManager = new PairingManager();
+                        window.pairingManager.init(async (couple) => {
+                            // 配對完成後的回調
+                            await initMainApp(user, couple);
+                        });
+                    }
+                    window.pairingManager.showPairingPage();
+                    return;
                 }
 
-                // 顯示主容器
-                const mainContainer = document.getElementById('mainContainer');
-                if (mainContainer) {
-                    mainContainer.classList.remove('hidden');
-                }
-
-                // 初始化 CoupleApp
-                if (!window.app) {
-                    window.app = new CoupleApp();
-                    await window.app.init();
-                }
+                // 3. 已配對 → 初始化主應用
+                console.log('✅ 用戶已配對，初始化主應用');
+                await initMainApp(user, couple);
             } catch (error) {
                 console.error('❌ 應用初始化失敗:', error);
                 if (window.customDialog) {
@@ -198,11 +214,47 @@ function initializeApp() {
                 loginPage.style.display = 'flex';
             }
 
-            // 隱藏主容器
+            // 隱藏主容器和配對頁面
             const mainContainer = document.getElementById('mainContainer');
             if (mainContainer) {
                 mainContainer.classList.add('hidden');
             }
+            const pairingPage = document.getElementById('pairingPage');
+            if (pairingPage) {
+                pairingPage.classList.add('hidden');
+            }
         }
     );
+}
+
+/**
+ * 初始化主應用（配對完成後）
+ * @param {Object} user - Firebase 用戶物件
+ * @param {Object} couple - 配對資料
+ */
+async function initMainApp(user, couple) {
+    // 初始化 DataManager（傳入 couple）
+    await window.DataManager.init(user, couple);
+
+    // 隱藏登入頁面和配對頁面
+    const loginPage = document.getElementById('loginPage');
+    if (loginPage) {
+        loginPage.style.display = 'none';
+    }
+    const pairingPage = document.getElementById('pairingPage');
+    if (pairingPage) {
+        pairingPage.classList.add('hidden');
+    }
+
+    // 顯示主容器
+    const mainContainer = document.getElementById('mainContainer');
+    if (mainContainer) {
+        mainContainer.classList.remove('hidden');
+    }
+
+    // 初始化 CoupleApp
+    if (!window.app) {
+        window.app = new CoupleApp();
+        await window.app.init();
+    }
 }

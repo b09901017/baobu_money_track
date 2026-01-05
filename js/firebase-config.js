@@ -224,15 +224,15 @@ async function deleteTransaction(transactionId) {
 }
 
 /**
- * 取得帳本列表
- * @param {string} userId - 用戶 ID
+ * 取得配對的帳本列表
+ * @param {string} coupleId - 配對 ID
  * @returns {Promise<Array>} - 帳本列表
  */
-async function getNotebooks(userId) {
+async function getNotebooks(coupleId) {
     try {
         const q = query(
             collection(db, "notebooks"),
-            where("member_ids", "array-contains", userId)
+            where("couple_id", "==", coupleId)
         );
         const querySnapshot = await getDocs(q);
         const notebooks = querySnapshot.docs.map(doc => ({
@@ -240,7 +240,7 @@ async function getNotebooks(userId) {
             ...doc.data()
         }));
 
-        console.log(`✅ 已取得 ${notebooks.length} 個帳本`);
+        console.log(`✅ 已取得 ${notebooks.length} 個配對帳本`);
         return notebooks;
     } catch (error) {
         console.error('❌ 取得帳本失敗:', error);
@@ -249,17 +249,23 @@ async function getNotebooks(userId) {
 }
 
 /**
- * 新增帳本
- * @param {Object} notebookData - 帳本資料
+ * 新增配對帳本
+ * @param {string} coupleId - 配對 ID
+ * @param {string} notebookName - 帳本名稱
+ * @param {Array} memberIds - 成員 ID 列表（可選）
+ * @param {Object} memberNames - 成員名稱映射（可選）
  * @returns {Promise<string>} - 帳本 ID
  */
-async function addNotebook(notebookData) {
+async function addNotebook(coupleId, notebookName, memberIds = [], memberNames = {}) {
     try {
         const docRef = await addDoc(collection(db, "notebooks"), {
-            ...notebookData,
+            name: notebookName,
+            couple_id: coupleId,
+            member_ids: memberIds,
+            member_names: memberNames,
             created_at: serverTimestamp()
         });
-        console.log('✅ 帳本已新增:', docRef.id);
+        console.log('✅ 配對帳本已新增:', docRef.id);
         return docRef.id;
     } catch (error) {
         console.error('❌ 新增帳本失敗:', error);

@@ -7,6 +7,125 @@
 
 ---
 
+## [4.0.0-alpha.3] - 2026-01-05
+
+### 🎉 重大功能 (Major Feature)
+
+#### 👫 情侶配對系統 - 階段 3 & 5 完成
+
+**階段 3：資料存取邏輯修改（已完成）**
+
+- ✅ **DataManager 完全重構**
+  - 修改 `init()` 方法接收 `couple` 參數
+  - 新增配對資訊儲存（coupleId, myRole, partner）
+  - 修改 `loadNotebooks()` 改用 `couple_id` 查詢
+  - 修改 `createDefaultNotebook()` 建立配對共享帳本
+  - 修改 `addNotebook()` 支援配對帳本
+  - 修改 `addTransaction()` 新增 `couple_id` 欄位
+  - 修改 `calculateBalance()` 使用配對角色判斷
+
+- ✅ **Firebase API 更新**
+  - `getNotebooks(coupleId)` - 查詢配對的帳本
+  - `addNotebook(coupleId, name, memberIds, memberNames)` - 建立配對帳本
+  - 交易記錄自動包含 `couple_id`
+
+**階段 5：Firestore 安全規則更新（已完成）**
+
+- ✅ **firestore.rules 完整重寫**
+  - 新增 Couples collection 規則
+    - 只能讀寫自己是成員的配對
+    - 暫不允許刪除配對
+  - 修改 Notebooks 規則
+    - 改為基於 `couple_id` 驗證
+    - 配對成員都可讀寫帳本
+  - 修改 Transactions 規則
+    - 改為基於 `couple_id` 驗證
+    - 配對成員都可讀寫交易
+  - 新增輔助函數 `isCoupleMember()`
+
+### 🔄 變更 (Changed)
+
+#### 資料結構變更（破壞性變更）
+
+**舊結構（v3.x）：**
+- 帳本關聯到個人（`notebooks.member_ids`）
+- 交易關聯到個人（`transactions.user_id`）
+
+**新結構（v4.0）：**
+- 帳本關聯到配對（`notebooks.couple_id`）
+- 交易關聯到配對（`transactions.couple_id`）
+- 保留 `user_id` 記錄實際操作用戶
+- 使用角色識別成員（'baobao' | 'bubu'）
+
+⚠️ **重要提醒**：
+- 舊版資料不相容，建議清除測試資料
+- 用戶需要重新配對才能使用
+- 安全規則需要部署：`firebase deploy --only firestore:rules`
+
+### 🔧 相關檔案變更
+
+```
+Modified:
+- js/app.js
+  - 新增配對檢查邏輯（登入後檢查是否已配對）
+  - 新增 initMainApp() 輔助函數
+  - 整合 PairingManager
+
+- js/data.js
+  - DataManager.init() 接收 couple 參數
+  - 新增配對相關屬性（couple, coupleId, myRole, partner）
+  - loadNotebooks() 改用 couple_id
+  - createDefaultNotebook() 建立配對帳本
+  - addNotebook() 支援配對
+  - addTransaction() 新增 couple_id
+  - calculateBalance() 使用配對角色
+
+- js/firebase-config.js
+  - getNotebooks(coupleId) - 改用 couple_id 查詢
+  - addNotebook(coupleId, name, memberIds, memberNames) - 支援配對
+
+- firestore.rules
+  - 新增 Couples collection 規則
+  - 修改 Notebooks 規則（基於 couple_id）
+  - 修改 Transactions 規則（基於 couple_id）
+
+- PAIRING_TODO.md
+  - 更新階段 2、3、5 為「已完成」
+
+Statistics:
+- 5 files changed
+- 327 insertions(+)
+- 156 deletions(-)
+```
+
+### 📚 文檔 (Documentation)
+
+- 更新 PAIRING_TODO.md 進度追蹤
+- 更新 CHANGELOG.md 記錄變更
+
+### 💡 技術亮點
+
+#### 配對資料流程
+
+```
+用戶登入 → 檢查配對
+  ├─ 無配對 → 顯示配對頁面
+  │           ├─ 建立新配對（生成配對碼）
+  │           └─ 加入現有配對（輸入配對碼）
+  └─ 已配對 → 初始化 DataManager(user, couple)
+              → 載入配對的帳本和交易
+              → 顯示主應用
+```
+
+#### 安全規則設計
+
+- 使用 `exists()` 和 `get()` 驗證配對成員資格
+- 所有資料存取都需驗證 `couple_id`
+- 配對成員之間平等權限（都可讀寫）
+- 防止未授權存取其他配對的資料
+
+---
+
 ## [3.0.0] - 2026-01-05
 
 ### 🐛 重大修復 (Critical Fixes)

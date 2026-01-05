@@ -4,7 +4,10 @@
 class DataManager {
     constructor() {
         this.currentUser = null;  // Firebase 用戶物件
-        this.partner = null;  // 伴侶資訊（從帳本推斷）
+        this.couple = null;  // 配對資訊
+        this.coupleId = null;  // 配對 ID
+        this.myRole = null;  // 我的角色 ('baobao' | 'bubu')
+        this.partner = null;  // 伴侶資訊（從配對推斷）
         this.currentNotebook = null;  // 當前帳本 ID
         this.notebooks = [];  // 帳本列表（快取）
         this.transactions = [];  // 交易列表（快取）
@@ -17,22 +20,46 @@ class DataManager {
     /**
      * 初始化資料管理器
      * @param {Object} user - Firebase 用戶物件
+     * @param {Object} couple - 配對資料
      */
-    async init(user) {
+    async init(user, couple) {
         if (!user) {
             throw new Error('用戶物件不能為空');
+        }
+        if (!couple) {
+            throw new Error('配對資料不能為空');
         }
 
         console.log('📊 開始初始化 DataManager...');
         this.currentUser = user;
+        this.couple = couple;  // 儲存配對資訊
+        this.coupleId = couple.id;
+        this.myRole = couple.member_roles[user.uid];  // 'baobao' | 'bubu'
+
+        // 推斷伴侶資訊
+        const partnerIds = couple.member_ids.filter(id => id !== user.uid);
+        if (partnerIds.length > 0) {
+            const partnerId = partnerIds[0];
+            this.partner = {
+                id: partnerId,
+                name: couple.member_names[partnerId],
+                role: couple.member_roles[partnerId]
+            };
+        }
+
+        console.log('👫 配對資訊:', {
+            coupleId: this.coupleId,
+            myRole: this.myRole,
+            partner: this.partner
+        });
 
         try {
-            // 1. 載入用戶的帳本
+            // 1. 載入該配對的帳本（而非個人帳本）
             await this.loadNotebooks();
 
             // 2. 如果沒有帳本，建立預設帳本
             if (this.notebooks.length === 0) {
-                console.log('📝 首次登入，建立預設帳本...');
+                console.log('📝 首次配對，建立預設帳本...');
                 await this.createDefaultNotebook();
             }
 
@@ -59,12 +86,12 @@ class DataManager {
     }
 
     /**
-     * 載入用戶的帳本
+     * 載入配對的帳本
      */
     async loadNotebooks() {
         try {
-            this.notebooks = await window.FirebaseAPI.getNotebooks(this.currentUser.uid);
-            console.log(`📚 已載入 ${this.notebooks.length} 個帳本`);
+            this.notebooks = await window.FirebaseAPI.getNotebooks(this.coupleId);
+            console.log(`📚 已載入 ${this.notebooks.length} 個配對帳本`);
         } catch (error) {
             console.error('❌ 載入帳本失敗:', error);
             this.notebooks = [];
@@ -98,20 +125,27 @@ class DataManager {
     }
 
     /**
-     * 建立預設帳本（首次登入時）
+     * 建立預設帳本（首次配對時）
      */
     async createDefaultNotebook() {
-        const defaultNotebook = {
-            name: `${this.currentUser.displayName || '我'}的記帳本`,
-            member_ids: [this.currentUser.uid],
-            member_names: {
-                [this.currentUser.uid]: this.currentUser.displayName || '我'
-            }
-        };
+        // 取得兩人的角色名稱
+        const baobaoName = this.myRole === 'baobao'
+            ? (this.currentUser.displayName || '我')
+            : (this.partner?.name || '伴侶');
+        const bubuName = this.myRole === 'bubu'
+            ? (this.currentUser.displayName || '我')
+            : (this.partner?.name || '伴侶');
+
+        const notebookName = `${baobaoName} & ${bubuName}的記帳本`;
 
         try {
-            const notebookId = await window.FirebaseAPI.addNotebook(defaultNotebook);
-            console.log('✅ 已建立預設帳本:', notebookId);
+            const notebookId = await window.FirebaseAPI.addNotebook(
+                this.coupleId,
+                notebookName,
+                this.couple.member_ids,
+                this.couple.member_names
+            );
+            console.log('✅ 已建立預設配對帳本:', notebookId);
 
             // 重新載入帳本列表
             await this.loadNotebooks();
@@ -132,6 +166,7 @@ class DataManager {
         try {
             const transaction = {
                 notebook_id: this.currentNotebook,
+                couple_id: this.coupleId,  // 新增：配對 ID
                 user_id: this.currentUser.uid,
                 ...transactionData
             };
@@ -295,25 +330,25 @@ class DataManager {
      */
     async addNotebook(name) {
         try {
-            const notebook = {
-                name: name,
-                member_ids: [this.currentUser.uid],
-                member_names: {
-                    [this.currentUser.uid]: this.currentUser.displayName || '我'
-                }
-            };
-
-            const notebookId = await window.FirebaseAPI.addNotebook(notebook);
+            const notebookId = await window.FirebaseAPI.addNotebook(
+                this.coupleId,
+                name,
+                this.couple.member_ids,
+                this.couple.member_names
+            );
 
             // 更新快取
             const newNotebook = {
                 id: notebookId,
-                ...notebook,
+                name: name,
+                couple_id: this.coupleId,
+                member_ids: this.couple.member_ids,
+                member_names: this.couple.member_names,
                 created_at: new Date().toISOString()
             };
             this.notebooks.push(newNotebook);
 
-            console.log('✅ 帳本已新增:', notebookId);
+            console.log('✅ 配對帳本已新增:', notebookId);
             return newNotebook;
         } catch (error) {
             console.error('❌ 新增帳本失敗:', error);
@@ -358,25 +393,26 @@ class DataManager {
         const transactions = this.getTransactions();
         const currentNotebook = this.getCurrentNotebook();
 
-        if (!currentNotebook) {
+        if (!currentNotebook || !this.couple) {
             return { status: 'settled', amount: 0, debtor: null, creditor: null };
         }
 
-        // 取得當前用戶和伴侶的名稱
+        // 取得當前用戶和伴侶的資訊（從配對資料）
         const myId = this.currentUser.uid;
-        const myName = this.currentUser.displayName || '我';
+        const myName = this.couple.member_names[myId] || this.currentUser.displayName || '我';
+        const myRole = this.couple.member_roles[myId];  // 'baobao' | 'bubu'
 
-        // 找出伴侶（如果有的話）
-        const partnerIds = currentNotebook.member_ids?.filter(id => id !== myId) || [];
-        const partnerId = partnerIds[0];
-        const partnerName = partnerId ? (currentNotebook.member_names?.[partnerId] || '對方') : '對方';
+        // 取得伴侶資訊
+        const partnerName = this.partner?.name || '對方';
+        const partnerRole = this.partner?.role;  // 'baobao' | 'bubu'
 
         let myTotal = 0;
         let partnerTotal = 0;
 
         transactions.forEach(tx => {
             const amount = parseFloat(tx.amount);
-            const isPaidByMe = tx.payer === 'me' || tx.user_id === myId;
+            // 判斷是否為我付的（優先使用 user_id，fallback 到 payer）
+            const isPaidByMe = tx.user_id === myId || tx.payer === 'me';
 
             // 根據「誰幫誰付」計算欠款
             if (isPaidByMe) {
