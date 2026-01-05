@@ -12,10 +12,13 @@ export class AnalyticsPage {
         // 視圖模式：'list' | 'chart'
         this.categoryViewMode = 'list';
 
-        // 篩選狀態
+        // 統計模式：'all' | 'me' | 'partner'
+        this.statMode = 'all';
+
+        // 篩選狀態（支援多重篩選）
         this.currentFilter = {
-            type: null, // 'category' | 'payer' | null
-            value: null  // 分類名稱 | 'me' | 'partner' | null
+            payer: null,    // 'me' | 'partner' | null
+            category: null  // 分類名稱 | null
         };
     }
 
@@ -36,15 +39,57 @@ export class AnalyticsPage {
         if (myExpenseEl) myExpenseEl.textContent = `$${Math.round(stats.myExpense)}`;
         if (partnerExpenseEl) partnerExpenseEl.textContent = `$${Math.round(stats.partnerExpense)}`;
 
-        // 更新分類統計
-        const categoryStats = window.DataManager.getCategoryStats(transactions);
-        this.renderCategoryStats(categoryStats);
+        // 更新分類統計（根據當前統計模式）
+        this.updateCategoryStats();
 
         // 清除篩選
-        this.currentFilter = { type: null, value: null };
+        this.currentFilter = { payer: null, category: null };
 
-        // 更新交易列表
-        this.renderTransactionList(transactions);
+        // 初始不顯示交易明細
+        this.renderEmptyTransactionList();
+    }
+
+    /**
+     * 更新分類統計（根據統計模式）
+     */
+    updateCategoryStats() {
+        let transactions = this.allTransactions;
+
+        // 根據統計模式篩選
+        if (this.statMode === 'me') {
+            transactions = transactions.filter(tx => tx.payer === 'me');
+        } else if (this.statMode === 'partner') {
+            transactions = transactions.filter(tx => tx.payer === 'partner');
+        }
+
+        const categoryStats = window.DataManager.getCategoryStats(transactions);
+        this.renderCategoryStats(categoryStats);
+    }
+
+    /**
+     * 切換統計模式
+     */
+    toggleStatMode(mode) {
+        this.statMode = mode;
+
+        // 更新按鈕樣式
+        document.querySelectorAll('.stat-mode-btn').forEach(btn => {
+            if (btn.dataset.mode === mode) {
+                btn.classList.add('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-rose', 'text-white', 'shadow-sm');
+                btn.classList.remove('text-soft-ink');
+            } else {
+                btn.classList.remove('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-rose', 'text-white', 'shadow-sm');
+                btn.classList.add('text-soft-ink');
+            }
+        });
+
+        // 重新計算分類統計
+        this.updateCategoryStats();
+
+        // 如果有篩選，重新應用
+        if (this.currentFilter.category || this.currentFilter.payer) {
+            this.applyCurrentFilter();
+        }
     }
 
     renderCategoryStats(stats) {
@@ -179,31 +224,62 @@ export class AnalyticsPage {
      * 按分類篩選
      */
     filterByCategory(category) {
-        this.currentFilter = { type: 'category', value: category };
-        const filtered = this.allTransactions.filter(tx =>
-            tx.categories && tx.categories.includes(category)
-        );
-        this.renderTransactionList(filtered, `分類：${category}`);
+        this.currentFilter.category = category;
+        this.applyCurrentFilter();
         this.showClearFilterButton();
     }
 
     /**
-     * 按付款人篩選
+     * 按付款人篩選（從統計卡片點擊，不再使用）
      */
     filterByPayer(payer) {
-        this.currentFilter = { type: 'payer', value: payer };
-        const filtered = this.allTransactions.filter(tx => tx.payer === payer);
-        const label = payer === 'me' ? '寶寶付款' : '步步付款';
-        this.renderTransactionList(filtered, label);
-        this.showClearFilterButton();
+        // 改為切換統計模式
+        this.toggleStatMode(payer === 'me' ? 'me' : 'partner');
+    }
+
+    /**
+     * 應用當前篩選
+     */
+    applyCurrentFilter() {
+        let filtered = this.allTransactions;
+
+        // 先根據統計模式篩選付款人
+        if (this.statMode === 'me') {
+            filtered = filtered.filter(tx => tx.payer === 'me');
+        } else if (this.statMode === 'partner') {
+            filtered = filtered.filter(tx => tx.payer === 'partner');
+        }
+
+        // 再根據分類篩選
+        if (this.currentFilter.category) {
+            filtered = filtered.filter(tx =>
+                tx.categories && tx.categories.includes(this.currentFilter.category)
+            );
+        }
+
+        // 生成篩選標籤
+        const labels = [];
+        if (this.statMode === 'me') labels.push('寶寶');
+        else if (this.statMode === 'partner') labels.push('步步');
+        if (this.currentFilter.category) labels.push(this.currentFilter.category);
+
+        const filterLabel = labels.length > 0 ? labels.join(' · ') : null;
+
+        this.renderTransactionList(filtered, filterLabel);
     }
 
     /**
      * 清除篩選
      */
     clearFilter() {
-        this.currentFilter = { type: null, value: null };
-        this.renderTransactionList(this.allTransactions);
+        this.currentFilter = { payer: null, category: null };
+        this.statMode = 'all';
+
+        // 重置統計模式按鈕
+        this.toggleStatMode('all');
+
+        // 初始不顯示交易明細
+        this.renderEmptyTransactionList();
         this.hideClearFilterButton();
     }
 
@@ -221,6 +297,21 @@ export class AnalyticsPage {
     hideClearFilterButton() {
         const btn = document.getElementById('btnClearFilter');
         if (btn) btn.classList.add('hidden');
+    }
+
+    /**
+     * 渲染空的交易列表（初始狀態）
+     */
+    renderEmptyTransactionList() {
+        const container = document.getElementById('analyticsTransactionList');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="text-center py-12">
+                <div class="text-6xl mb-3">📊</div>
+                <p class="text-warm-brown/60 font-hand text-base">點擊上方分類查看明細</p>
+            </div>
+        `;
     }
 
     /**
@@ -344,21 +435,21 @@ export class AnalyticsPage {
 
         return `
             <div class="transaction-item px-4 py-3 hover:bg-macaron-cream/20 cursor-pointer transition-colors" data-transaction-id="${tx.id}">
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
                     <!-- 付款標籤 -->
-                    <span class="text-xs font-hand font-bold ${payerColor} shrink-0 w-16">${payText}</span>
+                    <span class="text-xs font-hand font-bold ${payerColor} shrink-0" style="width: 64px;">${payText}</span>
 
                     <!-- 項目資訊 -->
-                    <div class="flex-1 min-w-0">
+                    <div class="flex-1 min-w-0 overflow-hidden">
                         <div class="flex items-center gap-1">
-                            <span class="font-hand text-sm text-soft-ink truncate font-bold">${tx.item_name}</span>
+                            <span class="font-hand text-sm text-soft-ink truncate font-bold block">${tx.item_name}</span>
                             ${photoIcon}
                         </div>
                         ${categories ? `<div class="text-xs text-warm-brown/60 truncate">${categories}</div>` : ''}
                     </div>
 
-                    <!-- 金額 -->
-                    <span class="font-display font-bold text-base text-[#E27D60] shrink-0">$${tx.amount}</span>
+                    <!-- 金額（固定在右側） -->
+                    <span class="font-display font-bold text-base text-[#E27D60] shrink-0" style="min-width: 60px; text-align: right;">$${tx.amount}</span>
                 </div>
             </div>
         `;

@@ -5,7 +5,18 @@
       "Bash(echo \"=== CSS 檔案統計 ===\" wc -l css/base/*.css css/layout/*.css css/components/*.css css/animations/*.css css/utilities/*.css css/main.css)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(firebase --version:*)",
+      "Bash(node --version)",
+      "Bash(npm --version:*)",
+      "Bash(npm install:*)",
+      "Bash(firebase login:*)",
+      "Bash(firebase projects:list:*)",
+      "Bash(firebase deploy:*)",
+      "Bash(find:*)",
+      "Skill(backend)",
+      "Skill(frontend)",
+      "Bash(git reset:*)"
     ]
   }
 }

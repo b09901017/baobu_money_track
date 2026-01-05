@@ -366,7 +366,17 @@ export class EventBinder {
             });
         }
 
-        // 付款人篩選（寶寶/步步）
+        // 統計模式切換（總花費/寶寶/步步）
+        document.querySelectorAll('.stat-mode-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const mode = e.currentTarget.dataset.mode;
+                if (mode && this.app.analyticsPage) {
+                    this.app.analyticsPage.toggleStatMode(mode);
+                }
+            });
+        });
+
+        // 付款人篩選（寶寶/步步）- 現在改為切換統計模式
         document.querySelectorAll('.stat-card-payer').forEach(card => {
             card.addEventListener('click', (e) => {
                 const payer = e.currentTarget.dataset.payer;
