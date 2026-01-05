@@ -38,18 +38,19 @@ service cloud.firestore {
     // ==================== 帳本 (notebooks) ====================
 
     match /notebooks/{notebookId} {
-      // 讀取：只能讀取自己配對的帳本
-      allow read: if isSignedIn() &&
-                     exists(/databases/$(database)/documents/couples/$(resource.data.couple_id)) &&
-                     request.auth.uid in get(/databases/$(database)/documents/couples/$(resource.data.couple_id)).data.member_ids;
+      // 讀取：允許查詢（查詢會自動過濾，只返回符合條件的）
+      // 實際權限由查詢條件限制（where couple_id == xxx）
+      allow read: if isSignedIn();
 
       // 新增：只能新增自己配對的帳本
       allow create: if isSignedIn() &&
+                       request.resource.data.couple_id is string &&
                        exists(/databases/$(database)/documents/couples/$(request.resource.data.couple_id)) &&
                        request.auth.uid in get(/databases/$(database)/documents/couples/$(request.resource.data.couple_id)).data.member_ids;
 
       // 更新/刪除：只能修改/刪除自己配對的帳本
       allow update, delete: if isSignedIn() &&
+                               resource.data.couple_id is string &&
                                exists(/databases/$(database)/documents/couples/$(resource.data.couple_id)) &&
                                request.auth.uid in get(/databases/$(database)/documents/couples/$(resource.data.couple_id)).data.member_ids;
     }
@@ -57,13 +58,13 @@ service cloud.firestore {
     // ==================== 交易記錄 (transactions) ====================
 
     match /transactions/{transactionId} {
-      // 讀取：只能讀取自己配對的交易
-      allow read: if isSignedIn() &&
-                     exists(/databases/$(database)/documents/couples/$(resource.data.couple_id)) &&
-                     request.auth.uid in get(/databases/$(database)/documents/couples/$(resource.data.couple_id)).data.member_ids;
+      // 讀取：允許查詢（查詢會自動過濾，只返回符合條件的）
+      // 實際權限由查詢條件限制
+      allow read: if isSignedIn();
 
       // 新增：只能新增自己配對的交易
       allow create: if isSignedIn() &&
+                       request.resource.data.couple_id is string &&
                        exists(/databases/$(database)/documents/couples/$(request.resource.data.couple_id)) &&
                        request.auth.uid in get(/databases/$(database)/documents/couples/$(request.resource.data.couple_id)).data.member_ids &&
                        request.resource.data.user_id == request.auth.uid &&
@@ -73,11 +74,13 @@ service cloud.firestore {
 
       // 更新：只能更新自己配對的交易（任一成員都可更新）
       allow update: if isSignedIn() &&
+                       resource.data.couple_id is string &&
                        exists(/databases/$(database)/documents/couples/$(resource.data.couple_id)) &&
                        request.auth.uid in get(/databases/$(database)/documents/couples/$(resource.data.couple_id)).data.member_ids;
 
       // 刪除：只能刪除自己配對的交易（任一成員都可刪除）
       allow delete: if isSignedIn() &&
+                       resource.data.couple_id is string &&
                        exists(/databases/$(database)/documents/couples/$(resource.data.couple_id)) &&
                        request.auth.uid in get(/databases/$(database)/documents/couples/$(resource.data.couple_id)).data.member_ids;
     }

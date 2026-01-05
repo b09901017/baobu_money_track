@@ -167,6 +167,11 @@ function initializeApp() {
                 let couple = null;
                 try {
                     couple = await window.FirebaseAPI.getUserCouple(user.uid);
+                    if (couple) {
+                        console.log('✅ 找到配對資料:', couple);
+                    } else {
+                        console.log('⚠️ 無配對資料');
+                    }
                 } catch (error) {
                     console.error('⚠️ 查詢配對失敗:', error);
                     // 如果查詢失敗，視為未配對

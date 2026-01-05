@@ -90,11 +90,14 @@ class DataManager {
      */
     async loadNotebooks() {
         try {
+            console.log('🔍 嘗試載入帳本，coupleId:', this.coupleId);
             this.notebooks = await window.FirebaseAPI.getNotebooks(this.coupleId);
             console.log(`📚 已載入 ${this.notebooks.length} 個配對帳本`);
         } catch (error) {
             console.error('❌ 載入帳本失敗:', error);
+            console.error('   錯誤詳情:', error.code, error.message);
             this.notebooks = [];
+            throw error;  // 重新拋出錯誤以便上層捕捉
         }
     }
 
