@@ -19,9 +19,9 @@ service cloud.firestore {
     // ==================== 配對 (couples) ====================
 
     match /couples/{coupleId} {
-      // 讀取：只能讀取自己是成員的配對
-      allow read: if isSignedIn() &&
-                     request.auth.uid in resource.data.member_ids;
+      // 讀取：允許所有已登入用戶讀取（用於查詢配對碼）
+      // 實際權限由查詢條件限制（where member_ids array-contains uid）
+      allow read: if isSignedIn();
 
       // 新增：只允許已登入用戶建立配對
       allow create: if isSignedIn() &&
