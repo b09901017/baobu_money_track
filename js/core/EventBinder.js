@@ -345,6 +345,46 @@ export class EventBinder {
                 }
             });
         });
+
+        // 分類視圖切換（列表/圓餅圖）
+        const btnCategoryListView = document.getElementById('btnCategoryListView');
+        const btnCategoryChartView = document.getElementById('btnCategoryChartView');
+
+        if (btnCategoryListView) {
+            btnCategoryListView.addEventListener('click', () => {
+                if (this.app.analyticsPage) {
+                    this.app.analyticsPage.toggleCategoryView('list');
+                }
+            });
+        }
+
+        if (btnCategoryChartView) {
+            btnCategoryChartView.addEventListener('click', () => {
+                if (this.app.analyticsPage) {
+                    this.app.analyticsPage.toggleCategoryView('chart');
+                }
+            });
+        }
+
+        // 付款人篩選（寶寶/步步）
+        document.querySelectorAll('.stat-card-payer').forEach(card => {
+            card.addEventListener('click', (e) => {
+                const payer = e.currentTarget.dataset.payer;
+                if (payer && this.app.analyticsPage) {
+                    this.app.analyticsPage.filterByPayer(payer);
+                }
+            });
+        });
+
+        // 清除篩選
+        const btnClearFilter = document.getElementById('btnClearFilter');
+        if (btnClearFilter) {
+            btnClearFilter.addEventListener('click', () => {
+                if (this.app.analyticsPage) {
+                    this.app.analyticsPage.clearFilter();
+                }
+            });
+        }
     }
 
     bindDetailModal() {

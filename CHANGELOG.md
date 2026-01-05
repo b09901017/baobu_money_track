@@ -7,6 +7,214 @@
 
 ---
 
+## [2.7.0] - 2026-01-05
+
+### ✨ 新增 (Added)
+
+#### 🍰 分類統計圓餅圖視覺化
+- ✅ **可愛童話風格圓餅圖** - 甜甜圈造型，中心有蛋糕 🍰
+  - 純 CSS/SVG 實作，無需外部圖表庫
+  - 馬卡龍色系漸層片段
+  - 柔和陰影與白色邊框
+  - Hover 提示效果
+  - 點擊圓餅片段篩選該分類
+
+- ✅ **列表/圓餅圖切換功能**
+  - 右上角可愛按鈕切換視圖
+  - 列表模式：詳細數據一目了然
+  - 圓餅圖模式：視覺化比例清晰
+  - 圖例顯示分類、百分比、金額
+  - 點擊圖例也可篩選
+
+#### 🎴 交易明細卡片式呈現
+- ✅ **每日童話風格卡片** - 分析頁面全新設計
+  - 按日期分組的精美卡片
+  - 漸層卡片標題（米黃 → 粉紅）
+  - 顯示日期、筆數、總計
+  - 智能日期顯示（今天/昨天/具體日期）
+  - 清單式項目（誰幫誰付 · 項目名稱 · 金額）
+
+- ✅ **童話風格清單項目**
+  - 顯示分類標籤（最多 2 個）
+  - 顯示照片圖標 📸
+  - Hover 背景變化
+  - 統一使用「誰幫誰付」表達方式
+
+#### 💰 付款人篩選功能
+- ✅ **點擊寶寶/步步卡片篩選** - 智能互動設計
+  - 點擊「寶寶」卡片 → 顯示寶寶的所有支出
+  - 點擊「步步」卡片 → 顯示步步的所有支出
+  - 卡片 Hover 放大效果
+  - 篩選後顯示「寶寶付款」或「步步付款」標籤
+
+- ✅ **多重篩選支援**
+  - 可按分類篩選
+  - 可按付款人篩選
+  - 篩選狀態標籤顯示
+  - 「清除篩選」按鈕快速重置
+
+### 🔄 變更 (Changed)
+
+#### AnalyticsPage.js 全面重構
+- **新增屬性**
+  - `categoryViewMode` - 分類視圖模式（list/chart）
+  - `currentFilter` - 當前篩選狀態
+  - `allTransactions` - 完整交易列表（用於篩選）
+  - `categoryStats` - 分類統計資料
+  - `categoryColors` - 分類顏色陣列
+
+- **新增方法**
+  - `renderCategoryList()` - 渲染分類列表視圖
+  - `renderCategoryChart()` - 渲染分類圓餅圖視圖
+  - `toggleCategoryView(mode)` - 切換視圖模式
+  - `filterByCategory(category)` - 按分類篩選
+  - `filterByPayer(payer)` - 按付款人篩選
+  - `clearFilter()` - 清除篩選
+  - `showClearFilterButton()` / `hideClearFilterButton()` - 控制清除按鈕
+  - `renderTransactionList(transactions, filterLabel)` - 渲染交易列表
+  - `renderDayCard(dateStr, transactions, isFirst)` - 渲染每日卡片
+  - `renderCardListItem(tx)` - 渲染卡片清單項目
+  - `isSameDay(date1, date2)` - 日期比較工具
+
+- **修改方法**
+  - `update()` - 儲存完整交易列表，清除篩選
+  - `renderCategoryStats()` - 支援列表/圓餅圖雙模式
+  - 移除 `showCategoryDetail()` - 改用 `filterByCategory()`
+
+#### 新增 PieChart.js 組件
+- **圓餅圖渲染器**
+  - `render(data, colors)` - 渲染 SVG 圓餅圖
+  - `createArcPath(...)` - 計算弧形路徑
+  - `renderLegend(data, colors)` - 渲染圖例
+  - `bindEvents(container, onClick)` - 綁定點擊事件
+  - 支援任意數量的分類
+  - 自動計算角度與路徑
+
+#### EventBinder.js 擴展
+- **新增事件綁定**
+  - 分類視圖切換按鈕（btnCategoryListView / btnCategoryChartView）
+  - 付款人統計卡片點擊（stat-card-payer）
+  - 清除篩選按鈕（btnClearFilter）
+  - 所有按鈕統一綁定到 `bindAnalytics()` 方法
+
+#### index.html 結構更新
+- **分類統計區塊**
+  - 新增標題與切換按鈕行
+  - 新增列表視圖容器（categoryListView）
+  - 新增圓餅圖視圖容器（categoryChartView）
+  - 新增圓餅圖容器（categoryPieChart）
+  - 新增圖例容器（categoryLegend）
+
+- **統計卡片**
+  - 寶寶/步步卡片加上可點擊樣式
+  - 加上 `data-payer` 屬性
+  - 加上 Hover 放大效果
+
+- **交易明細**
+  - 標題旁新增「清除篩選」按鈕
+  - 預設隱藏，篩選時顯示
+
+### ✨ 改善 (Improved)
+
+#### 使用者體驗
+- 📊 **視覺化呈現** - 圓餅圖一眼看懂支出比例
+- 🎴 **卡片式布局** - 每日交易整齊分組，層次分明
+- 🖱️ **互動篩選** - 點擊任何元素快速篩選
+- 💰 **付款人篩選** - 輕鬆查看誰花了多少錢
+- 🏷️ **篩選標籤** - 當前篩選狀態清晰顯示
+- ✕ **快速清除** - 一鍵返回完整列表
+
+#### 視覺設計
+- 🍰 **童話風格圓餅圖** - 可愛的甜甜圈造型
+- 🌸 **馬卡龍色系** - 柔和粉彩色片段
+- ✨ **流暢動畫** - Hover、切換、篩選皆有過渡效果
+- 📐 **一致性設計** - 卡片、按鈕、標籤風格統一
+- 🎨 **層次分明** - 漸層標題、清單項目、分隔線
+
+#### 互動設計
+- 👆 **可點擊提示** - Hover 放大、陰影變化
+- 🔄 **即時切換** - 列表/圖表無縫切換
+- 🎯 **精準篩選** - 分類、付款人多重篩選
+- 💡 **狀態反饋** - 篩選標籤、清除按鈕即時顯示
+
+### 🔧 相關檔案變更
+```
+Modified:
+- index.html
+  - 統計卡片加上可點擊樣式
+  - 分類統計加上切換按鈕
+  - 新增圓餅圖/圖例容器
+  - 交易明細加上篩選按鈕
+
+Added:
+- js/components/PieChart.js (新增 172 行)
+  - 純 CSS/SVG 圓餅圖組件
+  - 甜甜圈風格視覺化
+  - 圖例渲染器
+  - 事件綁定器
+
+Modified:
+- js/pages/AnalyticsPage.js
+  - 新增雙視圖模式支援
+  - 新增篩選功能
+  - 新增卡片式渲染
+  - 重構交易列表顯示
+
+Modified:
+- js/core/EventBinder.js
+  - 新增視圖切換事件
+  - 新增付款人篩選事件
+  - 新增清除篩選事件
+
+Statistics:
+- 4 files changed
+- 1 file added (PieChart.js)
+- 512 insertions(+)
+- 73 deletions(-)
+```
+
+### 📚 文檔 (Documentation)
+
+#### README.md 更新
+- 版本號更新：v2.6.0 → v2.7.0
+- 分析頁面功能說明更新
+
+### 🚀 部署 (Deployment)
+- ✅ 部署到 Firebase Hosting
+- ✅ 更新線上網站：https://baobu-app.web.app
+
+### 💡 技術亮點
+
+#### 純 CSS/SVG 圓餅圖
+- 無需 Chart.js 等外部庫
+- 使用 SVG `<path>` 元素繪製弧形
+- 數學計算角度與路徑（三角函數）
+- 支援任意數量的分類
+- Hover 效果與點擊事件
+- 檔案大小僅 5KB
+
+#### 卡片式布局設計
+- 按日期自動分組
+- 漸層標題增加視覺層次
+- 清單項目 Hover 效果
+- 統一使用「誰幫誰付」表達
+- 分類標籤簡潔顯示
+
+#### 智能篩選系統
+- 單一篩選狀態管理
+- 篩選標籤動態顯示
+- 清除按鈕智能顯示/隱藏
+- 支援多種篩選方式（分類/付款人）
+- 篩選後自動滾動到明細
+
+#### 童話風格一致性
+- 所有新增 UI 遵循設計系統
+- 馬卡龍色系（6 種柔和色彩）
+- 圓角、陰影、漸層統一規範
+- Emoji 裝飾點綴（🍰📸）
+
+---
+
 ## [2.6.0] - 2026-01-05
 
 ### ✨ 新增 (Added)

@@ -353,27 +353,58 @@
                         <p class="text-xs font-bold text-warm-brown mb-1">總支出</p>
                         <h3 class="text-xl font-display font-bold text-soft-ink" id="totalExpense">$0</h3>
                     </div>
-                    <div class="bg-white rounded-xl p-4 shadow-watercolor-layered text-center">
+                    <div class="stat-card-payer bg-white rounded-xl p-4 shadow-watercolor-layered text-center cursor-pointer transition-all hover:scale-105 hover:shadow-floating" data-payer="me">
                         <p class="text-xs font-bold text-warm-brown mb-1">寶寶</p>
-                        <h3 class="text-xl font-display font-bold text-soft-ink" id="myExpense">$0</h3>
+                        <h3 class="text-xl font-display font-bold text-macaron-rose" id="myExpense">$0</h3>
                     </div>
-                    <div class="bg-white rounded-xl p-4 shadow-watercolor-layered text-center">
+                    <div class="stat-card-payer bg-white rounded-xl p-4 shadow-watercolor-layered text-center cursor-pointer transition-all hover:scale-105 hover:shadow-floating" data-payer="partner">
                         <p class="text-xs font-bold text-warm-brown mb-1">步步</p>
-                        <h3 class="text-xl font-display font-bold text-soft-ink" id="partnerExpense">$0</h3>
+                        <h3 class="text-xl font-display font-bold text-blue-600" id="partnerExpense">$0</h3>
                     </div>
                 </div>
 
                 <!-- 分類統計 -->
                 <div class="bg-white rounded-2xl p-5 shadow-watercolor-layered mb-6">
-                    <h3 class="text-lg font-hand font-bold mb-4 text-soft-ink">分類統計</h3>
-                    <div id="categoryList" class="space-y-3">
-                        <!-- 分類項目由 JS 動態生成 -->
+                    <!-- 標題與切換按鈕 -->
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-hand font-bold text-soft-ink">分類統計</h3>
+                        <div class="flex gap-2">
+                            <button id="btnCategoryListView" class="w-8 h-8 rounded-full bg-gradient-to-br from-macaron-pink to-macaron-rose flex items-center justify-center text-white transition-all hover:scale-110 shadow-sm">
+                                <span class="material-symbols-outlined text-sm">list</span>
+                            </button>
+                            <button id="btnCategoryChartView" class="w-8 h-8 rounded-full bg-white hover:bg-macaron-cream/50 flex items-center justify-center text-soft-ink transition-all hover:scale-110 shadow-sm border border-macaron-pink/30">
+                                <span class="material-symbols-outlined text-sm">donut_large</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 列表視圖 -->
+                    <div id="categoryListView">
+                        <div id="categoryList" class="space-y-3">
+                            <!-- 分類項目由 JS 動態生成 -->
+                        </div>
+                    </div>
+
+                    <!-- 圓餅圖視圖 -->
+                    <div id="categoryChartView" class="hidden">
+                        <div id="categoryPieChart" class="flex items-center justify-center py-4">
+                            <!-- 圓餅圖由 JS 動態生成 -->
+                        </div>
+                        <!-- 圖例 -->
+                        <div id="categoryLegend" class="mt-4 grid grid-cols-2 gap-2">
+                            <!-- 圖例由 JS 動態生成 -->
+                        </div>
                     </div>
                 </div>
 
                 <!-- 交易明細 -->
                 <div>
-                    <h3 class="text-lg font-hand font-bold mb-4 px-2 text-soft-ink">交易明細</h3>
+                    <div class="flex items-center justify-between mb-4 px-2">
+                        <h3 class="text-lg font-hand font-bold text-soft-ink">交易明細</h3>
+                        <button id="btnClearFilter" class="hidden text-xs font-hand text-macaron-rose hover:text-macaron-pink transition-colors px-2 py-1 rounded-full hover:bg-macaron-pink/10">
+                            清除篩選 ✕
+                        </button>
+                    </div>
                     <div id="analyticsTransactionList" class="space-y-3">
                         <!-- 交易明細 -->
                     </div>
