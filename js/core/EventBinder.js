@@ -346,22 +346,22 @@ export class EventBinder {
             });
         });
 
-        // 分類視圖切換（列表/圓餅圖）
-        const btnCategoryListView = document.getElementById('btnCategoryListView');
-        const btnCategoryChartView = document.getElementById('btnCategoryChartView');
+        // 分類視圖切換（長條圖/圓餅圖）
+        const btnCategoryBarView = document.getElementById('btnCategoryBarView');
+        const btnCategoryPieView = document.getElementById('btnCategoryPieView');
 
-        if (btnCategoryListView) {
-            btnCategoryListView.addEventListener('click', () => {
+        if (btnCategoryBarView) {
+            btnCategoryBarView.addEventListener('click', () => {
                 if (this.app.analyticsPage) {
-                    this.app.analyticsPage.toggleCategoryView('list');
+                    this.app.analyticsPage.toggleCategoryView('bar');
                 }
             });
         }
 
-        if (btnCategoryChartView) {
-            btnCategoryChartView.addEventListener('click', () => {
+        if (btnCategoryPieView) {
+            btnCategoryPieView.addEventListener('click', () => {
                 if (this.app.analyticsPage) {
-                    this.app.analyticsPage.toggleCategoryView('chart');
+                    this.app.analyticsPage.toggleCategoryView('pie');
                 }
             });
         }

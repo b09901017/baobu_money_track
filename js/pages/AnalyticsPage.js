@@ -3,14 +3,15 @@
 
 import { TransactionRenderer } from '../components/TransactionRenderer.js';
 import { PieChart } from '../components/PieChart.js';
+import { BarChart } from '../components/BarChart.js';
 
 export class AnalyticsPage {
     constructor(state, onTransactionClickCallback) {
         this.state = state;
         this.onTransactionClickCallback = onTransactionClickCallback;
 
-        // 視圖模式：'list' | 'chart'
-        this.categoryViewMode = 'list';
+        // 視圖模式：'bar' | 'pie'
+        this.categoryViewMode = 'bar';
 
         // 統計模式：'all' | 'me' | 'partner'
         this.statMode = 'all';
@@ -98,51 +99,46 @@ export class AnalyticsPage {
         this.categoryColors = ['#FFB7B2', '#C7CEEA', '#E2F0CB', '#E0BBE4', '#FFC7D8', '#A8D8FF'];
 
         // 根據當前視圖模式渲染
-        if (this.categoryViewMode === 'list') {
-            this.renderCategoryList();
+        if (this.categoryViewMode === 'bar') {
+            this.renderCategoryBar();
         } else {
-            this.renderCategoryChart();
+            this.renderCategoryPie();
         }
     }
 
     /**
-     * 渲染分類列表視圖
+     * 渲染分類長條圖視圖
      */
-    renderCategoryList() {
-        const container = document.getElementById('categoryList');
+    renderCategoryBar() {
+        const container = document.getElementById('categoryBarChart');
         if (!container) return;
 
         const stats = this.categoryStats;
         const colors = this.categoryColors;
 
         if (!stats || stats.length === 0) {
-            container.innerHTML = '<p class="text-center text-warm-brown/60 font-hand">無分類資料 ✨</p>';
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <span class="text-4xl">📊</span>
+                    <p class="text-warm-brown/60 font-hand mt-2">暫無分類資料</p>
+                </div>
+            `;
             return;
         }
 
-        container.innerHTML = stats.map((item, index) => `
-            <div class="category-stat-item flex items-center gap-3 p-3 rounded-xl hover:bg-macaron-cream/30 transition-all cursor-pointer" data-category="${item.category}">
-                <div class="w-5 h-5 rounded-full" style="background: ${colors[index % colors.length]}; box-shadow: 0 2px 8px ${colors[index % colors.length]}40;"></div>
-                <div class="flex-1 font-hand font-bold text-soft-ink">${item.category}</div>
-                <div class="font-display font-bold text-soft-ink">$${Math.round(item.amount)}</div>
-                <div class="text-sm text-warm-brown/70 min-w-[50px] text-right">${item.percentage}%</div>
-                <span class="material-symbols-outlined text-warm-brown/40 text-lg">chevron_right</span>
-            </div>
-        `).join('');
+        // 渲染長條圖
+        container.innerHTML = BarChart.render(stats, colors);
 
         // 綁定點擊事件
-        container.querySelectorAll('.category-stat-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                const category = e.currentTarget.dataset.category;
-                this.filterByCategory(category);
-            });
+        BarChart.bindEvents(container, (category) => {
+            this.filterByCategory(category);
         });
     }
 
     /**
      * 渲染分類圓餅圖視圖
      */
-    renderCategoryChart() {
+    renderCategoryPie() {
         const chartContainer = document.getElementById('categoryPieChart');
         const legendContainer = document.getElementById('categoryLegend');
 
@@ -180,43 +176,43 @@ export class AnalyticsPage {
     toggleCategoryView(mode) {
         this.categoryViewMode = mode;
 
-        const listView = document.getElementById('categoryListView');
-        const chartView = document.getElementById('categoryChartView');
-        const listBtn = document.getElementById('btnCategoryListView');
-        const chartBtn = document.getElementById('btnCategoryChartView');
+        const barView = document.getElementById('categoryBarView');
+        const pieView = document.getElementById('categoryPieView');
+        const barBtn = document.getElementById('btnCategoryBarView');
+        const pieBtn = document.getElementById('btnCategoryPieView');
 
-        if (mode === 'list') {
-            // 顯示列表，隱藏圓餅圖
-            if (listView) listView.classList.remove('hidden');
-            if (chartView) chartView.classList.add('hidden');
+        if (mode === 'bar') {
+            // 顯示長條圖，隱藏圓餅圖
+            if (barView) barView.classList.remove('hidden');
+            if (pieView) pieView.classList.add('hidden');
 
             // 更新按鈕樣式
-            if (listBtn) {
-                listBtn.classList.add('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-rose', 'text-white');
-                listBtn.classList.remove('bg-white', 'text-soft-ink', 'border', 'border-macaron-pink/30');
+            if (barBtn) {
+                barBtn.classList.add('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-rose', 'text-white');
+                barBtn.classList.remove('bg-white', 'text-soft-ink', 'border', 'border-macaron-pink/30');
             }
-            if (chartBtn) {
-                chartBtn.classList.remove('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-rose', 'text-white');
-                chartBtn.classList.add('bg-white', 'text-soft-ink', 'hover:bg-macaron-cream/50', 'border', 'border-macaron-pink/30');
+            if (pieBtn) {
+                pieBtn.classList.remove('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-rose', 'text-white');
+                pieBtn.classList.add('bg-white', 'text-soft-ink', 'hover:bg-macaron-cream/50', 'border', 'border-macaron-pink/30');
             }
 
-            this.renderCategoryList();
+            this.renderCategoryBar();
         } else {
-            // 顯示圓餅圖，隱藏列表
-            if (listView) listView.classList.add('hidden');
-            if (chartView) chartView.classList.remove('hidden');
+            // 顯示圓餅圖，隱藏長條圖
+            if (barView) barView.classList.add('hidden');
+            if (pieView) pieView.classList.remove('hidden');
 
             // 更新按鈕樣式
-            if (chartBtn) {
-                chartBtn.classList.add('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-rose', 'text-white');
-                chartBtn.classList.remove('bg-white', 'text-soft-ink', 'border', 'border-macaron-pink/30');
+            if (pieBtn) {
+                pieBtn.classList.add('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-rose', 'text-white');
+                pieBtn.classList.remove('bg-white', 'text-soft-ink', 'border', 'border-macaron-pink/30');
             }
-            if (listBtn) {
-                listBtn.classList.remove('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-rose', 'text-white');
-                listBtn.classList.add('bg-white', 'text-soft-ink', 'hover:bg-macaron-cream/50', 'border', 'border-macaron-pink/30');
+            if (barBtn) {
+                barBtn.classList.remove('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-rose', 'text-white');
+                barBtn.classList.add('bg-white', 'text-soft-ink', 'hover:bg-macaron-cream/50', 'border', 'border-macaron-pink/30');
             }
 
-            this.renderCategoryChart();
+            this.renderCategoryPie();
         }
     }
 
@@ -428,28 +424,39 @@ export class AnalyticsPage {
         }
 
         const payerColor = tx.payer === 'me' ? 'text-macaron-rose' : 'text-blue-600';
-        const photoIcon = tx.photo_url ? '<span class="text-xs">📸</span>' : '';
-        const categories = tx.categories && tx.categories.length > 0
-            ? tx.categories.slice(0, 2).join(' · ')
-            : '';
+        const photoIcon = tx.photo_url ? '<span class="text-xs ml-1">📸</span>' : '';
+
+        // 備註：顯示分類或一般備註
+        let note = '';
+        if (tx.categories && tx.categories.length > 0) {
+            note = tx.categories.slice(0, 2).join(' · ');
+        } else if (tx.note) {
+            note = tx.note;
+        }
 
         return `
             <div class="transaction-item px-4 py-3 hover:bg-macaron-cream/20 cursor-pointer transition-colors" data-transaction-id="${tx.id}">
-                <div class="flex items-center gap-2">
-                    <!-- 付款標籤 -->
-                    <span class="text-xs font-hand font-bold ${payerColor} shrink-0" style="width: 64px;">${payText}</span>
-
-                    <!-- 項目資訊 -->
-                    <div class="flex-1 min-w-0 overflow-hidden">
-                        <div class="flex items-center gap-1">
-                            <span class="font-hand text-sm text-soft-ink truncate font-bold block">${tx.item_name}</span>
-                            ${photoIcon}
-                        </div>
-                        ${categories ? `<div class="text-xs text-warm-brown/60 truncate">${categories}</div>` : ''}
+                <div class="flex items-start gap-3">
+                    <!-- 付款標籤（固定寬度 68px） -->
+                    <div class="shrink-0" style="width: 68px;">
+                        <span class="text-xs font-hand font-bold ${payerColor} block">${payText}</span>
                     </div>
 
-                    <!-- 金額（固定在右側） -->
-                    <span class="font-display font-bold text-base text-[#E27D60] shrink-0" style="min-width: 60px; text-align: right;">$${tx.amount}</span>
+                    <!-- 項目資訊（彈性區域） -->
+                    <div class="flex-1 min-w-0 overflow-hidden">
+                        <!-- 名稱 -->
+                        <div class="flex items-center">
+                            <span class="font-hand text-sm text-soft-ink truncate font-bold">${tx.item_name}</span>
+                            ${photoIcon}
+                        </div>
+                        <!-- 備註/分類 -->
+                        ${note ? `<div class="text-xs text-warm-brown/60 truncate mt-0.5">${note}</div>` : ''}
+                    </div>
+
+                    <!-- 金額（固定寬度 70px，右對齊） -->
+                    <div class="shrink-0" style="width: 70px;">
+                        <span class="font-display font-bold text-base text-[#E27D60] block text-right">$${tx.amount}</span>
+                    </div>
                 </div>
             </div>
         `;

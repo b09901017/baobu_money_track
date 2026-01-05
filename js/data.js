@@ -406,14 +406,24 @@ class DataManager {
     getCategoryStats(transactions = null) {
         const txs = transactions || this.getTransactions();
         const categoryTotals = {};
+        let uncategorizedTotal = 0; // 未分類總額
 
         txs.forEach(tx => {
-            if (tx.categories && Array.isArray(tx.categories)) {
+            if (tx.categories && Array.isArray(tx.categories) && tx.categories.length > 0) {
+                // 有分類標籤
                 tx.categories.forEach(cat => {
                     categoryTotals[cat] = (categoryTotals[cat] || 0) + parseFloat(tx.amount);
                 });
+            } else {
+                // 沒有分類標籤 → 歸類為「未分類」
+                uncategorizedTotal += parseFloat(tx.amount);
             }
         });
+
+        // 加入未分類項目
+        if (uncategorizedTotal > 0) {
+            categoryTotals['未分類'] = uncategorizedTotal;
+        }
 
         const total = Object.values(categoryTotals).reduce((sum, val) => sum + val, 0);
 
