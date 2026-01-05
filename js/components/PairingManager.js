@@ -14,6 +14,28 @@ export class PairingManager {
     }
 
     /**
+     * 安全地顯示成功訊息（降級到 alert）
+     */
+    async showSuccess(message) {
+        if (window.customDialog && typeof window.customDialog.success === 'function') {
+            await this.showSuccess(message);
+        } else {
+            alert('✅ ' + message);
+        }
+    }
+
+    /**
+     * 安全地顯示錯誤訊息（降級到 alert）
+     */
+    async showError(message) {
+        if (window.customDialog && typeof window.customDialog.error === 'function') {
+            await this.showError(message);
+        } else {
+            alert('❌ ' + message);
+        }
+    }
+
+    /**
      * 初始化事件綁定
      */
     init(onPairingCompleteCallback) {
@@ -149,7 +171,7 @@ export class PairingManager {
             // 取得選擇的角色
             const roleInput = document.querySelector('input[name="createRole"]:checked');
             if (!roleInput) {
-                await window.customDialog.error('請選擇你的角色');
+                await this.showError('請選擇你的角色');
                 return;
             }
 
@@ -157,7 +179,7 @@ export class PairingManager {
             const user = window.currentUser;
 
             if (!user) {
-                await window.customDialog.error('用戶資料不存在，請重新登入');
+                await this.showError('用戶資料不存在，請重新登入');
                 return;
             }
 
@@ -184,10 +206,10 @@ export class PairingManager {
             // 切換到顯示配對碼界面
             this.showPairingCodeDisplay();
 
-            await window.customDialog.success('配對已建立！請將配對碼分享給伴侶');
+            await this.showSuccess('配對已建立！請將配對碼分享給伴侶');
         } catch (error) {
             console.error('❌ 建立配對失敗:', error);
-            await window.customDialog.error('建立配對失敗：' + error.message);
+            await this.showError('建立配對失敗：' + error.message);
         }
     }
 
@@ -196,49 +218,62 @@ export class PairingManager {
      */
     async handleJoinCouple() {
         try {
+            console.log('🔄 開始處理加入配對...');
+
             // 取得輸入的配對碼
             const inputPairingCode = document.getElementById('inputPairingCode');
             if (!inputPairingCode) {
-                await window.customDialog.error('找不到配對碼輸入框');
+                console.error('❌ 找不到配對碼輸入框');
+                await this.showError('找不到配對碼輸入框');
                 return;
             }
 
             const pairingCode = inputPairingCode.value.trim().toUpperCase();
+            console.log('📝 輸入的配對碼:', pairingCode);
 
             // 驗證配對碼格式
             if (!this.validatePairingCode(pairingCode)) {
-                await window.customDialog.error('配對碼格式錯誤，請輸入6位英數字');
+                console.error('❌ 配對碼格式錯誤');
+                await this.showError('配對碼格式錯誤，請輸入6位英數字');
                 return;
             }
 
             // 取得選擇的角色
             const roleInput = document.querySelector('input[name="joinRole"]:checked');
             if (!roleInput) {
-                await window.customDialog.error('請選擇你的角色');
+                console.error('❌ 未選擇角色');
+                await this.showError('請選擇你的角色');
                 return;
             }
 
             const role = roleInput.value;  // 'baobao' | 'bubu'
+            console.log('✅ 選擇的角色:', role);
+
             const user = window.currentUser;
 
             if (!user) {
-                await window.customDialog.error('用戶資料不存在，請重新登入');
+                console.error('❌ 用戶資料不存在');
+                await this.showError('用戶資料不存在，請重新登入');
                 return;
             }
 
+            console.log('✅ 當前用戶:', user.displayName || user.email);
             console.log('🔍 查找配對碼...', pairingCode);
 
             // 查找配對
             const couple = await window.FirebaseAPI.findCoupleByCode(pairingCode);
 
             if (!couple) {
-                await window.customDialog.error('配對碼不存在，請確認後再試');
+                console.error('❌ 配對碼不存在');
+                await this.showError('配對碼不存在，請確認後再試');
                 return;
             }
 
+            console.log('✅ 找到配對:', couple.id);
+
             // 檢查配對是否已完成
             if (couple.is_complete) {
-                await window.customDialog.error('此配對已完成，無法再加入');
+                await this.showError('此配對已完成，無法再加入');
                 return;
             }
 
@@ -246,11 +281,11 @@ export class PairingManager {
             const existingRole = Object.values(couple.member_roles)[0];
             if (existingRole === role) {
                 const roleName = role === 'baobao' ? '寶寶' : '步步';
-                await window.customDialog.error(`伴侶已選擇「${roleName}」角色，請選擇另一個角色`);
+                await this.showError(`伴侶已選擇「${roleName}」角色，請選擇另一個角色`);
                 return;
             }
 
-            console.log('🔄 正在加入配對...', { coupleId: couple.id, role });
+            console.log('🔄 正在加入配對...', { coupleId: couple.id, role, userName: user.displayName || user.email });
 
             // 加入配對
             await window.FirebaseAPI.joinCouple(
@@ -260,18 +295,24 @@ export class PairingManager {
                 user.displayName || user.email
             );
 
-            console.log('✅ 已加入配對');
+            console.log('✅ 已加入配對，更新配對資料');
+
+            // 重新查詢配對資料（包含更新後的 member_ids）
+            const updatedCouple = await window.FirebaseAPI.getUserCouple(user.uid);
+            console.log('📋 更新後的配對資料:', updatedCouple);
 
             // 儲存配對資料
-            this.currentCouple = couple;
+            this.currentCouple = updatedCouple;
 
-            await window.customDialog.success('配對成功！即將進入記帳 App');
+            await this.showSuccess('配對成功！即將進入記帳 App');
+
+            console.log('🎉 準備完成配對，進入主應用...');
 
             // 完成配對
             await this.completePairing();
         } catch (error) {
             console.error('❌ 加入配對失敗:', error);
-            await window.customDialog.error('加入配對失敗：' + error.message);
+            await this.showError('加入配對失敗：' + error.message);
         }
     }
 
@@ -299,7 +340,7 @@ export class PairingManager {
             const couple = await window.FirebaseAPI.getUserCouple(user.uid);
 
             if (!couple) {
-                await window.customDialog.error('無法取得配對資料，請重新登入');
+                await this.showError('無法取得配對資料，請重新登入');
                 return;
             }
 
@@ -309,7 +350,7 @@ export class PairingManager {
             }
         } catch (error) {
             console.error('❌ 完成配對失敗:', error);
-            await window.customDialog.error('發生錯誤：' + error.message);
+            await this.showError('發生錯誤：' + error.message);
         }
     }
 }
