@@ -97,6 +97,111 @@ export class TransactionRenderer {
     }
 
     /**
+     * 渲染時間軸交易項目（帶時間顯示）
+     * @param {Object} tx - 交易物件
+     * @param {number} index - 索引（保留參數以保持兼容性）
+     * @returns {string} - HTML 字串
+     */
+    static renderTimelineItemWithTime(tx, index) {
+        const icon = tx.categories && tx.categories.length > 0
+            ? CATEGORY_ICONS[tx.categories[0]] || 'auto_stories'
+            : 'auto_stories';
+
+        const payerText = tx.payer === 'me' ? '寶寶' : '步步';
+
+        // 判斷是否為寶寶付款
+        const isBaobao = tx.payer === 'me';
+
+        // 根據付款人決定樣式
+        const payerBadgeClass = isBaobao
+            ? 'bg-macaron-pink/20 text-macaron-rose'
+            : 'bg-macaron-blue/20 text-blue-600';
+
+        const payerBorderClass = isBaobao
+            ? 'border-l-4 border-macaron-pink'
+            : 'border-r-4 border-macaron-blue';
+
+        const payerDotClass = isBaobao
+            ? 'border-macaron-pink bg-macaron-pink/20'
+            : 'border-macaron-blue bg-macaron-blue/20';
+
+        // 計算時間（使用 created_at）
+        const time = new Date(tx.created_at);
+        const timeStr = `${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`;
+
+        // 照片圖標（如果有照片）
+        const photoIndicator = tx.photo_url ? `<span class="text-xs">📸</span>` : '';
+
+        // 寶寶付款：卡片偏左
+        // 步步付款：卡片偏右
+        if (isBaobao) {
+            return `
+                <div class="relative mb-4 flex justify-start items-start gap-2">
+                    <!-- 時間軸點 - 寶寶（左邊）-->
+                    <div class="absolute -left-8 top-3 w-4 h-4 rounded-full ${payerDotClass} border-[3px] shadow-sm z-10"></div>
+
+                    <!-- 時間標記 -->
+                    <div class="shrink-0 mt-3 text-xs text-warm-brown/60 font-hand font-bold min-w-[40px]">${timeStr}</div>
+
+                    <!-- 交易卡片 - 偏左 -->
+                    <div class="transaction-item flex-1 max-w-[80%] bg-white rounded-2xl p-3 shadow-watercolor-layered hover:shadow-floating transition-all cursor-pointer group ${payerBorderClass}" data-transaction-id="${tx.id}">
+                        <div class="flex items-center gap-3">
+                            <!-- 寶寶付標籤 -->
+                            <span class="px-2 py-0.5 rounded-full ${payerBadgeClass} text-xs font-bold shrink-0">寶寶付</span>
+
+                            <!-- 價錢 -->
+                            <div class="shrink-0">
+                                <div class="font-display font-bold text-lg text-[#E27D60]">$${tx.amount}</div>
+                            </div>
+
+                            <!-- 名稱 -->
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-1">
+                                    <h4 class="font-hand font-bold text-base text-soft-ink truncate">${tx.item_name}</h4>
+                                    ${photoIndicator}
+                                </div>
+                                ${tx.note ? `<p class="text-xs text-warm-brown/60 italic truncate">📝 ${tx.note}</p>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            return `
+                <div class="relative mb-4 flex justify-end items-start gap-2">
+                    <!-- 交易卡片 - 偏右 -->
+                    <div class="transaction-item flex-1 max-w-[80%] bg-white rounded-2xl p-3 shadow-watercolor-layered hover:shadow-floating transition-all cursor-pointer group ${payerBorderClass}" data-transaction-id="${tx.id}">
+                        <div class="flex items-center gap-3">
+                            <!-- 步步付標籤 -->
+                            <span class="px-2 py-0.5 rounded-full ${payerBadgeClass} text-xs font-bold shrink-0">步步付</span>
+
+                            <!-- 價錢 -->
+                            <div class="shrink-0">
+                                <div class="font-display font-bold text-lg text-[#E27D60]">$${tx.amount}</div>
+                            </div>
+
+                            <!-- 名稱 -->
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-1">
+                                    <h4 class="font-hand font-bold text-base text-soft-ink truncate">${tx.item_name}</h4>
+                                    ${photoIndicator}
+                                </div>
+                                ${tx.note ? `<p class="text-xs text-warm-brown/60 italic truncate">📝 ${tx.note}</p>` : ''}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 時間標記 -->
+                    <div class="shrink-0 mt-3 text-xs text-warm-brown/60 font-hand font-bold min-w-[40px] text-right">${timeStr}</div>
+
+                    <!-- 時間軸點 - 步步（右邊）-->
+                    <div class="absolute -right-8 top-3 w-4 h-4 rounded-full ${payerDotClass} border-[3px] shadow-sm z-10"></div>
+                </div>
+            `;
+        }
+    }
+
+    /**
      * 渲染時間軸交易項目（時間軸模式）
      * @param {Object} tx - 交易物件
      * @param {number} index - 索引（保留參數以保持兼容性）

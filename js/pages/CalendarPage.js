@@ -8,6 +8,16 @@ export class CalendarPage {
     constructor(state, onTransactionClickCallback) {
         this.state = state;
         this.onTransactionClickCallback = onTransactionClickCallback;
+
+        // 日曆模式：'single' | 'range'
+        this.calendarMode = 'single';
+
+        // 單日模式的當前選中日期
+        this.currentSelectedDate = null;
+
+        // 區間模式的臨時選中日期
+        this.tempRangeStart = null;
+        this.tempRangeEnd = null;
     }
 
     renderCalendar() {
@@ -71,12 +81,44 @@ export class CalendarPage {
         const dateStr = window.DataManager.formatDate(new Date(year, month, day));
         const today = window.DataManager.getToday();
 
+        // 今天的標記
         if (dateStr === today && !isOtherMonth) {
             cell.className += ' bg-macaron-cream font-bold ring-2 ring-antique-gold/30';
         }
 
+        // 有花費的標記
         if (dailyExpenses[dateStr]) {
             cell.className += ' ring-2 ring-macaron-pink/30';
+        }
+
+        // 單日模式：選中的日期
+        if (this.calendarMode === 'single' && dateStr === this.currentSelectedDate && !isOtherMonth) {
+            cell.className += ' bg-gradient-to-br from-macaron-pink to-macaron-purple text-white scale-105 shadow-watercolor-layered';
+        }
+
+        // 區間模式：開始、結束、中間日期的高亮
+        if (this.calendarMode === 'range' && !isOtherMonth) {
+            const cellDate = new Date(dateStr);
+
+            // 開始日期
+            if (this.tempRangeStart && dateStr === this.tempRangeStart) {
+                cell.className += ' bg-gradient-to-br from-macaron-blue to-macaron-purple text-white ring-2 ring-macaron-blue shadow-watercolor-layered';
+            }
+
+            // 結束日期
+            if (this.tempRangeEnd && dateStr === this.tempRangeEnd) {
+                cell.className += ' bg-gradient-to-br from-macaron-blue to-macaron-purple text-white ring-2 ring-macaron-purple shadow-watercolor-layered';
+            }
+
+            // 中間日期
+            if (this.tempRangeStart && this.tempRangeEnd) {
+                const start = new Date(this.tempRangeStart);
+                const end = new Date(this.tempRangeEnd);
+
+                if (cellDate > start && cellDate < end) {
+                    cell.className += ' bg-macaron-blue/20 border-2 border-macaron-blue/40';
+                }
+            }
         }
 
         // 日期數字
@@ -104,14 +146,41 @@ export class CalendarPage {
     }
 
     selectCalendarDay(dateStr, cell) {
-        document.querySelectorAll('#calendarGrid > div').forEach(day => {
-            day.classList.remove('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-purple', 'text-white', 'scale-105', 'shadow-watercolor-layered');
-        });
+        if (this.calendarMode === 'single') {
+            // 單日模式：選中一天，顯示該天的交易
+            document.querySelectorAll('#calendarGrid > div').forEach(day => {
+                day.classList.remove('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-purple', 'text-white', 'scale-105', 'shadow-watercolor-layered');
+            });
 
-        cell.classList.add('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-purple', 'text-white', 'scale-105', 'shadow-watercolor-layered');
-        this.state.selectedDate = dateStr;
+            cell.classList.add('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-purple', 'text-white', 'scale-105', 'shadow-watercolor-layered');
+            this.currentSelectedDate = dateStr;
+            this.state.selectedDate = dateStr;
 
-        this.showDayTransactions(dateStr);
+            this.showDayTransactions(dateStr);
+        } else {
+            // 區間模式：選擇開始和結束日期
+            if (!this.tempRangeStart || this.tempRangeEnd) {
+                // 選擇開始日期
+                this.tempRangeStart = dateStr;
+                this.tempRangeEnd = null;
+                this.renderCalendar();
+            } else {
+                // 選擇結束日期
+                const start = new Date(this.tempRangeStart);
+                const end = new Date(dateStr);
+
+                if (end < start) {
+                    // 如果結束日期早於開始日期，交換
+                    this.tempRangeEnd = this.tempRangeStart;
+                    this.tempRangeStart = dateStr;
+                } else {
+                    this.tempRangeEnd = dateStr;
+                }
+
+                this.showRangeTransactions(this.tempRangeStart, this.tempRangeEnd);
+                this.renderCalendar();
+            }
+        }
     }
 
     showDayTransactions(dateStr) {
@@ -138,5 +207,120 @@ export class CalendarPage {
             1
         );
         this.renderCalendar();
+    }
+
+    /**
+     * 顯示區間交易
+     */
+    showRangeTransactions(startDateStr, endDateStr) {
+        const transactions = window.DataManager.getTransactionsByDateRange(startDateStr, endDateStr);
+        const container = document.getElementById('dayTransactions');
+        const header = document.getElementById('selectedDate');
+
+        if (header) {
+            header.textContent = `${formatDisplayDate(startDateStr)} ~ ${formatDisplayDate(endDateStr)}`;
+        }
+
+        if (!container) return;
+
+        if (transactions.length === 0) {
+            container.innerHTML = '<p class="text-center text-warm-brown/60 py-4 font-hand">區間內無交易記錄 ✨</p>';
+        } else {
+            // 按日期分組
+            const grouped = {};
+            transactions.forEach(tx => {
+                if (!grouped[tx.date]) grouped[tx.date] = [];
+                grouped[tx.date].push(tx);
+            });
+
+            // 渲染分組交易
+            let html = '';
+            Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a)).forEach(date => {
+                html += `<div class="mb-4">`;
+                html += `<h5 class="text-xs font-bold text-warm-brown/70 mb-2 font-hand">${formatDisplayDate(date)}</h5>`;
+                html += `<div class="space-y-2">`;
+                grouped[date].forEach(tx => {
+                    html += TransactionRenderer.renderTransactionItem(tx);
+                });
+                html += `</div></div>`;
+            });
+            container.innerHTML = html;
+            TransactionRenderer.bindClickEvents(container, this.onTransactionClickCallback);
+        }
+    }
+
+    /**
+     * 切換模式（單日/區間）
+     */
+    toggleMode(mode) {
+        this.calendarMode = mode;
+
+        // 重置選擇
+        if (mode === 'range') {
+            this.tempRangeStart = null;
+            this.tempRangeEnd = null;
+        }
+
+        // 更新按鈕樣式
+        const singleBtn = document.getElementById('btnCalendarSingleMode');
+        const rangeBtn = document.getElementById('btnCalendarRangeMode');
+
+        if (singleBtn && rangeBtn) {
+            if (mode === 'single') {
+                singleBtn.classList.add('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-rose', 'text-white', 'shadow-watercolor-layered');
+                singleBtn.classList.remove('bg-white/60', 'text-soft-ink');
+                rangeBtn.classList.remove('bg-gradient-to-br', 'from-macaron-blue', 'to-macaron-purple', 'text-white', 'shadow-watercolor-layered');
+                rangeBtn.classList.add('bg-white/60', 'text-soft-ink');
+            } else {
+                rangeBtn.classList.add('bg-gradient-to-br', 'from-macaron-blue', 'to-macaron-purple', 'text-white', 'shadow-watercolor-layered');
+                rangeBtn.classList.remove('bg-white/60', 'text-soft-ink');
+                singleBtn.classList.remove('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-rose', 'text-white', 'shadow-watercolor-layered');
+                singleBtn.classList.add('bg-white/60', 'text-soft-ink');
+            }
+        }
+
+        this.renderCalendar();
+    }
+
+    /**
+     * 單日模式下切換日期
+     */
+    changeSingleDay(delta) {
+        if (this.calendarMode !== 'single' || !this.currentSelectedDate) return;
+
+        const currentDate = new Date(this.currentSelectedDate);
+        currentDate.setDate(currentDate.getDate() + delta);
+        const newDateStr = window.DataManager.formatDate(currentDate);
+
+        this.currentSelectedDate = newDateStr;
+        this.state.selectedDate = newDateStr;
+
+        // 更新月份顯示（如果跨月）
+        if (currentDate.getMonth() !== this.state.currentMonth.getMonth() ||
+            currentDate.getFullYear() !== this.state.currentMonth.getFullYear()) {
+            this.state.currentMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+        }
+
+        this.renderCalendar();
+        this.showDayTransactions(newDateStr);
+    }
+
+    /**
+     * 回到今天（單日模式）
+     */
+    goToToday() {
+        if (this.calendarMode !== 'single') {
+            this.toggleMode('single');
+        }
+
+        const today = new Date();
+        const todayStr = window.DataManager.formatDate(today);
+
+        this.currentSelectedDate = todayStr;
+        this.state.selectedDate = todayStr;
+        this.state.currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+        this.renderCalendar();
+        this.showDayTransactions(todayStr);
     }
 }

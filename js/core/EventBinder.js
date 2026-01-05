@@ -161,7 +161,7 @@ export class EventBinder {
     }
 
     bindCalendar() {
-        // 日曆導航
+        // 日曆導航 - 月份切換
         const prevMonth = document.getElementById('prevMonth');
         const nextMonth = document.getElementById('nextMonth');
 
@@ -179,6 +179,78 @@ export class EventBinder {
                     this.app.calendarPage.changeMonth(1);
                 }
             });
+        }
+
+        // 模式切換按鈕
+        const btnCalendarSingleMode = document.getElementById('btnCalendarSingleMode');
+        const btnCalendarRangeMode = document.getElementById('btnCalendarRangeMode');
+
+        if (btnCalendarSingleMode) {
+            btnCalendarSingleMode.addEventListener('click', () => {
+                if (this.app.calendarPage) {
+                    this.app.calendarPage.toggleMode('single');
+                    // 顯示/隱藏提示和導航
+                    this.toggleCalendarModeUI('single');
+                }
+            });
+        }
+
+        if (btnCalendarRangeMode) {
+            btnCalendarRangeMode.addEventListener('click', () => {
+                if (this.app.calendarPage) {
+                    this.app.calendarPage.toggleMode('range');
+                    // 顯示/隱藏提示和導航
+                    this.toggleCalendarModeUI('range');
+                }
+            });
+        }
+
+        // 單日模式導航
+        const btnCalendarPrevDay = document.getElementById('btnCalendarPrevDay');
+        const btnCalendarNextDay = document.getElementById('btnCalendarNextDay');
+        const btnCalendarToday = document.getElementById('btnCalendarToday');
+
+        if (btnCalendarPrevDay) {
+            btnCalendarPrevDay.addEventListener('click', () => {
+                if (this.app.calendarPage) {
+                    this.app.calendarPage.changeSingleDay(-1);
+                }
+            });
+        }
+
+        if (btnCalendarNextDay) {
+            btnCalendarNextDay.addEventListener('click', () => {
+                if (this.app.calendarPage) {
+                    this.app.calendarPage.changeSingleDay(1);
+                }
+            });
+        }
+
+        if (btnCalendarToday) {
+            btnCalendarToday.addEventListener('click', () => {
+                if (this.app.calendarPage) {
+                    this.app.calendarPage.goToToday();
+                }
+            });
+        }
+    }
+
+    /**
+     * 切換日曆模式的 UI 顯示
+     */
+    toggleCalendarModeUI(mode) {
+        const singleModeHint = document.getElementById('singleModeHint');
+        const rangeModeHint = document.getElementById('rangeModeHint');
+        const singleDayNav = document.getElementById('singleDayNav');
+
+        if (mode === 'single') {
+            if (singleModeHint) singleModeHint.classList.remove('hidden');
+            if (rangeModeHint) rangeModeHint.classList.add('hidden');
+            if (singleDayNav) singleDayNav.classList.remove('hidden');
+        } else {
+            if (singleModeHint) singleModeHint.classList.add('hidden');
+            if (rangeModeHint) rangeModeHint.classList.remove('hidden');
+            if (singleDayNav) singleDayNav.classList.add('hidden');
         }
     }
 
@@ -237,6 +309,26 @@ export class EventBinder {
             btnAddFromEmpty.addEventListener('click', () => {
                 if (this.app.transactionForm) {
                     this.app.transactionForm.open();
+                }
+            });
+        }
+
+        // 時間軸模式切換按鈕
+        const btnTimelineDetail = document.getElementById('btnTimelineDetail');
+        const btnTimelineSummary = document.getElementById('btnTimelineSummary');
+
+        if (btnTimelineDetail) {
+            btnTimelineDetail.addEventListener('click', () => {
+                if (this.app.timelineView) {
+                    this.app.timelineView.toggleMode('detail');
+                }
+            });
+        }
+
+        if (btnTimelineSummary) {
+            btnTimelineSummary.addEventListener('click', () => {
+                if (this.app.timelineView) {
+                    this.app.timelineView.toggleMode('summary');
                 }
             });
         }
