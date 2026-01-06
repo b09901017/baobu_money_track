@@ -50,13 +50,55 @@
 
 #### 📚 後續計畫
 
-本次為**階段 1**，後續將實作：
-- **階段 2**：Firestore 資料結構變更與餘額管理
+本次包含**階段 1-2**，後續將實作：
 - **階段 3**：即時監聽交易資料
 - **階段 4**：即時監聽帳本列表
 - **階段 5**：即時監聽餘額
 - **階段 6**：分批載入優化
 - **階段 7**：測試與除錯
+
+### 🚀 階段 2：Firestore 資料結構變更與餘額管理
+
+#### ✨ 新功能
+
+**餘額持久化系統**
+- ✅ 在 notebooks 新增 `balance` 欄位結構
+  - `baobao_owed`: 寶寶被欠的錢
+  - `bubu_owed`: 步步被欠的錢
+  - `last_updated`: 最後更新時間
+  - `version`: 版本號（樂觀鎖，避免並發衝突）
+
+- ✅ 建立 `BalanceManager` 餘額管理器
+  - `calculateTransactionDelta()`: 計算單筆交易對餘額的影響
+  - `calculateBalanceStatus()`: 從餘額資料計算結算狀態
+  - `calculateFullBalance()`: 從所有交易重算餘額
+
+- ✅ 新增 Firebase API 餘額管理函數
+  - `incrementNotebookBalance()`: 增量更新餘額（使用 Firestore Transaction 確保並發安全）
+  - `initializeNotebookBalance()`: 初始化帳本餘額
+  - `onNotebookBalanceChange()`: 監聽帳本餘額變更
+
+- ✅ 建立 `BalanceInitializer` 餘額初始化工具
+  - 自動檢查舊帳本是否有 balance 欄位
+  - 自動計算並初始化舊帳本餘額
+  - 批次處理所有帳本
+
+#### 🔧 技術變更
+
+**資料結構變更**
+- notebooks 集合新增 balance 物件欄位
+- 使用版本號機制處理並發更新
+
+**DataManager 整合**
+- 在 init() 時自動檢查並初始化所有帳本餘額
+- 新建帳本時自動初始化餘額為 0
+- 使用 Firestore Transaction 確保並發更新安全（最多重試 3 次）
+
+**檔案變更**
+- 📄 `js/core/BalanceManager.js`：新建餘額管理器
+- 📄 `js/firebase-config.js`：新增 3 個餘額管理 API
+- 📄 `js/utils/BalanceInitializer.js`：新建餘額初始化工具
+- 📄 `js/data.js`：整合餘額管理器到 DataManager
 
 ---
 

@@ -1,6 +1,9 @@
 // ==================== 資料管理模組 (Firebase 版本) ====================
 // 此模組負責管理應用的資料狀態，使用 Firebase Firestore
 
+import { BalanceManager } from './core/BalanceManager.js';
+import { BalanceInitializer } from './utils/BalanceInitializer.js';
+
 class DataManager {
     constructor() {
         this.currentUser = null;  // Firebase 用戶物件
@@ -13,6 +16,13 @@ class DataManager {
         this.transactions = [];  // 交易列表（快取）
         this.customCategories = [];  // 自訂分類（快取）
         this.isInitialized = false;  // 是否已初始化
+
+        // 餘額管理器
+        this.balanceManager = new BalanceManager();
+        window.BalanceManager = BalanceManager; // 掛載類別供工具使用
+
+        // 餘額初始化器
+        this.balanceInitializer = new BalanceInitializer();
     }
 
     // ==================== 初始化 ====================
@@ -57,24 +67,28 @@ class DataManager {
             // 1. 載入該配對的帳本（而非個人帳本）
             await this.loadNotebooks();
 
-            // 2. 如果沒有帳本，建立預設帳本
+            // 2. 檢查並初始化餘額
+            console.log('🔧 檢查帳本餘額...');
+            await this.balanceInitializer.initializeAll(this.notebooks);
+
+            // 3. 如果沒有帳本，建立預設帳本
             if (this.notebooks.length === 0) {
                 console.log('📝 首次配對，建立預設帳本...');
                 await this.createDefaultNotebook();
             }
 
-            // 3. 設定當前帳本
+            // 4. 設定當前帳本
             if (!this.currentNotebook && this.notebooks.length > 0) {
                 this.currentNotebook = this.notebooks[0].id;
                 console.log('📖 當前帳本:', this.notebooks[0].name);
             }
 
-            // 4. 載入當前帳本的交易
+            // 5. 載入當前帳本的交易
             if (this.currentNotebook) {
                 await this.loadTransactions();
             }
 
-            // 5. 載入自訂分類
+            // 6. 載入自訂分類
             await this.loadCustomCategories();
 
             this.isInitialized = true;
@@ -142,6 +156,13 @@ class DataManager {
                 this.couple.member_names
             );
             console.log('✅ 已建立預設配對帳本:', notebookId);
+
+            // 初始化餘額為 0
+            await window.FirebaseAPI.initializeNotebookBalance(notebookId, {
+                baobao_owed: 0,
+                bubu_owed: 0
+            });
+            console.log('✅ 已初始化帳本餘額');
 
             // 重新載入帳本列表
             await this.loadNotebooks();

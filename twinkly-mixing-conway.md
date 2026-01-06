@@ -676,10 +676,10 @@ class DataManager {
 ```
 
 #### 測試驗證
-- [ ] Firebase Console 中 notebooks 文檔有 balance 欄位
-- [ ] balance.baobao_owed 和 bubu_owed 值正確
-- [ ] balance.version = 1
-- [ ] Console 顯示「餘額初始化完成」
+- [x] Firebase Console 中 notebooks 文檔有 balance 欄位
+- [x] balance.baobao_owed 和 bubu_owed 值正確
+- [x] balance.version = 1
+- [x] Console 顯示「餘額初始化完成」
 
 #### Commit
 ```bash

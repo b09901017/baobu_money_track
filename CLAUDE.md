@@ -26,7 +26,12 @@
      - 建立 ListenerManager 監聽器管理器
      - 建立 NetworkMonitor 網路狀態監控器
      - 新增必要的 Firebase 模組（onSnapshot, runTransaction 等）
-   - ⏳ **階段 2：餘額管理系統**（待進行）
+   - ✅ **階段 2：餘額管理系統（已完成 2026-01-06）**
+     - 在 notebooks 新增 balance 欄位結構
+     - 建立 BalanceManager 餘額管理器
+     - 新增 Firebase API 餘額管理函數
+     - 建立 BalanceInitializer 自動初始化工具
+     - 整合到 DataManager
    - ⏳ **階段 3-7：即時監聽與分批載入**（待進行）
 
 3. **角色系統說明**

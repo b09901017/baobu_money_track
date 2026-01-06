@@ -692,6 +692,112 @@ async function updateUserData(userId, userData) {
     }
 }
 
+// ==================== 餘額管理 ====================
+
+/**
+ * 增量更新帳本餘額（使用 Firestore Transaction 確保並發安全）
+ * @param {string} notebookId - 帳本 ID
+ * @param {number} baobaoDelta - 寶寶餘額變化量
+ * @param {number} bubuDelta - 步步餘額變化量
+ * @returns {Promise<void>}
+ */
+async function incrementNotebookBalance(notebookId, baobaoDelta, bubuDelta) {
+    const notebookRef = doc(db, 'notebooks', notebookId);
+    const maxRetries = 3;
+    let retries = 0;
+
+    while (retries < maxRetries) {
+        try {
+            await runTransaction(db, async (transaction) => {
+                const notebookDoc = await transaction.get(notebookRef);
+
+                if (!notebookDoc.exists()) {
+                    throw new Error('帳本不存在');
+                }
+
+                const currentBalance = notebookDoc.data().balance || {
+                    baobao_owed: 0,
+                    bubu_owed: 0,
+                    version: 0
+                };
+
+                const newBalance = {
+                    baobao_owed: currentBalance.baobao_owed + baobaoDelta,
+                    bubu_owed: currentBalance.bubu_owed + bubuDelta,
+                    last_updated: serverTimestamp(),
+                    version: currentBalance.version + 1
+                };
+
+                transaction.update(notebookRef, { balance: newBalance });
+                console.log(`✅ 餘額已更新 (版本: ${newBalance.version}):`, newBalance);
+            });
+
+            return; // 成功
+        } catch (error) {
+            if (error.code === 'aborted') {
+                // 並發衝突，重試
+                retries++;
+                console.warn(`⚠️ 並發衝突，重試 ${retries}/${maxRetries}...`);
+                await new Promise(resolve => setTimeout(resolve, 100 * retries)); // 指數退避
+            } else {
+                console.error('❌ 更新餘額失敗:', error);
+                throw error;
+            }
+        }
+    }
+
+    throw new Error('並發衝突過多，餘額更新失敗');
+}
+
+/**
+ * 初始化帳本餘額
+ * @param {string} notebookId - 帳本 ID
+ * @param {Object} balance - { baobao_owed, bubu_owed }
+ * @returns {Promise<void>}
+ */
+async function initializeNotebookBalance(notebookId, balance) {
+    try {
+        const notebookRef = doc(db, 'notebooks', notebookId);
+        await updateDoc(notebookRef, {
+            balance: {
+                ...balance,
+                last_updated: serverTimestamp(),
+                version: 1
+            }
+        });
+        console.log('✅ 帳本餘額已初始化:', balance);
+    } catch (error) {
+        console.error('❌ 初始化餘額失敗:', error);
+        throw error;
+    }
+}
+
+/**
+ * 監聽帳本餘額變更
+ * @param {string} notebookId - 帳本 ID
+ * @param {Function} callback - 回調函數 (balance) => void
+ * @returns {Function} - 取消監聽函數
+ */
+function onNotebookBalanceChange(notebookId, callback) {
+    const notebookRef = doc(db, 'notebooks', notebookId);
+
+    return onSnapshot(
+        notebookRef,
+        (snapshot) => {
+            if (snapshot.exists()) {
+                const balance = snapshot.data().balance;
+                callback(balance);
+            }
+        },
+        (error) => {
+            console.error('❌ 監聽餘額失敗:', error);
+            if (window.customDialog && error.code !== 'unavailable') {
+                window.customDialog.error('監聽餘額失敗：' + error.message);
+            }
+        }
+    );
+}
+
 // ==================== 導出 API ====================
 
 window.FirebaseAPI = {
@@ -722,7 +828,12 @@ window.FirebaseAPI = {
     findCoupleByCode,
     joinCouple,
     getUserCouple,
-    updateUserData
+    updateUserData,
+
+    // 餘額管理
+    incrementNotebookBalance,
+    initializeNotebookBalance,
+    onNotebookBalanceChange
 };
 
 console.log('✅ FirebaseAPI 已掛載到 window');

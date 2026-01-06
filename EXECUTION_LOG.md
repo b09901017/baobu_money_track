@@ -68,3 +68,71 @@
 - 修改 `js/app.js`，添加 import 語句
 - 在 initCore() 方法中初始化 ListenerManager 和 NetworkMonitor
 
+---
+
+## 第二階段：Firestore 資料結構變更與餘額管理
+
+### 開始時間：2026-01-06
+### 完成時間：2026-01-06
+### 狀態：✅ 已完成
+
+### 執行項目：
+
+#### 2.1 建立餘額管理器
+- 狀態：✅ 已完成
+- 檔案：`js/core/BalanceManager.js` (新建)
+- 功能：處理餘額增量更新與計算
+- 結果：建立 BalanceManager 類別，提供 calculateTransactionDelta, calculateBalanceStatus, calculateFullBalance 方法
+
+#### 2.2 新增 Firebase API 餘額管理函數
+- 狀態：✅ 已完成
+- 檔案：`js/firebase-config.js`
+- 功能：提供餘額管理 API
+- 結果：新增 incrementNotebookBalance, initializeNotebookBalance, onNotebookBalanceChange 三個函數
+
+#### 2.3 建立餘額初始化工具
+- 狀態：✅ 已完成
+- 檔案：`js/utils/BalanceInitializer.js` (新建)
+- 功能：為舊帳本初始化 balance 欄位
+- 結果：建立 BalanceInitializer 類別，提供 checkAndInitialize, initializeAll 方法
+
+#### 2.4 整合到 DataManager
+- 狀態：✅ 已完成
+- 檔案：`js/data.js`
+- 功能：整合餘額管理器到資料管理系統
+- 結果：
+  - 添加 import 語句
+  - 在 constructor 中初始化 balanceManager 和 balanceInitializer
+  - 在 init() 方法中添加餘額檢查與初始化
+  - 修改 createDefaultNotebook() 方法，新建帳本時初始化餘額為 0
+
+---
+
+## 執行記錄（續）
+
+### 2026-01-06
+
+**步驟 2.1 - 建立餘額管理器**
+- 新建 `js/core/BalanceManager.js`
+- 實作 calculateTransactionDelta 計算單筆交易對餘額的影響
+- 實作 calculateBalanceStatus 從餘額資料計算結算狀態
+- 實作 calculateFullBalance 從所有交易重算餘額
+
+**步驟 2.2 - 新增 Firebase API 餘額管理函數**
+- 修改 `js/firebase-config.js`，添加三個餘額管理函數
+- incrementNotebookBalance: 使用 Firestore Transaction 確保並發安全
+- initializeNotebookBalance: 初始化帳本餘額
+- onNotebookBalanceChange: 監聽帳本餘額變更
+- 將三個函數導出到 window.FirebaseAPI
+
+**步驟 2.3 - 建立餘額初始化工具**
+- 新建 `js/utils/BalanceInitializer.js`
+- 實作 checkAndInitialize 檢查並初始化單個帳本
+- 實作 initializeAll 批次初始化所有帳本
+
+**步驟 2.4 - 整合到 DataManager**
+- 修改 `js/data.js`，添加 import 語句
+- 在 constructor 中初始化 balanceManager 和 balanceInitializer
+- 在 init() 方法中添加餘額檢查（步驟 2）
+- 修改 createDefaultNotebook() 方法，新建帳本時初始化餘額
+
