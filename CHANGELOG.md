@@ -7,6 +7,59 @@
 
 ---
 
+## [5.0.0] - 2026-01-06
+
+### 🚀 重大架構升級 - 階段 1：基礎架構與離線支援
+
+#### ✨ 新功能
+
+**離線支援與即時同步基礎設施**
+- ✅ 啟用 Firebase Offline Persistence（IndexedDB）
+  - 支援離線讀寫資料
+  - 網路恢復後自動同步
+  - 處理多標籤頁開啟情況
+  - 相容性檢查（瀏覽器是否支援 IndexedDB）
+
+- ✅ 新增 `ListenerManager` 監聽器管理器
+  - 統一管理所有 Firestore onSnapshot 監聽器
+  - 提供 `register()` / `unregister()` / `unregisterAll()` 方法
+  - 追蹤監聽器狀態，防止記憶體洩漏
+  - 支援監聽器生命週期管理
+
+- ✅ 新增 `NetworkMonitor` 網路狀態監控器
+  - 即時偵測線上/離線狀態
+  - 斷網時顯示橘色提示條：「📡 離線模式：變更將在重新連線後同步」
+  - 重新連線時顯示「已重新連線 🎉」提示
+  - 整合 customDialog 提示系統
+
+#### 🔧 技術變更
+
+**Firebase 模組擴充**
+- 新增 `onSnapshot`（即時監聽）
+- 新增 `startAfter`（分頁查詢）
+- 新增 `enableIndexedDbPersistence`（離線持久化）
+- 新增 `Timestamp`（時間戳處理）
+- 新增 `runTransaction`（交易保證，並發安全）
+
+**檔案變更**
+- 📄 `index.html`：更新 Firebase 模組引入
+- 📄 `js/firebase-config.js`：啟用離線持久化，更新模組解構
+- 📄 `js/core/ListenerManager.js`：新建監聽器管理器
+- 📄 `js/core/NetworkMonitor.js`：新建網路狀態監控器
+- 📄 `js/app.js`：整合兩個新管理器到核心系統
+
+#### 📚 後續計畫
+
+本次為**階段 1**，後續將實作：
+- **階段 2**：Firestore 資料結構變更與餘額管理
+- **階段 3**：即時監聽交易資料
+- **階段 4**：即時監聽帳本列表
+- **階段 5**：即時監聽餘額
+- **階段 6**：分批載入優化
+- **階段 7**：測試與除錯
+
+---
+
 ## [4.2.0] - 2026-01-06
 
 ### 🐛 重大修復 (Critical Fix)

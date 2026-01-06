@@ -4,6 +4,8 @@
 import { StateManager } from './core/StateManager.js';
 import { EventBinder } from './core/EventBinder.js';
 import { Router } from './core/Router.js';
+import { ListenerManager } from './core/ListenerManager.js';
+import { NetworkMonitor } from './core/NetworkMonitor.js';
 
 import { BalanceCard } from './components/BalanceCard.js';
 import { TimelineView } from './components/TimelineView.js';
@@ -95,6 +97,14 @@ class CoupleApp {
     }
 
     initCore() {
+        // 監聽管理器
+        this.listenerManager = new ListenerManager();
+        window.listenerManager = this.listenerManager;  // 掛載到全域
+
+        // 網路狀態監控器
+        this.networkMonitor = new NetworkMonitor();
+        window.networkMonitor = this.networkMonitor;  // 掛載到全域
+
         // 路由器
         this.router = new Router(
             this.state,

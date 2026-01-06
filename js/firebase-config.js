@@ -3,7 +3,7 @@
 // 從 index.html 中載入的 Firebase 模組
 const {
     initializeApp,
-    getFirestore, collection, addDoc, getDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp,
+    getFirestore, collection, addDoc, getDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp, onSnapshot, startAfter, enableIndexedDbPersistence, Timestamp, runTransaction,
     getStorage, ref, uploadBytes, getDownloadURL, deleteObject,
     getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
 } = window.firebaseModules;
@@ -19,6 +19,21 @@ const auth = getAuth(app);
 
 console.log('✅ Firebase 已初始化');
 console.log('📦 專案 ID:', firebaseConfig.projectId);
+
+// 啟用離線持久化
+enableIndexedDbPersistence(db)
+    .then(() => {
+        console.log('✅ 離線持久化已啟用');
+    })
+    .catch((err) => {
+        if (err.code === 'failed-precondition') {
+            console.warn('⚠️ 多個標籤頁同時開啟，離線持久化僅在第一個標籤頁啟用');
+        } else if (err.code === 'unimplemented') {
+            console.warn('⚠️ 瀏覽器不支援 IndexedDB，離線持久化無法使用');
+        } else {
+            console.error('❌ 啟用離線持久化失敗:', err);
+        }
+    });
 
 // ==================== 認證相關 ====================
 
