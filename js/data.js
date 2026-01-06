@@ -23,6 +23,12 @@ class DataManager {
 
         // 餘額初始化器
         this.balanceInitializer = new BalanceInitializer();
+
+        // 監聽範圍
+        this.listeningStartDate = null;  // 監聽的起始日期
+
+        // 防抖計時器
+        this._debounceTimer = null;
     }
 
     // ==================== 初始化 ====================
@@ -83,9 +89,9 @@ class DataManager {
                 console.log('📖 當前帳本:', this.notebooks[0].name);
             }
 
-            // 5. 載入當前帳本的交易
+            // 5. 啟動交易監聽（取代 loadTransactions）
             if (this.currentNotebook) {
-                await this.loadTransactions();
+                this.startListeningTransactions();
             }
 
             // 6. 載入自訂分類
@@ -181,26 +187,39 @@ class DataManager {
      */
     async addTransaction(transactionData) {
         try {
-            // 直接使用絕對角色，不需要轉換
+            // 離線提示
+            if (window.networkMonitor && !window.networkMonitor.isOnline) {
+                console.log('📡 離線模式：變更將在重新連線後同步');
+            }
+
+            // 1. 新增交易到 Firestore
             const transaction = {
                 notebook_id: this.currentNotebook,
-                couple_id: this.coupleId,  // 配對 ID
+                couple_id: this.coupleId,
                 user_id: this.currentUser.uid,
                 ...transactionData
             };
 
             const transactionId = await window.FirebaseAPI.addTransaction(transaction);
-
-            // 更新快取
-            const newTransaction = {
-                id: transactionId,
-                ...transaction,
-                created_at: new Date().toISOString()
-            };
-            this.transactions.unshift(newTransaction);
-
             console.log('✅ 交易已新增:', transactionId);
-            return newTransaction;
+
+            // 2. 增量更新餘額
+            const { baobaoDelta, bubuDelta } = this.balanceManager.calculateTransactionDelta(transaction);
+            if (baobaoDelta !== 0 || bubuDelta !== 0) {
+                await window.FirebaseAPI.incrementNotebookBalance(
+                    this.currentNotebook,
+                    baobaoDelta,
+                    bubuDelta
+                );
+                console.log('💰 餘額已更新:', { baobaoDelta, bubuDelta });
+            }
+
+            // 3. 本地快取會由 onSnapshot 自動更新，不需要手動處理
+
+            return {
+                id: transactionId,
+                ...transaction
+            };
         } catch (error) {
             console.error('❌ 新增交易失敗:', error);
             throw error;
@@ -291,15 +310,29 @@ class DataManager {
      */
     async deleteTransaction(id) {
         try {
-            await window.FirebaseAPI.deleteTransaction(id);
-
-            // 更新快取
-            const index = this.transactions.findIndex(tx => tx.id === id);
-            if (index !== -1) {
-                this.transactions.splice(index, 1);
+            // 1. 取得交易資料（用於餘額回退）
+            const transaction = this.transactions.find(tx => tx.id === id);
+            if (!transaction) {
+                throw new Error('交易不存在');
             }
 
+            // 2. 刪除交易
+            await window.FirebaseAPI.deleteTransaction(id);
             console.log('✅ 交易已刪除:', id);
+
+            // 3. 反向更新餘額（減去這筆交易的影響）
+            const { baobaoDelta, bubuDelta } = this.balanceManager.calculateTransactionDelta(transaction);
+            if (baobaoDelta !== 0 || bubuDelta !== 0) {
+                await window.FirebaseAPI.incrementNotebookBalance(
+                    this.currentNotebook,
+                    -baobaoDelta,  // 反向操作
+                    -bubuDelta
+                );
+                console.log('💰 餘額已回退:', { baobaoDelta: -baobaoDelta, bubuDelta: -bubuDelta });
+            }
+
+            // 4. 本地快取會由 onSnapshot 自動更新
+
             return true;
         } catch (error) {
             console.error('❌ 刪除交易失敗:', error);
@@ -315,16 +348,37 @@ class DataManager {
      */
     async updateTransaction(id, updates) {
         try {
-            await window.FirebaseAPI.updateTransaction(id, updates);
-
-            // 更新快取
-            const transaction = this.transactions.find(tx => tx.id === id);
-            if (transaction) {
-                Object.assign(transaction, updates);
+            // 1. 取得舊交易資料
+            const oldTransaction = this.transactions.find(tx => tx.id === id);
+            if (!oldTransaction) {
+                throw new Error('交易不存在');
             }
 
+            // 2. 更新交易
+            await window.FirebaseAPI.updateTransaction(id, updates);
             console.log('✅ 交易已更新:', id);
-            return transaction;
+
+            // 3. 更新餘額（先減去舊的，再加上新的）
+            const newTransaction = { ...oldTransaction, ...updates };
+
+            const oldDelta = this.balanceManager.calculateTransactionDelta(oldTransaction);
+            const newDelta = this.balanceManager.calculateTransactionDelta(newTransaction);
+
+            const baobaoDelta = newDelta.baobaoDelta - oldDelta.baobaoDelta;
+            const bubuDelta = newDelta.bubuDelta - oldDelta.bubuDelta;
+
+            if (baobaoDelta !== 0 || bubuDelta !== 0) {
+                await window.FirebaseAPI.incrementNotebookBalance(
+                    this.currentNotebook,
+                    baobaoDelta,
+                    bubuDelta
+                );
+                console.log('💰 餘額已調整:', { baobaoDelta, bubuDelta });
+            }
+
+            // 4. 本地快取會由 onSnapshot 自動更新
+
+            return newTransaction;
         } catch (error) {
             console.error('❌ 更新交易失敗:', error);
             throw error;
@@ -384,8 +438,14 @@ class DataManager {
         if (notebook) {
             this.currentNotebook = notebookId;
 
-            // 重新載入該帳本的交易
-            await this.loadTransactions();
+            // 停止舊的監聽
+            this.stopListeningTransactions();
+
+            // 清空快取
+            this.transactions = [];
+
+            // 啟動新的監聽
+            this.startListeningTransactions();
 
             console.log('📖 已切換帳本:', notebook.name);
             return notebook;
@@ -701,6 +761,232 @@ class DataManager {
             console.error('❌ 刪除交易照片失敗:', error);
             throw error;
         }
+    }
+
+    // ==================== 即時監聽 ====================
+
+    /**
+     * 開始監聽交易（近 3 個月）
+     */
+    startListeningTransactions() {
+        // 停止舊的監聽（如果有）
+        window.listenerManager.unregister('transactions');
+
+        // 設定監聽起始日期（近 3 個月）
+        const threeMonthsAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+        this.listeningStartDate = this.formatDate(threeMonthsAgo);
+
+        console.log(`🎧 開始監聽交易 (自 ${this.listeningStartDate})...`);
+
+        // 註冊監聽器
+        const unsubscribe = window.FirebaseAPI.onRecentTransactionsChange(
+            this.currentNotebook,
+            threeMonthsAgo,
+            (transactions, changes) => this.handleTransactionsChange(transactions, changes)
+        );
+
+        window.listenerManager.register('transactions', unsubscribe);
+    }
+
+    /**
+     * 處理交易變更回調（防抖處理）
+     * @param {Array} transactions - 完整交易列表
+     * @param {Object} changes - 變更詳情 { added, modified, removed }
+     */
+    handleTransactionsChange(transactions, changes) {
+        // 取消之前的計時器
+        if (this._debounceTimer) clearTimeout(this._debounceTimer);
+
+        // 300ms 內只觸發一次（避免頻繁更新）
+        this._debounceTimer = setTimeout(() => {
+            console.log('📊 更新交易快取...');
+
+            // 更新本地快取
+            this.transactions = transactions;
+
+            // 通知訂閱者
+            if (window.app && window.app.state) {
+                window.app.state.notify('transactions', { transactions, changes });
+            }
+
+            // 如果對方新增交易，顯示提示（可選）
+            if (changes.added.length > 0) {
+                const addedByMe = changes.added.every(tx => tx.user_id === this.currentUser.uid);
+                if (!addedByMe) {
+                    console.log(`✨ 對方新增了 ${changes.added.length} 筆記錄`);
+                }
+            }
+        }, 300);
+    }
+
+    /**
+     * 停止監聽交易
+     */
+    stopListeningTransactions() {
+        window.listenerManager.unregister('transactions');
+        console.log('🛑 已停止監聽交易');
+    }
+
+    /**
+     * 載入更早的交易（分批載入）
+     */
+    async loadEarlierTransactions(limitCount = 30) {
+        if (this.transactions.length === 0) {
+            console.warn('⚠️ 尚未載入任何交易');
+            return [];
+        }
+
+        // 找到最早的交易日期
+        const sortedDates = this.transactions.map(tx => tx.date).sort();
+        const earliestDate = sortedDates[0];
+
+        console.log(`📥 載入 ${earliestDate} 之前的交易...`);
+
+        try {
+            const earlierTransactions = await window.FirebaseAPI.getEarlierTransactions(
+                this.currentNotebook,
+                earliestDate,
+                limitCount
+            );
+
+            if (earlierTransactions.length > 0) {
+                // 合併到本地快取（避免重複）
+                const existingIds = new Set(this.transactions.map(tx => tx.id));
+                const newTransactions = earlierTransactions.filter(tx => !existingIds.has(tx.id));
+
+                this.transactions = [...this.transactions, ...newTransactions];
+
+                // 更新監聽起始日期
+                const newEarliestDate = newTransactions.map(tx => tx.date).sort()[0];
+                if (newEarliestDate) {
+                    this.listeningStartDate = newEarliestDate;
+                }
+
+                console.log(`✅ 已載入 ${newTransactions.length} 筆更早的交易`);
+
+                // 通知訂閱者
+                if (window.app && window.app.state) {
+                    window.app.state.notify('transactions', {
+                        transactions: this.transactions,
+                        changes: { added: newTransactions, modified: [], removed: [] }
+                    });
+                }
+            } else {
+                console.log('⚠️ 沒有更早的交易了');
+            }
+
+            return earlierTransactions;
+        } catch (error) {
+            console.error('❌ 載入更早交易失敗:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 開始監聽帳本列表
+     */
+    startListeningNotebooks() {
+        // 停止舊的監聽（如果有）
+        window.listenerManager.unregister('notebooks');
+
+        console.log('🎧 開始監聽帳本列表...');
+
+        // 註冊監聽器
+        const unsubscribe = window.FirebaseAPI.onNotebooksChange(
+            this.coupleId,
+            (notebooks) => this.handleNotebooksChange(notebooks)
+        );
+
+        window.listenerManager.register('notebooks', unsubscribe);
+    }
+
+    /**
+     * 處理帳本列表變更回調
+     * @param {Array} notebooks - 完整帳本列表
+     */
+    handleNotebooksChange(notebooks) {
+        console.log('📚 帳本列表更新...');
+
+        // 更新本地快取
+        this.notebooks = notebooks;
+
+        // 通知訂閱者
+        if (window.app && window.app.state) {
+            window.app.state.notify('notebooks', notebooks);
+        }
+    }
+
+    /**
+     * 停止監聽帳本列表
+     */
+    stopListeningNotebooks() {
+        window.listenerManager.unregister('notebooks');
+        console.log('🛑 已停止監聽帳本列表');
+    }
+
+    /**
+     * 開始監聽當前帳本餘額
+     */
+    startListeningNotebookBalance() {
+        if (!this.currentNotebook) {
+            console.warn('⚠️ 無當前帳本，無法監聽餘額');
+            return;
+        }
+
+        // 停止舊的監聽（如果有）
+        window.listenerManager.unregister('balance');
+
+        console.log('🎧 開始監聽帳本餘額...');
+
+        // 註冊監聽器
+        const unsubscribe = window.FirebaseAPI.onNotebookBalanceChange(
+            this.currentNotebook,
+            (balance) => this.handleBalanceChange(balance)
+        );
+
+        window.listenerManager.register('balance', unsubscribe);
+    }
+
+    /**
+     * 處理餘額變更回調
+     * @param {Object} balance - { baobao_owed, bubu_owed, version, last_updated }
+     */
+    handleBalanceChange(balance) {
+        console.log('💰 餘額更新:', balance);
+
+        // 計算結算狀態
+        const balanceStatus = this.balanceManager.calculateBalanceStatus(balance);
+
+        // 通知訂閱者
+        if (window.app && window.app.state) {
+            window.app.state.notify('balance', balanceStatus);
+        }
+    }
+
+    /**
+     * 停止監聽餘額
+     */
+    stopListeningBalance() {
+        window.listenerManager.unregister('balance');
+        console.log('🛑 已停止監聽餘額');
+    }
+
+    /**
+     * 清理資源（登出時調用）
+     */
+    cleanup() {
+        console.log('🧹 清理 DataManager 資源...');
+
+        // 停止所有監聽器
+        window.listenerManager.unregisterAll();
+
+        // 清空本地快取
+        this.transactions = [];
+        this.notebooks = [];
+        this.currentNotebook = null;
+        this.isInitialized = false;
+
+        console.log('✅ DataManager 已清理');
     }
 }
 

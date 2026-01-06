@@ -798,6 +798,138 @@ function onNotebookBalanceChange(notebookId, callback) {
     );
 }
 
+// ==================== 交易即時監聽 ====================
+
+/**
+ * 監聽近期交易（近 3 個月）
+ * @param {string} notebookId - 帳本 ID
+ * @param {Date} sinceDate - 起始日期（預設近 3 個月）
+ * @param {Function} callback - 回調函數 (transactions, changes) => void
+ * @returns {Function} - 取消監聽函數
+ */
+function onRecentTransactionsChange(notebookId, sinceDate, callback) {
+    const threeMonthsAgo = sinceDate || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+    const sinceDateStr = threeMonthsAgo.toISOString().split('T')[0];
+
+    console.log(`🎧 開始監聽近期交易 (自 ${sinceDateStr})...`);
+
+    const q = query(
+        collection(db, 'transactions'),
+        where('notebook_id', '==', notebookId),
+        where('date', '>=', sinceDateStr),
+        orderBy('date', 'desc'),
+        orderBy('created_at', 'desc')
+    );
+
+    return onSnapshot(
+        q,
+        (snapshot) => {
+            const transactions = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            const changes = {
+                added: snapshot.docChanges().filter(c => c.type === 'added').map(c => ({
+                    id: c.doc.id,
+                    ...c.doc.data()
+                })),
+                modified: snapshot.docChanges().filter(c => c.type === 'modified').map(c => ({
+                    id: c.doc.id,
+                    ...c.doc.data()
+                })),
+                removed: snapshot.docChanges().filter(c => c.type === 'removed').map(c => ({
+                    id: c.doc.id,
+                    ...c.doc.data()
+                }))
+            };
+
+            console.log(`📊 交易變更: +${changes.added.length} ~${changes.modified.length} -${changes.removed.length}`);
+            callback(transactions, changes);
+        },
+        (error) => {
+            console.error('❌ 監聽交易失敗:', error);
+            if (error.code === 'permission-denied') {
+                window.customDialog?.error('無法存取交易資料：權限不足');
+            } else if (error.code === 'failed-precondition') {
+                window.customDialog?.error('資料查詢失敗：請聯絡開發者建立 Firestore 索引');
+            } else if (error.code !== 'unavailable') {
+                window.customDialog?.error('監聽交易失敗：' + error.message);
+            }
+        }
+    );
+}
+
+/**
+ * 載入更早的交易（分頁查詢）
+ * @param {string} notebookId - 帳本 ID
+ * @param {string} beforeDate - 日期上限 (YYYY-MM-DD)
+ * @param {number} limitCount - 限制筆數
+ * @returns {Promise<Array>} - 交易列表
+ */
+async function getEarlierTransactions(notebookId, beforeDate, limitCount = 30) {
+    try {
+        console.log(`📥 載入 ${beforeDate} 之前的 ${limitCount} 筆交易...`);
+
+        const q = query(
+            collection(db, 'transactions'),
+            where('notebook_id', '==', notebookId),
+            where('date', '<', beforeDate),
+            orderBy('date', 'desc'),
+            orderBy('created_at', 'desc'),
+            limit(limitCount)
+        );
+
+        const querySnapshot = await getDocs(q);
+        const transactions = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        console.log(`✅ 已載入 ${transactions.length} 筆更早的交易`);
+        return transactions;
+    } catch (error) {
+        console.error('❌ 載入更早交易失敗:', error);
+        throw error;
+    }
+}
+
+// ==================== 帳本即時監聽 ====================
+
+/**
+ * 監聽帳本列表
+ * @param {string} coupleId - 配對 ID
+ * @param {Function} callback - 回調函數 (notebooks) => void
+ * @returns {Function} - 取消監聽函數
+ */
+function onNotebooksChange(coupleId, callback) {
+    console.log('🎧 開始監聽帳本列表...');
+
+    const q = query(
+        collection(db, 'notebooks'),
+        where('couple_id', '==', coupleId)
+    );
+
+    return onSnapshot(
+        q,
+        (snapshot) => {
+            const notebooks = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            console.log(`📚 帳本列表更新: ${notebooks.length} 個帳本`);
+            callback(notebooks);
+        },
+        (error) => {
+            console.error('❌ 監聽帳本失敗:', error);
+            if (error.code !== 'unavailable') {
+                window.customDialog?.error('監聽帳本失敗：' + error.message);
+            }
+        }
+    );
+}
+
 // ==================== 導出 API ====================
 
 window.FirebaseAPI = {
@@ -833,7 +965,14 @@ window.FirebaseAPI = {
     // 餘額管理
     incrementNotebookBalance,
     initializeNotebookBalance,
-    onNotebookBalanceChange
+    onNotebookBalanceChange,
+
+    // 交易監聽
+    onRecentTransactionsChange,
+    getEarlierTransactions,
+
+    // 帳本監聽
+    onNotebooksChange
 };
 
 console.log('✅ FirebaseAPI 已掛載到 window');

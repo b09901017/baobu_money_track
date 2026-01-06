@@ -16,13 +16,50 @@ export class TimelineView {
         // 無限滾動參數
         this.transactionsLoaded = 30; // 初始載入 30 筆
         this.loadMoreCount = 30; // 每次載入更多 30 筆
+
+        // 訂閱交易變更事件
+        this.state.subscribe('transactions', (data) => this.handleTransactionsUpdate(data));
     }
 
     /**
      * 初始化時間軸
      */
     async init() {
-        await this.loadTransactions();
+        // 初始資料將由訂閱自動更新，無需主動載入
+        // DataManager 會在 init() 時啟動監聽並推送初始資料
+    }
+
+    /**
+     * 處理交易變更訂閱
+     * @param {Object} data - { transactions, changes }
+     */
+    handleTransactionsUpdate(data) {
+        const { transactions, changes } = data;
+
+        // 檢查是否有記錄
+        if (!transactions || transactions.length === 0) {
+            if (this.timelineContainer) this.timelineContainer.classList.add('hidden');
+            if (this.loadMoreContainer) this.loadMoreContainer.classList.add('hidden');
+            if (this.emptyState) this.emptyState.classList.remove('hidden');
+            return;
+        }
+
+        if (this.timelineContainer) this.timelineContainer.classList.remove('hidden');
+        if (this.emptyState) this.emptyState.classList.add('hidden');
+
+        // 渲染交易記錄
+        this.renderTimeline(transactions);
+
+        // 判斷是否可以載入更多（如果已載入的交易數達到監聽起始日期）
+        const listeningStartDate = window.DataManager.listeningStartDate;
+        if (listeningStartDate) {
+            const oldestTransaction = transactions[transactions.length - 1];
+            if (oldestTransaction && oldestTransaction.date <= listeningStartDate) {
+                if (this.loadMoreContainer) this.loadMoreContainer.classList.remove('hidden');
+            } else {
+                if (this.loadMoreContainer) this.loadMoreContainer.classList.add('hidden');
+            }
+        }
     }
 
     /**
@@ -58,11 +95,11 @@ export class TimelineView {
     }
 
     /**
-     * 載入更多記錄
+     * 載入更多記錄（批次載入更早的交易）
      */
     async loadMore() {
-        this.transactionsLoaded += this.loadMoreCount;
-        await this.loadTransactions(false);
+        await window.DataManager.loadEarlierTransactions(this.loadMoreCount);
+        // DataManager 會自動合併資料並透過訂閱通知更新
     }
 
     /**
@@ -157,9 +194,10 @@ export class TimelineView {
 
     /**
      * 刷新時間軸（在新增/編輯/刪除交易後）
+     * 注意：現在透過即時監聽自動更新，無需手動呼叫 refresh()
      */
     async refresh() {
-        this.transactionsLoaded = 30; // 重置為初始筆數
-        await this.loadTransactions(false);
+        // 透過 onSnapshot 即時監聽，交易變更會自動推送
+        // 此方法保留以維持相容性，但實際上不執行任何操作
     }
 }

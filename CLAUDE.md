@@ -11,7 +11,7 @@
 
 ## 開發策略
 
-### 🎯 當前階段: 架構升級中 (v5.0.0 - 階段 1 已完成)
+### 🎯 當前階段: 架構升級中 (v5.0.0 - 階段 1-4 已完成)
 1. **已完成模組化重構與 Firebase 整合**
    - ✅ 完成 16 個 JS 模組化檔案（總計 2,241 行）
    - ✅ 完成 20 個 CSS 模組化檔案（按 ITCSS 架構組織）
@@ -32,7 +32,18 @@
      - 新增 Firebase API 餘額管理函數
      - 建立 BalanceInitializer 自動初始化工具
      - 整合到 DataManager
-   - ⏳ **階段 3-7：即時監聽與分批載入**（待進行）
+   - ✅ **階段 3：交易即時監聽（已完成 2026-01-06）**
+     - 新增 Firebase API 交易監聽函數（onRecentTransactionsChange, getEarlierTransactions）
+     - DataManager 改用即時監聽模式，整合餘額增量更新
+     - TimelineView 訂閱交易變更事件
+     - HomePage 適配訂閱模式
+   - ✅ **階段 4：帳本與餘額即時監聽（已完成 2026-01-06）**
+     - 新增 Firebase API 帳本監聽函數（onNotebooksChange）
+     - DataManager 監聽帳本和餘額，實作 cleanup()
+     - BalanceCard 訂閱餘額變更事件
+     - NotebooksPage 訂閱帳本列表變更事件
+     - app.js 登出時清理所有監聽器
+   - ⏳ **階段 5-7：其他頁面適配、開發者工具、測試**（待進行）
 
 3. **角色系統說明**
    - 🎭 **絕對角色設計**：寶寶（baobao）和步步（bubu）為固定角色

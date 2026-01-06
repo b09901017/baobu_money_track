@@ -10,18 +10,20 @@ export class HomePage {
 
     /**
      * 更新首頁
+     * 注意：透過即時監聽自動更新，無需手動呼叫 update()
      */
     async update() {
-        this.balanceCard.update();
-        await this.timelineView.refresh();
+        // 透過訂閱自動更新，不再需要手動刷新
+        // balanceCard 和 timelineView 會自動響應 StateManager 的通知
     }
 
     /**
      * 初始化首頁
      */
     async init() {
-        this.balanceCard.update();
+        // 初始化訂閱（timelineView 會在 constructor 中訂閱）
         await this.timelineView.init();
+        // balanceCard 的初始化由 app.js 在傳入 state 後自動處理（Stage 4.4）
     }
 
     /**

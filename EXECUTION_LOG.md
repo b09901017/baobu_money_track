@@ -136,3 +136,187 @@
 - 在 init() 方法中添加餘額檢查（步驟 2）
 - 修改 createDefaultNotebook() 方法，新建帳本時初始化餘額
 
+---
+
+## 第三階段：即時監聽與分批載入 - 交易
+
+### 開始時間：2026-01-06
+### 完成時間：2026-01-06
+### 狀態：✅ 已完成
+
+### 執行項目：
+
+#### 3.1 新增 Firebase API 交易監聽函數
+- 狀態：✅ 已完成
+- 檔案：`js/firebase-config.js`
+- 功能：提供即時監聽最近交易和批次載入更早交易的 API
+- 結果：
+  - 新增 `onRecentTransactionsChange(notebookId, sinceDate, callback)` - 監聽最近 3 個月交易
+  - 新增 `getEarlierTransactions(notebookId, beforeDate, limitCount)` - 批次載入更早交易
+  - 導出到 `window.FirebaseAPI`
+
+#### 3.2 修改 DataManager 啟動交易監聽
+- 狀態：✅ 已完成
+- 檔案：`js/data.js`
+- 功能：改用即時監聽模式，支援餘額增量更新
+- 結果：
+  - 新增 `listeningStartDate` 和 `_debounceTimer` 屬性
+  - 實作 `startListeningTransactions()` - 啟動交易監聽
+  - 實作 `handleTransactionsChange(transactions, changes)` - 處理變更（含 300ms 防抖）
+  - 實作 `stopListeningTransactions()` - 停止監聽
+  - 實作 `loadEarlierTransactions(limitCount)` - 載入更早交易
+  - 修改 `addTransaction()` - 整合餘額增量更新
+  - 修改 `deleteTransaction()` - 整合餘額反向更新
+  - 修改 `updateTransaction()` - 整合餘額差異更新
+  - 修改 `switchNotebook()` - 重啟監聽器
+  - 修改 `init()` - 啟動監聽取代手動載入
+
+#### 3.3 修改 TimelineView 訂閱交易變更
+- 狀態：✅ 已完成
+- 檔案：`js/components/TimelineView.js`
+- 功能：訂閱 StateManager 的交易變更事件
+- 結果：
+  - 在 constructor 中訂閱 'transactions' 事件
+  - 新增 `handleTransactionsUpdate(data)` - 處理訂閱更新
+  - 修改 `init()` - 改為被動等待訂閱推送
+  - 修改 `loadMore()` - 呼叫 DataManager.loadEarlierTransactions()
+  - 修改 `refresh()` - 標記為不再需要（保留相容性）
+
+#### 3.4 修改 HomePage
+- 狀態：✅ 已完成
+- 檔案：`js/pages/HomePage.js`
+- 功能：適配訂閱模式
+- 結果：
+  - 修改 `update()` - 標記為不再需要（保留相容性）
+  - 修改 `init()` - 僅初始化 timelineView
+
+---
+
+## 第四階段：即時監聽與分批載入 - 帳本與餘額
+
+### 開始時間：2026-01-06
+### 完成時間：2026-01-06
+### 狀態：✅ 已完成
+
+### 執行項目：
+
+#### 4.1 新增 Firebase API 帳本監聽函數
+- 狀態：✅ 已完成
+- 檔案：`js/firebase-config.js`
+- 功能：提供即時監聽帳本列表的 API
+- 結果：
+  - 新增 `onNotebooksChange(coupleId, callback)` - 監聽帳本列表變更
+  - 導出到 `window.FirebaseAPI`
+
+#### 4.2 修改 DataManager 監聽帳本和餘額
+- 狀態：✅ 已完成
+- 檔案：`js/data.js`
+- 功能：啟動帳本和餘額的即時監聽
+- 結果：
+  - 實作 `startListeningNotebooks()` - 啟動帳本監聽
+  - 實作 `handleNotebooksChange(notebooks)` - 處理帳本變更
+  - 實作 `stopListeningNotebooks()` - 停止帳本監聽
+  - 實作 `startListeningNotebookBalance()` - 啟動餘額監聽
+  - 實作 `handleBalanceChange(balance)` - 處理餘額變更
+  - 實作 `stopListeningBalance()` - 停止餘額監聽
+  - 實作 `cleanup()` - 登出時清理所有監聽器和資料
+
+#### 4.3 修改 BalanceCard 訂閱餘額變更
+- 狀態：✅ 已完成
+- 檔案：`js/components/BalanceCard.js`
+- 功能：訂閱 StateManager 的餘額變更事件
+- 結果：
+  - 修改 constructor 接收 `state` 參數
+  - 在 constructor 中訂閱 'balance' 事件
+  - 新增 `handleBalanceUpdate(balance)` - 處理訂閱更新
+  - 修改 `update()` - 標記為不再需要（保留相容性）
+
+#### 4.4 修改 app.js 傳入 state 到 BalanceCard
+- 狀態：✅ 已完成
+- 檔案：`js/app.js`
+- 功能：將 StateManager 傳入 BalanceCard
+- 結果：
+  - 修改 BalanceCard 實例化，傳入 `this.state`
+
+#### 4.5 修改 NotebooksPage 訂閱帳本列表
+- 狀態：✅ 已完成
+- 檔案：`js/pages/NotebooksPage.js` 和 `js/app.js`
+- 功能：訂閱 StateManager 的帳本列表變更事件
+- 結果：
+  - 修改 constructor 接收 `state` 參數
+  - 在 constructor 中訂閱 'notebooks' 事件
+  - 新增 `handleNotebooksUpdate(notebooks)` - 處理訂閱更新
+  - 新增 `renderNotebooks(notebooks)` - 渲染帳本列表
+  - 修改 `update()` - 標記為不再需要（保留相容性）
+  - 修改 `addNewNotebook()` - 移除手動更新呼叫
+  - 修改 app.js NotebooksPage 實例化，傳入 `this.state`
+  - 修改 app.js 切換帳本回調，移除手動更新呼叫
+
+#### 4.6 修改 app.js 登出時清理
+- 狀態：✅ 已完成
+- 檔案：`js/app.js`
+- 功能：登出時清理所有監聽器
+- 結果：
+  - 在登出回調中添加 `DataManager.cleanup()` 呼叫
+  - 在登出回調中添加 `listenerManager.unregisterAll()` 呼叫
+
+---
+
+## 執行記錄（續）
+
+### 2026-01-06
+
+**步驟 3.1 - 新增 Firebase API 交易監聽函數**
+- 修改 `js/firebase-config.js`，新增兩個函數
+- onRecentTransactionsChange: 使用 onSnapshot 監聽最近 3 個月交易，返回 transactions 和 changes
+- getEarlierTransactions: 批次載入更早的交易，支援自訂筆數（預設 30 筆）
+- 將兩個函數導出到 window.FirebaseAPI
+
+**步驟 3.2 - 修改 DataManager 啟動交易監聽**
+- 修改 `js/data.js`，新增 listeningStartDate 和 _debounceTimer 屬性
+- 實作 startListeningTransactions，使用 ListenerManager 註冊監聽器
+- 實作 handleTransactionsChange，含 300ms 防抖機制
+- 修改 addTransaction/deleteTransaction/updateTransaction，整合餘額增量更新
+- 修改 switchNotebook，重啟監聽器
+- 修改 init，啟動監聽取代手動載入
+
+**步驟 3.3 - 修改 TimelineView 訂閱交易變更**
+- 修改 `js/components/TimelineView.js`
+- 在 constructor 中訂閱 'transactions' 事件
+- 實作 handleTransactionsUpdate，處理訂閱資料並判斷是否顯示載入更多按鈕
+- 修改 init, loadMore, refresh 方法適配訂閱模式
+
+**步驟 3.4 - 修改 HomePage**
+- 修改 `js/pages/HomePage.js`
+- 修改 update 和 init 方法，移除手動更新邏輯
+
+**步驟 4.1 - 新增 Firebase API 帳本監聽函數**
+- 修改 `js/firebase-config.js`，新增 onNotebooksChange 函數
+- 使用 onSnapshot 監聽帳本列表變更
+- 將函數導出到 window.FirebaseAPI
+
+**步驟 4.2 - 修改 DataManager 監聽帳本和餘額**
+- 修改 `js/data.js`
+- 實作 startListeningNotebooks, handleNotebooksChange, stopListeningNotebooks
+- 實作 startListeningNotebookBalance, handleBalanceChange, stopListeningBalance
+- 實作 cleanup 方法，清理所有監聽器和資料
+
+**步驟 4.3 - 修改 BalanceCard 訂閱餘額變更**
+- 修改 `js/components/BalanceCard.js`
+- 修改 constructor 接收 state 參數並訂閱 'balance' 事件
+- 實作 handleBalanceUpdate 處理訂閱更新
+
+**步驟 4.4 - 修改 app.js 傳入 state 到 BalanceCard**
+- 修改 `js/app.js`
+- 修改 BalanceCard 實例化，傳入 this.state
+
+**步驟 4.5 - 修改 NotebooksPage 訂閱帳本列表**
+- 修改 `js/pages/NotebooksPage.js`
+- 修改 constructor 接收 state 參數並訂閱 'notebooks' 事件
+- 實作 handleNotebooksUpdate 和 renderNotebooks
+- 修改 `js/app.js`，傳入 state 到 NotebooksPage
+
+**步驟 4.6 - 修改 app.js 登出時清理**
+- 修改 `js/app.js` 登出回調
+- 添加 DataManager.cleanup() 和 listenerManager.unregisterAll() 呼叫
+

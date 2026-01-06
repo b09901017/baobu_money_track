@@ -2,12 +2,38 @@
 // 來源: app.js 行 973-1105
 
 export class NotebooksPage {
-    constructor(onSwitchCallback) {
+    constructor(state, onSwitchCallback) {
+        this.state = state;
         this.onSwitchCallback = onSwitchCallback;  // 切換帳本後的回調
+
+        // 訂閱帳本列表變更事件
+        if (this.state) {
+            this.state.subscribe('notebooks', (notebooks) => this.handleNotebooksUpdate(notebooks));
+        }
     }
 
+    /**
+     * 處理帳本列表變更訂閱
+     * @param {Array} notebooks - 帳本列表
+     */
+    handleNotebooksUpdate(notebooks) {
+        this.renderNotebooks(notebooks);
+    }
+
+    /**
+     * 更新帳本列表（保留以維持相容性）
+     * 注意：現在透過即時監聽自動更新，無需手動呼叫 update()
+     */
     update() {
-        const notebooks = window.DataManager.getNotebooks();
+        // 透過 onSnapshot 即時監聽，帳本列表變更會自動推送
+        // 此方法保留以維持相容性，但實際上不執行任何操作
+    }
+
+    /**
+     * 渲染帳本列表
+     * @param {Array} notebooks - 帳本列表
+     */
+    renderNotebooks(notebooks) {
         const container = document.getElementById('notebooksList');
         if (!container) return;
 
@@ -122,7 +148,7 @@ export class NotebooksPage {
         if (name && name.trim()) {
             try {
                 await window.DataManager.addNotebook(name.trim());
-                this.update();
+                // 透過訂閱自動更新，無需手動呼叫 this.update()
                 await window.customDialog.success(`成功新增故事本「${name.trim()}」！`);
             } catch (error) {
                 console.error('❌ 新增帳本失敗:', error);

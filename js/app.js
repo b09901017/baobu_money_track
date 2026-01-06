@@ -45,7 +45,7 @@ class CoupleApp {
         window.customDialog = customDialog;
 
         // 結算卡片
-        this.balanceCard = new BalanceCard();
+        this.balanceCard = new BalanceCard(this.state);
 
         // 時間軸視圖
         this.timelineView = new TimelineView(
@@ -81,11 +81,10 @@ class CoupleApp {
         );
 
         // 帳本頁面
-        this.notebooksPage = new NotebooksPage(() => {
+        this.notebooksPage = new NotebooksPage(this.state, () => {
             // 切換帳本後的回調
             this.homePage.updateNotebookTitle();
-            this.notebooksPage.update();
-            this.homePage.update();
+            // 透過訂閱自動更新，無需手動呼叫 update()
             this.router.switchPage('homePage');
         });
 
@@ -250,6 +249,16 @@ function initializeApp() {
         // 登出回調
         () => {
             console.log('👤 用戶已登出，顯示登入頁面');
+
+            // 清理所有監聽器和資料
+            if (window.DataManager) {
+                window.DataManager.cleanup();
+                console.log('✅ DataManager 已清理');
+            }
+            if (window.listenerManager) {
+                window.listenerManager.unregisterAll();
+                console.log('✅ 所有監聽器已註銷');
+            }
 
             // 顯示登入頁面
             const loginPage = document.getElementById('loginPage');

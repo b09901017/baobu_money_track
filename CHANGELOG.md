@@ -100,6 +100,81 @@
 - 📄 `js/utils/BalanceInitializer.js`：新建餘額初始化工具
 - 📄 `js/data.js`：整合餘額管理器到 DataManager
 
+### 🚀 階段 3-4：即時監聽與分批載入 - 交易與帳本
+
+#### ✨ 新功能
+
+**交易即時監聽（階段 3）**
+- ✅ 新增 Firebase API 交易監聽函數
+  - `onRecentTransactionsChange()`: 監聽最近 3 個月交易，返回 transactions 和 changes
+  - `getEarlierTransactions()`: 批次載入更早交易（預設 30 筆）
+  - 完整的錯誤處理（權限、索引、網路錯誤）
+
+- ✅ DataManager 改用即時監聽模式
+  - 啟動交易監聽，預設監聽最近 3 個月
+  - 使用 300ms 防抖機制處理頻繁更新
+  - 支援批次載入更早交易
+  - 整合餘額增量更新到 CRUD 操作
+  - 切換帳本時自動重啟監聽器
+
+- ✅ UI 組件訂閱模式改造
+  - TimelineView 訂閱交易變更事件
+  - HomePage 適配訂閱模式
+  - 自動判斷是否顯示「載入更多」按鈕
+
+**帳本與餘額即時監聽（階段 4）**
+- ✅ 新增 Firebase API 帳本監聽函數
+  - `onNotebooksChange()`: 監聽帳本列表變更
+  - 自動推送新增/編輯/刪除事件
+
+- ✅ DataManager 監聽帳本和餘額
+  - 啟動帳本列表監聽
+  - 啟動當前帳本餘額監聽
+  - 登出時清理所有監聽器和資料
+
+- ✅ UI 組件訂閱模式改造
+  - BalanceCard 訂閱餘額變更事件
+  - NotebooksPage 訂閱帳本列表變更事件
+  - app.js 登出時清理所有監聽器
+
+#### 🔧 技術變更
+
+**資料流架構**
+- 從「手動查詢」升級為「即時監聽 + 訂閱模式」
+- DataManager 負責監聽 Firestore，透過 StateManager 推送變更
+- UI 組件訂閱 StateManager 事件，自動響應資料變更
+- 保留舊方法以維持向後相容性
+
+**效能優化**
+- 預設載入最近 3 個月交易，避免一次載入大量資料
+- 使用防抖機制減少 UI 更新頻率
+- 餘額計算從 O(n) 優化為 O(1)（直接讀取 Firestore balance 欄位）
+
+**並發安全**
+- 使用 Firestore Transaction 確保餘額更新並發安全
+- 支援樂觀鎖（版本號）
+- 最多重試 3 次，指數退避
+
+**檔案變更（階段 3）**
+- 📄 `js/firebase-config.js`：新增 2 個交易監聽 API
+- 📄 `js/data.js`：改用 onSnapshot 監聽，整合餘額增量更新
+- 📄 `js/components/TimelineView.js`：訂閱交易變更
+- 📄 `js/pages/HomePage.js`：適配訂閱模式
+
+**檔案變更（階段 4）**
+- 📄 `js/firebase-config.js`：新增 1 個帳本監聽 API
+- 📄 `js/data.js`：監聽帳本和餘額，實作 cleanup()
+- 📄 `js/components/BalanceCard.js`：訂閱餘額變更
+- 📄 `js/pages/NotebooksPage.js`：訂閱帳本列表變更
+- 📄 `js/app.js`：傳入 state 到組件，登出時清理
+
+#### 📚 後續計畫
+
+階段 3-4 已完成，後續將實作：
+- **階段 5**：其他頁面適配（CalendarPage、AnalyticsPage）
+- **階段 6**：開發者工具與除錯
+- **階段 7**：完整測試與文檔更新
+
 ---
 
 ## [4.2.0] - 2026-01-06
