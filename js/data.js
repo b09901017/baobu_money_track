@@ -87,7 +87,12 @@ class DataManager {
             if (!this.currentNotebook && this.notebooks.length > 0) {
                 this.currentNotebook = this.notebooks[0].id;
                 console.log('📖 當前帳本:', this.notebooks[0].name);
+                // ⭐ [修正點 1] 啟動餘額監聽 (讓結算卡片會動)
+                this.startListeningNotebookBalance();
             }
+
+            // ⭐ [修正點 2] 啟動帳本列表監聽 (讓"我們的故事書"有資料)
+            this.startListeningNotebooks();
 
             // 5. 啟動交易監聽（取代 loadTransactions）
             if (this.currentNotebook) {
@@ -1011,7 +1016,9 @@ class DataManager {
         console.log('🧹 清理 DataManager 資源...');
 
         // 停止所有監聽器
-        window.listenerManager.unregisterAll();
+        if (window.listenerManager) {
+            window.listenerManager.unregisterAll();
+        }
 
         // 清空本地快取
         this.transactions = [];

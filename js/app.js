@@ -292,7 +292,14 @@ function initializeApp() {
  * @param {Object} couple - 配對資料
  */
 async function initMainApp(user, couple) {
-    // 初始化 DataManager（傳入 couple）
+    // 1. 先初始化 CoupleApp 實例
+    // 這會建立 ListenerManager、StateManager 等核心元件，讓 DataManager 可以使用
+    if (!window.app) {
+        window.app = new CoupleApp();
+    }
+
+    // 2. 初始化 DataManager（傳入 couple）
+    // 此時 window.listenerManager 已經存在，可以正常註冊監聽器
     await window.DataManager.init(user, couple);
 
     // 隱藏登入頁面和配對頁面
@@ -311,9 +318,6 @@ async function initMainApp(user, couple) {
         mainContainer.classList.remove('hidden');
     }
 
-    // 初始化 CoupleApp
-    if (!window.app) {
-        window.app = new CoupleApp();
-        await window.app.init();
-    }
+    // 3. 最後才啟動應用（綁定事件、載入頁面資料）
+    await window.app.init();
 }
