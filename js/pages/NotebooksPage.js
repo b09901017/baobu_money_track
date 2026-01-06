@@ -9,6 +9,13 @@ export class NotebooksPage {
         // 訂閱帳本列表變更事件
         if (this.state) {
             this.state.subscribe('notebooks', (notebooks) => this.handleNotebooksUpdate(notebooks));
+            // 訂閱交易變更事件（用於更新帳本封面統計）
+            this.state.subscribe('transactions', (data) => {
+                console.log('📚 NotebooksPage 收到交易更新，重新渲染帳本統計');
+                // 重新渲染帳本列表（更新封面統計）
+                const notebooks = window.DataManager.getNotebooks();
+                this.renderNotebooks(notebooks);
+            });
         }
     }
 

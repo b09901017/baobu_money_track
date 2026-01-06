@@ -7,6 +7,49 @@
 
 ---
 
+## [5.1.0] - 2026-01-06
+
+### ✨ 新功能
+
+**編輯交易功能**
+- ✅ 實作完整的交易編輯功能
+  - 在交易詳情模態框新增編輯按鈕（右上角鉛筆圖示）
+  - 點擊編輯按鈕可開啟編輯表單，預填所有欄位資料
+  - 支援編輯所有交易欄位：金額、項目名稱、日期、付款人、受益人、分類、備註
+  - 支援照片更新：上傳新照片會自動刪除舊照片
+  - 編輯模式下提交按鈕顯示「💾 保存修改」
+  - 成功更新後顯示「交易已更新！」提示
+
+**檔案變更**
+- 📄 `js/components/TransactionForm.js`：
+  - 新增 `editingTransactionId` 和 `editingTransaction` 狀態追蹤
+  - 修改 `open()` 方法支援傳入交易資料進入編輯模式
+  - 新增 `fillFormWithTransaction()` 方法填充表單欄位
+  - 修改 `submit()` 方法區分新增/編輯邏輯，處理照片更新
+  - 修改 `reset()` 方法清除編輯狀態並重置按鈕文字
+
+- 📄 `js/components/TransactionDetail.js`：
+  - 新增 `bindEditButton()` 方法綁定編輯按鈕事件
+  - 修改 `show()` 方法調用編輯按鈕綁定
+
+### 🐛 Bug 修復
+
+**修復「分析頁」與「帳本頁」資料顯示問題**
+
+- ✅ 修復 NotebooksPage 帳本封面統計不更新問題
+  - **問題診斷**：NotebooksPage 只訂閱了 `notebooks` 變更，沒有訂閱 `transactions` 變更，導致新增交易後帳本封面的統計金額不會即時更新
+  - **修復方案**：在 constructor 中新增訂閱 `transactions` 變更事件，當交易變更時重新渲染帳本列表更新封面統計
+
+- ✅ 改善 AnalyticsPage 使用者體驗
+  - **問題診斷**：AnalyticsPage 已正確訂閱交易變更，但 UI 預設顯示空狀態，可能讓用戶誤以為資料沒載入
+  - **改善方案**：在空狀態提示中顯示已載入的交易總數（例如：「共 15 筆交易」），讓用戶清楚知道資料已成功載入
+
+**檔案變更**
+- 📄 `js/pages/NotebooksPage.js`：新增訂閱 `transactions` 變更事件
+- 📄 `js/pages/AnalyticsPage.js`：改善 `renderEmptyTransactionList()` 顯示交易總數提示
+
+---
+
 ## [5.0.0] - 2026-01-06
 
 ### 🚀 重大架構升級 - 階段 1：基礎架構與離線支援

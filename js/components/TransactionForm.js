@@ -10,13 +10,16 @@ export class TransactionForm {
         this.sheet = document.getElementById('addTransactionSheet');
         this.form = document.getElementById('transactionForm');
         this.selectedPhoto = null;  // 儲存選中的照片檔案
+        this.editingTransactionId = null;  // 編輯模式下的交易 ID
+        this.editingTransaction = null;  // 編輯模式下的交易資料
     }
 
     /**
      * 開啟表單
+     * @param {Object|null} transaction - 要編輯的交易資料（null 表示新增模式）
      */
-    open() {
-        console.log('🔓 TransactionForm.open() 被呼叫');
+    open(transaction = null) {
+        console.log('🔓 TransactionForm.open() 被呼叫', transaction ? '(編輯模式)' : '(新增模式)');
         console.log('Sheet 元素:', this.sheet);
 
         if (!this.sheet) {
@@ -31,6 +34,19 @@ export class TransactionForm {
 
         // 重置表單（會同時設置今天日期）
         this.reset();
+
+        // 如果是編輯模式，填充表單資料
+        if (transaction) {
+            this.editingTransactionId = transaction.id;
+            this.editingTransaction = transaction;
+            this.fillFormWithTransaction(transaction);
+
+            // 更改提交按鈕文字
+            const submitBtn = this.form?.querySelector('[type="submit"]');
+            if (submitBtn) {
+                submitBtn.textContent = '💾 保存修改';
+            }
+        }
 
         // 渲染自訂分類
         this.renderCustomCategories();
@@ -66,6 +82,14 @@ export class TransactionForm {
 
         this.state.selectedCategories = [];
         this.selectedPhoto = null;  // 清除選中的照片
+        this.editingTransactionId = null;  // 清除編輯狀態
+        this.editingTransaction = null;
+
+        // 重置提交按鈕文字
+        const submitBtn = this.form?.querySelector('[type="submit"]');
+        if (submitBtn) {
+            submitBtn.textContent = '✨ 記入日記';
+        }
 
         // 重置分類選擇視覺效果
         document.querySelectorAll('.tag-btn > div').forEach(div => {
@@ -74,6 +98,71 @@ export class TransactionForm {
 
         // 清除照片預覽
         this.clearPhotoPreview();
+    }
+
+    /**
+     * 填充表單資料（編輯模式）
+     * @param {Object} transaction - 交易資料
+     */
+    fillFormWithTransaction(transaction) {
+        // 填充金額
+        const amountInput = document.getElementById('amount');
+        if (amountInput) {
+            amountInput.value = transaction.amount;
+        }
+
+        // 填充項目名稱
+        const itemNameInput = document.getElementById('itemName');
+        if (itemNameInput) {
+            itemNameInput.value = transaction.item_name || '';
+        }
+
+        // 填充日期
+        const dateInput = document.getElementById('transactionDate');
+        if (dateInput) {
+            dateInput.value = transaction.date;
+        }
+
+        // 填充備註
+        const noteInput = document.getElementById('note');
+        if (noteInput) {
+            noteInput.value = transaction.note || '';
+        }
+
+        // 選擇付款人
+        const payerRadio = document.querySelector(`input[name="payer"][value="${transaction.payer}"]`);
+        if (payerRadio) {
+            payerRadio.checked = true;
+        }
+
+        // 選擇受益人
+        const beneficiaryRadio = document.querySelector(`input[name="beneficiary"][value="${transaction.beneficiary}"]`);
+        if (beneficiaryRadio) {
+            beneficiaryRadio.checked = true;
+        }
+
+        // 填充分類（需要在 renderCustomCategories 之後執行）
+        if (transaction.categories && Array.isArray(transaction.categories)) {
+            this.state.selectedCategories = [...transaction.categories];
+
+            // 延遲執行以確保 DOM 已更新
+            setTimeout(() => {
+                transaction.categories.forEach(category => {
+                    const categoryBtn = document.querySelector(`.tag-btn[data-category="${category}"]`);
+                    if (categoryBtn) {
+                        const iconDiv = categoryBtn.querySelector('div');
+                        if (iconDiv) {
+                            iconDiv.classList.add('bg-gradient-to-br', 'from-[#FF9EAA]', 'to-[#FFB7B2]', 'shadow-watercolor-layered', 'scale-110', 'text-white');
+                        }
+                    }
+                });
+            }, 100);
+        }
+
+        // 顯示現有照片
+        if (transaction.photo_url) {
+            this.showPhotoPreview(transaction.photo_url);
+        }
     }
 
     /**
@@ -255,7 +344,7 @@ export class TransactionForm {
      * 提交交易
      */
     async submit() {
-        console.log('🔍 開始提交交易...');
+        console.log('🔍 開始提交交易...', this.editingTransactionId ? '(編輯模式)' : '(新增模式)');
 
         if (!this.form) {
             console.error('❌ 找不到表單元素');
@@ -292,47 +381,100 @@ export class TransactionForm {
                 return;
             }
 
-            // 先新增交易（取得交易 ID）
-            const result = await window.DataManager.addTransaction(transactionData);
-            console.log('✅ 交易已新增:', result);
+            // === 編輯模式 ===
+            if (this.editingTransactionId) {
+                // 處理照片更新邏輯
+                if (this.selectedPhoto && this.selectedPhoto instanceof File) {
+                    // 有新照片需要上傳
+                    try {
+                        console.log('📸 開始上傳新照片...');
 
-            // 如果有選擇照片，上傳照片
-            if (this.selectedPhoto && result.id) {
-                try {
-                    console.log('📸 開始上傳照片...');
+                        // 如果有舊照片，先刪除
+                        if (this.editingTransaction.photo_path) {
+                            await window.DataManager.deleteTransactionPhoto(this.editingTransaction.photo_path);
+                            console.log('🗑️ 已刪除舊照片');
+                        }
 
-                    // 顯示上傳進度提示（可選）
-                    const uploadResult = await window.DataManager.uploadTransactionPhoto(
-                        this.selectedPhoto,
-                        result.id
-                    );
+                        // 上傳新照片
+                        const uploadResult = await window.DataManager.uploadTransactionPhoto(
+                            this.selectedPhoto,
+                            this.editingTransactionId
+                        );
 
-                    console.log('✅ 照片上傳成功:', uploadResult);
+                        console.log('✅ 新照片上傳成功:', uploadResult);
 
-                    // 更新交易的照片資訊
-                    await window.DataManager.updateTransaction(result.id, {
-                        photo_url: uploadResult.url,
-                        photo_path: uploadResult.path
-                    });
-
-                    console.log('✅ 交易照片資訊已更新');
-                } catch (photoError) {
-                    console.error('❌ 照片上傳失敗:', photoError);
-                    // 照片上傳失敗不影響交易本身，顯示警告即可
-                    await window.customDialog.error('照片上傳失敗：' + photoError.message);
+                        // 更新交易資料中的照片資訊
+                        transactionData.photo_url = uploadResult.url;
+                        transactionData.photo_path = uploadResult.path;
+                    } catch (photoError) {
+                        console.error('❌ 照片上傳失敗:', photoError);
+                        await window.customDialog.error('照片上傳失敗：' + photoError.message);
+                        return;
+                    }
+                } else if (this.editingTransaction.photo_url) {
+                    // 保留原有照片
+                    transactionData.photo_url = this.editingTransaction.photo_url;
+                    transactionData.photo_path = this.editingTransaction.photo_path;
                 }
+
+                // 更新交易
+                await window.DataManager.updateTransaction(this.editingTransactionId, transactionData);
+                console.log('✅ 交易已更新');
+
+                this.close();
+
+                // 呼叫提交回調（更新頁面）
+                if (this.onSubmitCallback) {
+                    console.log('🔄 呼叫更新回調...');
+                    this.onSubmitCallback();
+                }
+
+                await window.customDialog.success('交易已更新！');
             }
+            // === 新增模式 ===
+            else {
+                // 先新增交易（取得交易 ID）
+                const result = await window.DataManager.addTransaction(transactionData);
+                console.log('✅ 交易已新增:', result);
 
-            this.close();
+                // 如果有選擇照片，上傳照片
+                if (this.selectedPhoto && result.id) {
+                    try {
+                        console.log('📸 開始上傳照片...');
 
-            // 呼叫提交回調（更新首頁）
-            if (this.onSubmitCallback) {
-                console.log('🔄 呼叫更新回調...');
-                this.onSubmitCallback();
+                        // 顯示上傳進度提示（可選）
+                        const uploadResult = await window.DataManager.uploadTransactionPhoto(
+                            this.selectedPhoto,
+                            result.id
+                        );
+
+                        console.log('✅ 照片上傳成功:', uploadResult);
+
+                        // 更新交易的照片資訊
+                        await window.DataManager.updateTransaction(result.id, {
+                            photo_url: uploadResult.url,
+                            photo_path: uploadResult.path
+                        });
+
+                        console.log('✅ 交易照片資訊已更新');
+                    } catch (photoError) {
+                        console.error('❌ 照片上傳失敗:', photoError);
+                        // 照片上傳失敗不影響交易本身，顯示警告即可
+                        await window.customDialog.error('照片上傳失敗：' + photoError.message);
+                    }
+                }
+
+                this.close();
+
+                // 呼叫提交回調（更新首頁）
+                if (this.onSubmitCallback) {
+                    console.log('🔄 呼叫更新回調...');
+                    this.onSubmitCallback();
+                }
+
+                // 簡單的成功提示
+                await window.customDialog.success('交易已記入日記！');
             }
-
-            // 簡單的成功提示
-            await window.customDialog.success('交易已記入日記！');
         } catch (error) {
             console.error('❌ 提交交易時發生錯誤:', error);
             await window.customDialog.error('發生錯誤：' + error.message);

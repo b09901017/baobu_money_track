@@ -48,6 +48,9 @@ export class TransactionDetail {
         const dateText = `${date.getFullYear()} 年 ${date.getMonth() + 1} 月 ${date.getDate()} 日`;
         document.getElementById('detailDate').textContent = dateText;
 
+        // 綁定編輯按鈕事件
+        this.bindEditButton(tx);
+
         // 設定分類
         const categoriesContainer = document.getElementById('detailCategories');
         if (tx.categories && tx.categories.length > 0) {
@@ -196,6 +199,51 @@ export class TransactionDetail {
             console.error('❌ 刪除照片失敗:', error);
             await window.customDialog.error('刪除照片失敗：' + error.message);
         }
+    }
+
+    /**
+     * 綁定編輯按鈕事件
+     * @param {Object} transaction - 交易資料
+     */
+    bindEditButton(transaction) {
+        if (!this.modal) return;
+
+        // 找到編輯按鈕（右上角的 edit icon）
+        // 找到所有 button 元素，並檢查其中是否包含 "edit" 文字的 icon
+        const buttons = this.modal.querySelectorAll('button');
+        let editButton = null;
+
+        for (const button of buttons) {
+            const icon = button.querySelector('.material-symbols-outlined');
+            if (icon && icon.textContent.trim() === 'edit') {
+                editButton = button;
+                break;
+            }
+        }
+
+        if (!editButton) {
+            console.warn('⚠️ 找不到編輯按鈕');
+            return;
+        }
+
+        // 移除舊的事件監聽器（如果有）
+        const newButton = editButton.cloneNode(true);
+        editButton.parentNode.replaceChild(newButton, editButton);
+
+        // 綁定點擊事件
+        newButton.addEventListener('click', () => {
+            console.log('✏️ 點擊編輯按鈕，交易 ID:', transaction.id);
+
+            // 關閉詳情模態框
+            this.close();
+
+            // 開啟編輯表單
+            if (window.app && window.app.transactionForm) {
+                window.app.transactionForm.open(transaction);
+            } else {
+                console.error('❌ 找不到 TransactionForm');
+            }
+        });
     }
 
     /**

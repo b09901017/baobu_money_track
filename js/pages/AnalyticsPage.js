@@ -325,10 +325,15 @@ export class AnalyticsPage {
         const container = document.getElementById('analyticsTransactionList');
         if (!container) return;
 
+        // 顯示交易總數，讓用戶知道資料已載入
+        const totalCount = this.allTransactions ? this.allTransactions.length : 0;
+        const countText = totalCount > 0 ? `共 ${totalCount} 筆交易` : '暫無交易記錄';
+
         container.innerHTML = `
             <div class="text-center py-12">
                 <div class="text-6xl mb-3">📊</div>
                 <p class="text-warm-brown/60 font-hand text-base">點擊上方分類查看明細</p>
+                <p class="text-warm-brown/40 font-hand text-sm mt-2">${countText}</p>
             </div>
         `;
     }

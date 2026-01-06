@@ -2,7 +2,7 @@
 
 > 一個童話風格的情侶共同記帳應用，支援多帳本管理、彈性付款記錄、智能結算功能。
 
-![Version](https://img.shields.io/badge/version-5.0.0-pink)
+![Version](https://img.shields.io/badge/version-5.1.0-pink)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow)
 ![Firebase](https://img.shields.io/badge/Firebase-Integrated-orange)
@@ -445,6 +445,7 @@ service firebase.storage {
 - ✅ 備註功能
 - ✅ 日期選擇
 - ✅ **照片上傳**（收據、發票、截圖）
+- ✅ **編輯交易** - 點擊交易詳情右上角編輯按鈕，修改所有欄位和照片
 - ✅ 資料即時同步到 Firebase
 
 #### 📸 照片管理
