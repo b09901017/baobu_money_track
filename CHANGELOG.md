@@ -7,6 +7,63 @@
 
 ---
 
+## [5.1.1] - 2026-01-06
+
+### 🐛 Bug 修復
+
+**修復巢狀結構重構後的資料顯示問題**
+
+#### 問題描述
+在 v5.0.0 重構為巢狀 Firestore 結構後（`couples/{coupleId}/notebooks/{notebookId}/transactions/{transactionId}`），從 Firebase 返回的交易不再包含 `notebook_id` 欄位（因為已在路徑中），但程式碼多處仍依賴此欄位進行篩選，導致：
+- ❌ 帳本頁面的小帳本封面無法顯示統計金額
+- ❌ 分析頁面完全無法顯示資料和圖表
+
+#### 修復內容
+
+1. **BalanceInitializer 路徑修正**
+   - ✅ 修復 `checkAndInitialize()` 使用舊的根集合路徑導致權限錯誤
+   - ✅ 改用巢狀路徑：`couples/{coupleId}/notebooks/{notebookId}`
+   - ✅ 新增 `coupleId` 參數傳遞到所有相關方法
+   - **錯誤訊息**：`FirebaseError: Missing or insufficient permissions`
+   - **影響範圍**：無法初始化帳本餘額
+
+2. **DataManager 自動補充 notebook_id**
+   - ✅ 在所有從 Firebase 獲取交易的地方自動添加 `notebook_id` 欄位
+   - ✅ 修正 `handleTransactionsChange()` - 即時監聽時添加
+   - ✅ 修正 `loadTransactions()` - 手動載入時添加
+   - ✅ 修正 `getTransactionsByDateRange()` - 日期範圍查詢時添加
+   - ✅ 修正 `loadEarlierTransactions()` - 分批載入時添加
+   - **影響範圍**：NotebooksPage、AnalyticsPage、CalendarPage 所有依賴 `notebook_id` 篩選的功能
+
+#### 技術細節
+
+**修改前（❌ 問題）：**
+```javascript
+// BalanceInitializer.js - 使用舊路徑
+const notebookRef = doc(db, 'notebooks', notebookId);
+
+// data.js - 缺少 notebook_id 欄位
+this.transactions = transactions;
+```
+
+**修改後（✅ 修復）：**
+```javascript
+// BalanceInitializer.js - 使用巢狀路徑
+const notebookRef = doc(db, 'couples', coupleId, 'notebooks', notebookId);
+
+// data.js - 自動補充 notebook_id
+this.transactions = transactions.map(tx => ({
+    ...tx,
+    notebook_id: this.currentNotebook
+}));
+```
+
+#### 檔案變更
+- 📄 `js/utils/BalanceInitializer.js`：修正路徑為巢狀結構，新增 `coupleId` 參數
+- 📄 `js/data.js`：在 4 處交易獲取點自動補充 `notebook_id` 欄位
+
+---
+
 ## [5.1.0] - 2026-01-06
 
 ### ✨ 新功能

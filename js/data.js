@@ -75,7 +75,7 @@ class DataManager {
 
             // 2. 檢查並初始化餘額
             console.log('🔧 檢查帳本餘額...');
-            await this.balanceInitializer.initializeAll(this.notebooks);
+            await this.balanceInitializer.initializeAll(this.coupleId, this.notebooks);
 
             // 3. 如果沒有帳本，建立預設帳本
             if (this.notebooks.length === 0) {
@@ -131,7 +131,12 @@ class DataManager {
      */
     async loadTransactions() {
         try {
-            this.transactions = await window.FirebaseAPI.getTransactions(this.coupleId, this.currentNotebook);
+            const transactions = await window.FirebaseAPI.getTransactions(this.coupleId, this.currentNotebook);
+            // 添加 notebook_id 以支援多帳本篩選
+            this.transactions = transactions.map(tx => ({
+                ...tx,
+                notebook_id: this.currentNotebook
+            }));
             console.log(`💰 已載入 ${this.transactions.length} 筆交易`);
         } catch (error) {
             console.error('❌ 載入交易失敗:', error);
@@ -314,7 +319,11 @@ class DataManager {
                 startDate,
                 endDate
             );
-            return transactions;
+            // 添加 notebook_id 以支援多帳本篩選
+            return transactions.map(tx => ({
+                ...tx,
+                notebook_id: this.currentNotebook
+            }));
         } catch (error) {
             console.error('❌ 查詢日期範圍失敗:', error);
             // Fallback 到本地快取
@@ -845,8 +854,11 @@ class DataManager {
         this._debounceTimer = setTimeout(() => {
             console.log('📊 更新交易快取...');
 
-            // 更新本地快取
-            this.transactions = transactions;
+            // 更新本地快取（添加 notebook_id 以支援多帳本篩選）
+            this.transactions = transactions.map(tx => ({
+                ...tx,
+                notebook_id: this.currentNotebook
+            }));
 
             // 通知訂閱者
             if (window.app && window.app.state) {
@@ -897,7 +909,13 @@ class DataManager {
             if (earlierTransactions.length > 0) {
                 // 合併到本地快取（避免重複）
                 const existingIds = new Set(this.transactions.map(tx => tx.id));
-                const newTransactions = earlierTransactions.filter(tx => !existingIds.has(tx.id));
+                const newTransactions = earlierTransactions
+                    .filter(tx => !existingIds.has(tx.id))
+                    // 添加 notebook_id 以支援多帳本篩選
+                    .map(tx => ({
+                        ...tx,
+                        notebook_id: this.currentNotebook
+                    }));
 
                 this.transactions = [...this.transactions, ...newTransactions];
 
