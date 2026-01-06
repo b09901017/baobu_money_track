@@ -276,14 +276,33 @@ class DataManager {
     }
 
     /**
-     * 取得日期範圍內的交易
+     * 取得日期範圍內的交易（優先使用本地快取）
      * @param {string} startDate - 開始日期 (YYYY-MM-DD)
      * @param {string} endDate - 結束日期 (YYYY-MM-DD)
      * @returns {Promise<Array>} - 交易列表
      */
     async getTransactionsByDateRange(startDate, endDate) {
+        // 檢查是否在監聽範圍內（近 3 個月）
+        const threeMonthsAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+        const threeMonthsAgoStr = this.formatDate(threeMonthsAgo);
+
+        const isWithinListeningRange = startDate >= threeMonthsAgoStr;
+
+        if (isWithinListeningRange) {
+            // 使用本地快取（已由 onSnapshot 自動更新）
+            console.log('📊 使用本地快取查詢日期範圍');
+            return this.transactions
+                .filter(tx =>
+                    tx.notebook_id === this.currentNotebook &&
+                    tx.date >= startDate &&
+                    tx.date <= endDate
+                )
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+        }
+
+        // 超出監聽範圍，從 Firebase 查詢
+        console.log('📊 超出監聽範圍，從 Firebase 查詢');
         try {
-            // 從 Firebase 取得日期範圍內的交易（確保最新資料）
             const transactions = await window.FirebaseAPI.getTransactionsByDateRange(
                 this.currentNotebook,
                 startDate,
@@ -291,16 +310,30 @@ class DataManager {
             );
             return transactions;
         } catch (error) {
-            console.error('❌ 取得日期範圍交易失敗:', error);
-            // Fallback 到快取資料
+            console.error('❌ 查詢日期範圍失敗:', error);
+            // Fallback 到本地快取
             return this.transactions
-                .filter(tx => {
-                    if (tx.notebook_id !== this.currentNotebook) return false;
-                    const txDate = new Date(tx.date);
-                    return txDate >= new Date(startDate) && txDate <= new Date(endDate);
-                })
+                .filter(tx =>
+                    tx.notebook_id === this.currentNotebook &&
+                    tx.date >= startDate &&
+                    tx.date <= endDate
+                )
                 .sort((a, b) => new Date(b.date) - new Date(a.date));
         }
+    }
+
+    /**
+     * 取得特定日期的交易（使用本地快取）
+     * @param {string} date - 日期 (YYYY-MM-DD)
+     * @returns {Array} - 交易列表
+     */
+    getTransactionsByDate(date) {
+        return this.transactions
+            .filter(tx =>
+                tx.notebook_id === this.currentNotebook &&
+                tx.date === date
+            )
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     }
 
     /**

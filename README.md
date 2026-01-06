@@ -2,7 +2,7 @@
 
 > 一個童話風格的情侶共同記帳應用，支援多帳本管理、彈性付款記錄、智能結算功能。
 
-![Version](https://img.shields.io/badge/version-4.1.1-pink)
+![Version](https://img.shields.io/badge/version-5.0.0-pink)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow)
 ![Firebase](https://img.shields.io/badge/Firebase-Integrated-orange)
@@ -357,6 +357,32 @@ service firebase.storage {
 ## 📱 主要功能
 
 ### ✅ 已實作功能
+
+#### 🔄 即時同步與離線支援（v5.0 新功能）
+- ✅ **即時監聽** - 兩人的新增/編輯/刪除操作即時同步
+  - 使用 Firestore onSnapshot 監聽交易、帳本、餘額變更
+  - 訂閱模式架構，UI 自動響應資料變更
+  - 支援監聽器生命週期管理，防止記憶體洩漏
+- ✅ **餘額持久化** - 餘額儲存在 Firebase，不再每次重算所有交易
+  - 使用 Firestore Transaction 確保並發安全
+  - 增量更新餘額（從 O(n) 優化為 O(1)）
+  - 支援樂觀鎖（版本號）機制
+- ✅ **分批載入** - 預設載入近 3 個月交易，按需載入更早記錄
+  - 優化首次載入效能
+  - 日期範圍查詢優先使用本地快取
+  - 超出範圍自動從 Firebase 查詢
+- ✅ **離線支援** - 離線時可查看快取資料，重新連線自動同步
+  - 啟用 Firebase Offline Persistence（IndexedDB）
+  - 網路狀態監控與離線提示
+  - 離線操作會在重新連線後自動同步
+- ✅ **並發安全** - 使用 Firestore Transaction 確保餘額計算正確
+  - 最多重試 3 次，指數退避
+  - 防止兩人同時操作導致資料錯誤
+- ✅ **開發者工具** - 提供除錯和診斷功能
+  - 監聽器狀態管理
+  - 本地快取統計
+  - 餘額檢查與修復工具
+  - Console 輸入 `DevTools.help()` 查看指令
 
 #### 👫 情侶配對系統（v4.0 新功能）
 - ✅ **建立配對** - 生成 6 位配對碼

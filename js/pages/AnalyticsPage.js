@@ -21,9 +21,24 @@ export class AnalyticsPage {
             payer: null,    // 'me' | 'partner' | null
             category: null  // 分類名稱 | null
         };
+
+        // 當前週期（用於重新計算）
+        this.currentPeriod = 'month';
+
+        // 訂閱交易變更（新增）
+        this.state.subscribe('transactions', (data) => {
+            console.log('📊 AnalyticsPage 收到交易更新');
+            // 重新計算統計（保持當前篩選條件）
+            this.update(this.currentPeriod);
+        });
+
+        console.log('📊 AnalyticsPage 已建立並訂閱交易變更');
     }
 
     async update(period = 'month') {
+        // 儲存當前週期（用於交易變更時重新計算）
+        this.currentPeriod = period;
+
         const { startDate, endDate } = this.getDateRange(period);
         const transactions = await window.DataManager.getTransactionsByDateRange(startDate, endDate);
 

@@ -20,7 +20,7 @@
    - ✅ 所有核心功能已實作完成
    - ✅ **絕對角色系統**：使用 baobao/bubu 固定角色，不依賴相對邏輯
 
-2. **🚀 架構升級：即時同步與離線支援（進行中）**
+2. **🚀 架構升級：即時同步與離線支援（已完成 ✅）**
    - ✅ **階段 1：基礎架構準備（已完成 2026-01-06）**
      - 啟用 Firebase Offline Persistence（IndexedDB）
      - 建立 ListenerManager 監聽器管理器
@@ -43,7 +43,19 @@
      - BalanceCard 訂閱餘額變更事件
      - NotebooksPage 訂閱帳本列表變更事件
      - app.js 登出時清理所有監聽器
-   - ⏳ **階段 5-7：其他頁面適配、開發者工具、測試**（待進行）
+   - ✅ **階段 5：其他頁面適配與優化（已完成 2026-01-06）**
+     - CalendarPage 訂閱交易變更
+     - AnalyticsPage 訂閱交易變更
+     - 優化 DataManager 日期範圍查詢（優先使用本地快取）
+     - 建立 Firestore 索引需求文檔（FIRESTORE_INDEXES.md）
+   - ✅ **階段 6：錯誤處理與開發者工具（已完成 2026-01-06）**
+     - 建立 BalanceRepairTool 餘額修復工具
+     - 建立 DevTools 開發者工具
+     - 整合到 app.js（開發環境自動載入）
+   - ✅ **階段 7：測試與部署準備（已完成 2026-01-06）**
+     - 更新文檔（CHANGELOG.md, CLAUDE.md, README.md）
+     - 準備 Git 提交與推送
+     - 準備 Firebase 部署
 
 3. **角色系統說明**
    - 🎭 **絕對角色設計**：寶寶（baobao）和步步（bubu）為固定角色

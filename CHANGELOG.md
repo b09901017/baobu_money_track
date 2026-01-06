@@ -168,12 +168,85 @@
 - 📄 `js/pages/NotebooksPage.js`：訂閱帳本列表變更
 - 📄 `js/app.js`：傳入 state 到組件，登出時清理
 
-#### 📚 後續計畫
+### 🚀 階段 5-7：完整訂閱適配、開發者工具與文檔更新
 
-階段 3-4 已完成，後續將實作：
-- **階段 5**：其他頁面適配（CalendarPage、AnalyticsPage）
-- **階段 6**：開發者工具與除錯
-- **階段 7**：完整測試與文檔更新
+#### ✨ 新功能
+
+**其他頁面適配（階段 5）**
+- ✅ CalendarPage 訂閱交易變更
+  - 單日模式自動更新交易列表
+  - 區間模式自動更新交易列表
+  - 日曆標記自動更新
+
+- ✅ AnalyticsPage 訂閱交易變更
+  - 保持當前篩選條件重新計算統計
+  - 儲存當前週期（month/week/all）
+  - 自動更新圓餅圖/長條圖
+
+- ✅ 優化日期範圍查詢
+  - 檢查是否在監聽範圍內（近 3 個月）
+  - 範圍內優先使用本地快取（已由 onSnapshot 自動更新）
+  - 範圍外從 Firebase 查詢
+  - 新增 `getTransactionsByDate()` 方法（使用本地快取）
+
+- ✅ 建立 Firestore 索引需求文檔
+  - `FIRESTORE_INDEXES.md` 說明必要索引
+  - 提供自動建立和手動建立方式
+  - 列出 3 個必要複合索引
+
+**開發者工具與除錯（階段 6）**
+- ✅ 建立 `BalanceRepairTool` 餘額修復工具
+  - `checkBalance()`: 檢查帳本餘額是否正確
+  - `repairBalance()`: 修復單個帳本餘額
+  - `repairAllBalances()`: 檢查並修復所有帳本
+  - 掛載到全域供 Console 使用
+
+- ✅ 建立 `DevTools` 開發者工具
+  - 監聽器管理：`showListenerStatus()` / `unregisterAllListeners()`
+  - 快取管理：`showCacheStats()` / `clearLocalCache()`
+  - 餘額管理：`checkBalance()` / `repairBalance()` / `repairAllBalances()`
+  - 連線檢查：`checkFirebaseConnection()` / `showNetworkStatus()`
+  - 日誌匯出：`exportLogs()`
+  - 掛載到全域，輸入 `DevTools.help()` 查看指令
+
+- ✅ 整合到 app.js
+  - 開發環境自動載入開發者工具
+  - 檢測 localhost 或 127.0.0.1
+
+**文檔更新（階段 7）**
+- ✅ 建立 `FIRESTORE_INDEXES.md`
+- ✅ 更新 `CHANGELOG.md`（本文件）
+- ✅ 更新 `CLAUDE.md` 標記階段 5-7 已完成
+- ✅ 更新 `README.md` 新增即時同步功能說明
+
+#### 🔧 技術變更
+
+**檔案變更（階段 5）**
+- 📄 `js/pages/CalendarPage.js`：訂閱交易變更
+- 📄 `js/pages/AnalyticsPage.js`：訂閱交易變更，儲存當前週期
+- 📄 `js/data.js`：優化日期範圍查詢，新增 `getTransactionsByDate()`
+- 📄 `FIRESTORE_INDEXES.md`：新建索引文檔
+
+**檔案變更（階段 6）**
+- 📄 `js/utils/BalanceRepairTool.js`：新建餘額修復工具
+- 📄 `js/utils/DevTools.js`：新建開發者工具
+- 📄 `js/app.js`：新增 imports，開發環境載入工具
+
+**檔案變更（階段 7）**
+- 📄 `CHANGELOG.md`：更新版本記錄
+- 📄 `CLAUDE.md`：標記已完成功能
+- 📄 `README.md`：新增即時同步功能說明
+
+#### ✅ 完成狀態
+
+v5.0.0 全部 7 個階段已完成：
+- ✅ **階段 1**：基礎架構準備與離線支援
+- ✅ **階段 2**：餘額管理系統
+- ✅ **階段 3**：交易即時監聽
+- ✅ **階段 4**：帳本與餘額即時監聽
+- ✅ **階段 5**：其他頁面適配與優化
+- ✅ **階段 6**：錯誤處理與開發者工具
+- ✅ **階段 7**：測試與部署準備
 
 ---
 

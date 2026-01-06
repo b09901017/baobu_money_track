@@ -19,6 +19,8 @@ import { NotebooksPage } from './pages/NotebooksPage.js';
 import { AnalyticsPage } from './pages/AnalyticsPage.js';
 
 import customDialog from './utils/CustomDialog.js';
+import { BalanceRepairTool } from './utils/BalanceRepairTool.js';
+import { DevTools } from './utils/DevTools.js';
 
 class CoupleApp {
     constructor() {
@@ -277,6 +279,11 @@ function initializeApp() {
             }
         }
     );
+
+    // 載入開發者工具（開發環境）
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.log('🛠️ 開發環境，載入開發者工具');
+    }
 }
 
 /**

@@ -25,6 +25,21 @@ export class CalendarPage {
 
         // 綁定滑動手勢
         this.initSwipeGesture();
+
+        // 訂閱交易變更（新增）
+        this.state.subscribe('transactions', (data) => {
+            console.log('📅 CalendarPage 收到交易更新');
+            // 如果當前在日曆視圖，重新渲染
+            if (this.calendarMode === 'single' && this.currentSelectedDate) {
+                this.showDayTransactions(this.currentSelectedDate);
+            } else if (this.calendarMode === 'range' && this.tempRangeStart && this.tempRangeEnd) {
+                this.showRangeTransactions(this.tempRangeStart, this.tempRangeEnd);
+            } else {
+                this.renderCalendar();
+            }
+        });
+
+        console.log('📅 CalendarPage 已建立並訂閱交易變更');
     }
 
     /**
