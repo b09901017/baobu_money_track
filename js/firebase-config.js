@@ -35,6 +35,48 @@ enableIndexedDbPersistence(db)
         }
     });
 
+// ==================== 路徑工具函數 ====================
+
+/**
+ * 取得帳本集合引用（子集合）
+ * @param {string} coupleId - 配對 ID
+ * @returns {CollectionReference}
+ */
+function getNotebooksRef(coupleId) {
+    return collection(db, 'couples', coupleId, 'notebooks');
+}
+
+/**
+ * 取得單一帳本文件引用
+ * @param {string} coupleId - 配對 ID
+ * @param {string} notebookId - 帳本 ID
+ * @returns {DocumentReference}
+ */
+function getNotebookRef(coupleId, notebookId) {
+    return doc(db, 'couples', coupleId, 'notebooks', notebookId);
+}
+
+/**
+ * 取得交易集合引用（子集合）
+ * @param {string} coupleId - 配對 ID
+ * @param {string} notebookId - 帳本 ID
+ * @returns {CollectionReference}
+ */
+function getTransactionsRef(coupleId, notebookId) {
+    return collection(db, 'couples', coupleId, 'notebooks', notebookId, 'transactions');
+}
+
+/**
+ * 取得單一交易文件引用
+ * @param {string} coupleId - 配對 ID
+ * @param {string} notebookId - 帳本 ID
+ * @param {string} transactionId - 交易 ID
+ * @returns {DocumentReference}
+ */
+function getTransactionRef(coupleId, notebookId, transactionId) {
+    return doc(db, 'couples', coupleId, 'notebooks', notebookId, 'transactions', transactionId);
+}
+
 // ==================== 認證相關 ====================
 
 /**
@@ -102,15 +144,26 @@ function setupAuthListener(onUserSignedIn, onUserSignedOut) {
 
 /**
  * 新增交易
+ * @param {string} coupleId - 配對 ID
+ * @param {string} notebookId - 帳本 ID
  * @param {Object} transactionData - 交易資料
  * @returns {Promise<string>} - 交易 ID
  */
-async function addTransaction(transactionData) {
+async function addTransaction(coupleId, notebookId, transactionData) {
     try {
-        const docRef = await addDoc(collection(db, "transactions"), {
-            ...transactionData,
-            created_at: serverTimestamp()
+        // 清理不需要的欄位（路徑已包含）
+        const cleanedData = { ...transactionData };
+        delete cleanedData.couple_id;
+        delete cleanedData.notebook_id;
+
+        // 使用子集合路徑
+        const transactionsRef = getTransactionsRef(coupleId, notebookId);
+        const docRef = await addDoc(transactionsRef, {
+            ...cleanedData,
+            created_at: serverTimestamp(),
+            updated_at: serverTimestamp()
         });
+
         console.log('✅ 交易已新增:', docRef.id);
         return docRef.id;
     } catch (error) {
@@ -121,15 +174,17 @@ async function addTransaction(transactionData) {
 
 /**
  * 取得交易列表
+ * @param {string} coupleId - 配對 ID
  * @param {string} notebookId - 帳本 ID
  * @param {number} limitCount - 限制筆數
  * @returns {Promise<Array>} - 交易列表
  */
-async function getTransactions(notebookId, limitCount = 50) {
+async function getTransactions(coupleId, notebookId, limitCount = 50) {
     try {
+        // 使用子集合路徑，不需要 where() 過濾
+        const transactionsRef = getTransactionsRef(coupleId, notebookId);
         const q = query(
-            collection(db, "transactions"),
-            where("notebook_id", "==", notebookId),
+            transactionsRef,
             orderBy("date", "desc"),
             limit(limitCount)
         );
@@ -149,15 +204,17 @@ async function getTransactions(notebookId, limitCount = 50) {
 
 /**
  * 取得最近的交易記錄（按建立時間排序）
+ * @param {string} coupleId - 配對 ID
  * @param {string} notebookId - 帳本 ID
  * @param {number} limitCount - 限制筆數
  * @returns {Promise<Array>} - 交易列表
  */
-async function getRecentTransactions(notebookId, limitCount = 30) {
+async function getRecentTransactions(coupleId, notebookId, limitCount = 30) {
     try {
+        // 使用子集合路徑，不需要 where() 過濾
+        const transactionsRef = getTransactionsRef(coupleId, notebookId);
         const q = query(
-            collection(db, "transactions"),
-            where("notebook_id", "==", notebookId),
+            transactionsRef,
             orderBy("created_at", "desc"),
             limit(limitCount)
         );
@@ -177,16 +234,18 @@ async function getRecentTransactions(notebookId, limitCount = 30) {
 
 /**
  * 取得日期範圍內的交易
+ * @param {string} coupleId - 配對 ID
  * @param {string} notebookId - 帳本 ID
  * @param {string} startDate - 開始日期 (YYYY-MM-DD)
  * @param {string} endDate - 結束日期 (YYYY-MM-DD)
  * @returns {Promise<Array>} - 交易列表
  */
-async function getTransactionsByDateRange(notebookId, startDate, endDate) {
+async function getTransactionsByDateRange(coupleId, notebookId, startDate, endDate) {
     try {
+        // 使用子集合路徑，不需要 where('notebook_id') 過濾
+        const transactionsRef = getTransactionsRef(coupleId, notebookId);
         const q = query(
-            collection(db, "transactions"),
-            where("notebook_id", "==", notebookId),
+            transactionsRef,
             where("date", ">=", startDate),
             where("date", "<=", endDate),
             orderBy("date", "desc")
@@ -207,12 +266,14 @@ async function getTransactionsByDateRange(notebookId, startDate, endDate) {
 
 /**
  * 更新交易
+ * @param {string} coupleId - 配對 ID
+ * @param {string} notebookId - 帳本 ID
  * @param {string} transactionId - 交易 ID
  * @param {Object} updates - 更新資料
  */
-async function updateTransaction(transactionId, updates) {
+async function updateTransaction(coupleId, notebookId, transactionId, updates) {
     try {
-        const docRef = doc(db, "transactions", transactionId);
+        const docRef = getTransactionRef(coupleId, notebookId, transactionId);
         await updateDoc(docRef, {
             ...updates,
             updated_at: serverTimestamp()
@@ -226,11 +287,14 @@ async function updateTransaction(transactionId, updates) {
 
 /**
  * 刪除交易
+ * @param {string} coupleId - 配對 ID
+ * @param {string} notebookId - 帳本 ID
  * @param {string} transactionId - 交易 ID
  */
-async function deleteTransaction(transactionId) {
+async function deleteTransaction(coupleId, notebookId, transactionId) {
     try {
-        await deleteDoc(doc(db, "transactions", transactionId));
+        const docRef = getTransactionRef(coupleId, notebookId, transactionId);
+        await deleteDoc(docRef);
         console.log('✅ 交易已刪除:', transactionId);
     } catch (error) {
         console.error('❌ 刪除交易失敗:', error);
@@ -247,11 +311,9 @@ async function getNotebooks(coupleId) {
     try {
         console.log('🔍 查詢配對帳本，coupleId:', coupleId);
 
-        const q = query(
-            collection(db, "notebooks"),
-            where("couple_id", "==", coupleId)
-        );
-        const querySnapshot = await getDocs(q);
+        // 使用子集合路徑，不需要 where() 過濾
+        const notebooksRef = getNotebooksRef(coupleId);
+        const querySnapshot = await getDocs(notebooksRef);
         const notebooks = querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
@@ -272,18 +334,23 @@ async function getNotebooks(coupleId) {
  * 新增配對帳本
  * @param {string} coupleId - 配對 ID
  * @param {string} notebookName - 帳本名稱
- * @param {Array} memberIds - 成員 ID 列表（可選）
- * @param {Object} memberNames - 成員名稱映射（可選）
+ * @param {Array} memberIds - 成員 ID 列表（可選，已棄用）
+ * @param {Object} memberNames - 成員名稱映射（可選，已棄用）
  * @returns {Promise<string>} - 帳本 ID
  */
 async function addNotebook(coupleId, notebookName, memberIds = [], memberNames = {}) {
     try {
-        const docRef = await addDoc(collection(db, "notebooks"), {
+        // 使用子集合路徑，不需要 couple_id, member_ids, member_names 欄位（路徑已包含）
+        const notebooksRef = getNotebooksRef(coupleId);
+        const docRef = await addDoc(notebooksRef, {
             name: notebookName,
-            couple_id: coupleId,
-            member_ids: memberIds,
-            member_names: memberNames,
-            created_at: serverTimestamp()
+            created_at: serverTimestamp(),
+            balance: {
+                baobao_owed: 0,
+                bubu_owed: 0,
+                version: 0,
+                last_updated: serverTimestamp()
+            }
         });
         console.log('✅ 配對帳本已新增:', docRef.id);
         return docRef.id;
@@ -696,13 +763,14 @@ async function updateUserData(userId, userData) {
 
 /**
  * 增量更新帳本餘額（使用 Firestore Transaction 確保並發安全）
+ * @param {string} coupleId - 配對 ID
  * @param {string} notebookId - 帳本 ID
  * @param {number} baobaoDelta - 寶寶餘額變化量
  * @param {number} bubuDelta - 步步餘額變化量
  * @returns {Promise<void>}
  */
-async function incrementNotebookBalance(notebookId, baobaoDelta, bubuDelta) {
-    const notebookRef = doc(db, 'notebooks', notebookId);
+async function incrementNotebookBalance(coupleId, notebookId, baobaoDelta, bubuDelta) {
+    const notebookRef = getNotebookRef(coupleId, notebookId);
     const maxRetries = 3;
     let retries = 0;
 
@@ -751,13 +819,14 @@ async function incrementNotebookBalance(notebookId, baobaoDelta, bubuDelta) {
 
 /**
  * 初始化帳本餘額
+ * @param {string} coupleId - 配對 ID
  * @param {string} notebookId - 帳本 ID
  * @param {Object} balance - { baobao_owed, bubu_owed }
  * @returns {Promise<void>}
  */
-async function initializeNotebookBalance(notebookId, balance) {
+async function initializeNotebookBalance(coupleId, notebookId, balance) {
     try {
-        const notebookRef = doc(db, 'notebooks', notebookId);
+        const notebookRef = getNotebookRef(coupleId, notebookId);
         await updateDoc(notebookRef, {
             balance: {
                 ...balance,
@@ -774,12 +843,13 @@ async function initializeNotebookBalance(notebookId, balance) {
 
 /**
  * 監聽帳本餘額變更
+ * @param {string} coupleId - 配對 ID
  * @param {string} notebookId - 帳本 ID
  * @param {Function} callback - 回調函數 (balance) => void
  * @returns {Function} - 取消監聽函數
  */
-function onNotebookBalanceChange(notebookId, callback) {
-    const notebookRef = doc(db, 'notebooks', notebookId);
+function onNotebookBalanceChange(coupleId, notebookId, callback) {
+    const notebookRef = getNotebookRef(coupleId, notebookId);
 
     return onSnapshot(
         notebookRef,
@@ -802,20 +872,22 @@ function onNotebookBalanceChange(notebookId, callback) {
 
 /**
  * 監聽近期交易（近 3 個月）
+ * @param {string} coupleId - 配對 ID
  * @param {string} notebookId - 帳本 ID
  * @param {Date} sinceDate - 起始日期（預設近 3 個月）
  * @param {Function} callback - 回調函數 (transactions, changes) => void
  * @returns {Function} - 取消監聽函數
  */
-function onRecentTransactionsChange(notebookId, sinceDate, callback) {
+function onRecentTransactionsChange(coupleId, notebookId, sinceDate, callback) {
     const threeMonthsAgo = sinceDate || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
     const sinceDateStr = threeMonthsAgo.toISOString().split('T')[0];
 
     console.log(`🎧 開始監聽近期交易 (自 ${sinceDateStr})...`);
 
+    // 使用子集合路徑，不需要 where('notebook_id') 過濾
+    const transactionsRef = getTransactionsRef(coupleId, notebookId);
     const q = query(
-        collection(db, 'transactions'),
-        where('notebook_id', '==', notebookId),
+        transactionsRef,
         where('date', '>=', sinceDateStr),
         orderBy('date', 'desc'),
         orderBy('created_at', 'desc')
@@ -862,18 +934,20 @@ function onRecentTransactionsChange(notebookId, sinceDate, callback) {
 
 /**
  * 載入更早的交易（分頁查詢）
+ * @param {string} coupleId - 配對 ID
  * @param {string} notebookId - 帳本 ID
  * @param {string} beforeDate - 日期上限 (YYYY-MM-DD)
  * @param {number} limitCount - 限制筆數
  * @returns {Promise<Array>} - 交易列表
  */
-async function getEarlierTransactions(notebookId, beforeDate, limitCount = 30) {
+async function getEarlierTransactions(coupleId, notebookId, beforeDate, limitCount = 30) {
     try {
         console.log(`📥 載入 ${beforeDate} 之前的 ${limitCount} 筆交易...`);
 
+        // 使用子集合路徑，不需要 where('notebook_id') 過濾
+        const transactionsRef = getTransactionsRef(coupleId, notebookId);
         const q = query(
-            collection(db, 'transactions'),
-            where('notebook_id', '==', notebookId),
+            transactionsRef,
             where('date', '<', beforeDate),
             orderBy('date', 'desc'),
             orderBy('created_at', 'desc'),
@@ -905,13 +979,11 @@ async function getEarlierTransactions(notebookId, beforeDate, limitCount = 30) {
 function onNotebooksChange(coupleId, callback) {
     console.log('🎧 開始監聽帳本列表...');
 
-    const q = query(
-        collection(db, 'notebooks'),
-        where('couple_id', '==', coupleId)
-    );
+    // 使用子集合路徑，不需要 where('couple_id') 過濾
+    const notebooksRef = getNotebooksRef(coupleId);
 
     return onSnapshot(
-        q,
+        notebooksRef,
         (snapshot) => {
             const notebooks = snapshot.docs.map(doc => ({
                 id: doc.id,

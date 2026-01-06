@@ -131,7 +131,7 @@ class DataManager {
      */
     async loadTransactions() {
         try {
-            this.transactions = await window.FirebaseAPI.getTransactions(this.currentNotebook);
+            this.transactions = await window.FirebaseAPI.getTransactions(this.coupleId, this.currentNotebook);
             console.log(`💰 已載入 ${this.transactions.length} 筆交易`);
         } catch (error) {
             console.error('❌ 載入交易失敗:', error);
@@ -169,7 +169,7 @@ class DataManager {
             console.log('✅ 已建立預設配對帳本:', notebookId);
 
             // 初始化餘額為 0
-            await window.FirebaseAPI.initializeNotebookBalance(notebookId, {
+            await window.FirebaseAPI.initializeNotebookBalance(this.coupleId, notebookId, {
                 baobao_owed: 0,
                 bubu_owed: 0
             });
@@ -199,19 +199,18 @@ class DataManager {
 
             // 1. 新增交易到 Firestore
             const transaction = {
-                notebook_id: this.currentNotebook,
-                couple_id: this.coupleId,
                 user_id: this.currentUser.uid,
                 ...transactionData
             };
 
-            const transactionId = await window.FirebaseAPI.addTransaction(transaction);
+            const transactionId = await window.FirebaseAPI.addTransaction(this.coupleId, this.currentNotebook, transaction);
             console.log('✅ 交易已新增:', transactionId);
 
             // 2. 增量更新餘額
             const { baobaoDelta, bubuDelta } = this.balanceManager.calculateTransactionDelta(transaction);
             if (baobaoDelta !== 0 || bubuDelta !== 0) {
                 await window.FirebaseAPI.incrementNotebookBalance(
+                    this.coupleId,
                     this.currentNotebook,
                     baobaoDelta,
                     bubuDelta
@@ -266,6 +265,7 @@ class DataManager {
     async getRecentTransactions(limit = 30) {
         try {
             const transactions = await window.FirebaseAPI.getRecentTransactions(
+                this.coupleId,
                 this.currentNotebook,
                 limit
             );
@@ -309,6 +309,7 @@ class DataManager {
         console.log('📊 超出監聽範圍，從 Firebase 查詢');
         try {
             const transactions = await window.FirebaseAPI.getTransactionsByDateRange(
+                this.coupleId,
                 this.currentNotebook,
                 startDate,
                 endDate
@@ -355,13 +356,14 @@ class DataManager {
             }
 
             // 2. 刪除交易
-            await window.FirebaseAPI.deleteTransaction(id);
+            await window.FirebaseAPI.deleteTransaction(this.coupleId, this.currentNotebook, id);
             console.log('✅ 交易已刪除:', id);
 
             // 3. 反向更新餘額（減去這筆交易的影響）
             const { baobaoDelta, bubuDelta } = this.balanceManager.calculateTransactionDelta(transaction);
             if (baobaoDelta !== 0 || bubuDelta !== 0) {
                 await window.FirebaseAPI.incrementNotebookBalance(
+                    this.coupleId,
                     this.currentNotebook,
                     -baobaoDelta,  // 反向操作
                     -bubuDelta
@@ -393,7 +395,7 @@ class DataManager {
             }
 
             // 2. 更新交易
-            await window.FirebaseAPI.updateTransaction(id, updates);
+            await window.FirebaseAPI.updateTransaction(this.coupleId, this.currentNotebook, id, updates);
             console.log('✅ 交易已更新:', id);
 
             // 3. 更新餘額（先減去舊的，再加上新的）
@@ -407,6 +409,7 @@ class DataManager {
 
             if (baobaoDelta !== 0 || bubuDelta !== 0) {
                 await window.FirebaseAPI.incrementNotebookBalance(
+                    this.coupleId,
                     this.currentNotebook,
                     baobaoDelta,
                     bubuDelta
@@ -476,14 +479,16 @@ class DataManager {
         if (notebook) {
             this.currentNotebook = notebookId;
 
-            // 停止舊的監聽
+            // 停止所有舊監聽器
             this.stopListeningTransactions();
+            this.stopListeningBalance();  // ✅ 新增：停止餘額監聽
 
             // 清空快取
             this.transactions = [];
 
-            // 啟動新的監聽
+            // 啟動新監聽器
             this.startListeningTransactions();
+            this.startListeningNotebookBalance();  // ✅ 新增：啟動餘額監聽
 
             console.log('📖 已切換帳本:', notebook.name);
             return notebook;
@@ -818,6 +823,7 @@ class DataManager {
 
         // 註冊監聽器
         const unsubscribe = window.FirebaseAPI.onRecentTransactionsChange(
+            this.coupleId,
             this.currentNotebook,
             threeMonthsAgo,
             (transactions, changes) => this.handleTransactionsChange(transactions, changes)
@@ -882,6 +888,7 @@ class DataManager {
 
         try {
             const earlierTransactions = await window.FirebaseAPI.getEarlierTransactions(
+                this.coupleId,
                 this.currentNotebook,
                 earliestDate,
                 limitCount
@@ -978,6 +985,7 @@ class DataManager {
 
         // 註冊監聽器
         const unsubscribe = window.FirebaseAPI.onNotebookBalanceChange(
+            this.coupleId,
             this.currentNotebook,
             (balance) => this.handleBalanceChange(balance)
         );
