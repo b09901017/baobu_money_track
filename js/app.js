@@ -73,8 +73,12 @@ class CoupleApp {
         // 交易詳情
         this.transactionDetail = new TransactionDetail();
 
-        // 通知面板
+        // 通知面板（立即初始化以確保訂閱 state，避免漏失初始數據）
         this.notificationPanel = new NotificationPanel(this.state);
+        this.notificationPanel.init();
+
+        // 將 NotificationPanel 實例掛載到 window（供詳情彈窗使用）
+        window.NotificationPanelInstance = this.notificationPanel;
     }
 
     initPages() {
@@ -130,13 +134,7 @@ class CoupleApp {
         // 綁定所有事件
         this.eventBinder.bindAll();
 
-        // 初始化通知面板
-        this.notificationPanel.init();
-
-        // 將 NotificationPanel 實例掛載到 window（供詳情彈窗使用）
-        window.NotificationPanelInstance = this.notificationPanel;
-
-        // 綁定鈴鐺按鈕點擊事件
+        // 綁定鈴鐺按鈕點擊事件（NotificationPanel 已在 initComponents 中初始化）
         const btnNotifications = document.getElementById('btnNotifications');
         if (btnNotifications) {
             btnNotifications.addEventListener('click', () => {

@@ -9,9 +9,9 @@
 
 ## [5.6.2] - 2026-01-07
 
-### 🎨 UI 層級優化
+### 🎨 UI 層級優化 + 🐛 通知初始化修復
 
-**通知詳情彈窗的毛玻璃效果與層級修正！**
+**通知詳情彈窗的毛玻璃效果、層級修正，以及通知初始化 Bug 修復！**
 
 #### 主要改進
 
@@ -26,6 +26,17 @@
    - 添加 `-webkit-backdrop-filter` 前綴，確保 Safari 瀏覽器相容性
    - 保持童話風格，圓角與陰影設計不變
 
+3. **修復通知初始化 Bug** 🐛
+   - **問題**：登入後沒有顯示通知，直到修改一筆資料後才全部顯示
+   - **根本原因**：初始化順序錯誤
+     - `DataManager.init()` 啟動 activities 監聽器（第332行）
+     - 立即接收到現有通知數據並調用 `state.notify()`
+     - 但 `NotificationPanel.init()` 要到第351行的 `app.init()` 才執行
+     - 導致初始數據在訂閱之前就發送了，因此丟失
+   - **解決方案**：將 `NotificationPanel.init()` 提前到 `initComponents()` 中執行
+     - 確保在 DataManager 啟動監聽器之前就已訂閱 state
+     - 現在登入後立即顯示所有現有通知
+
 #### 技術實現
 
 1. **index.html**
@@ -33,15 +44,22 @@
    - `#notificationDetailOverlay` - 新增毛玻璃效果（blur 12px）
    - 詳情彈窗主體 - 新增毛玻璃背景（blur 8px，95% 透明度）
 
+2. **app.js**
+   - `initComponents()` - 在創建 NotificationPanel 實例後立即調用 `init()`
+   - 移除 `app.init()` 中重複的初始化代碼
+   - 確保訂閱順序：NotificationPanel 訂閱 → DataManager 啟動監聽器
+
 #### 修改檔案
 
 - `index.html`（通知詳情彈窗 z-index 與毛玻璃效果）
+- `js/app.js`（NotificationPanel 初始化時機調整）
 
 #### 設計特色
 
 - **層級清晰**：詳情彈窗永遠覆蓋在通知面板之上
 - **毛玻璃美學**：現代感的半透明背景，保持內容可讀性
 - **跨瀏覽器相容**：同時支援標準和 WebKit 前綴
+- **即時通知**：登入後立即顯示所有現有通知，無需等待觸發
 
 ---
 
