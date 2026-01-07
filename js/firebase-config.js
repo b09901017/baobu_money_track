@@ -3,7 +3,7 @@
 // 從 index.html 中載入的 Firebase 模組
 const {
     initializeApp,
-    getFirestore, collection, addDoc, getDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp, onSnapshot, startAfter, enableIndexedDbPersistence, Timestamp, runTransaction,
+    getFirestore, collection, addDoc, getDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp, onSnapshot, startAfter, enableIndexedDbPersistence, Timestamp, runTransaction, writeBatch,
     getStorage, ref, uploadBytes, getDownloadURL, deleteObject,
     getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
 } = window.firebaseModules;
@@ -330,9 +330,10 @@ async function getNotebooks(coupleId) {
     try {
         console.log('🔍 查詢配對帳本，coupleId:', coupleId);
 
-        // 使用子集合路徑，不需要 where() 過濾
+        // 使用子集合路徑，並按 order 欄位排序
         const notebooksRef = getNotebooksRef(coupleId);
-        const querySnapshot = await getDocs(notebooksRef);
+        const q = query(notebooksRef, orderBy('order', 'asc'));
+        const querySnapshot = await getDocs(q);
         const notebooks = querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
@@ -356,15 +357,17 @@ async function getNotebooks(coupleId) {
  * @param {Array} memberIds - 成員 ID 列表（可選，已棄用）
  * @param {Object} memberNames - 成員名稱映射（可選，已棄用）
  * @param {string} type - 帳本類型（'daily' | 'trip'），預設為 'daily'
+ * @param {number} order - 排序值（預設為 0，呼叫端應計算正確的值）
  * @returns {Promise<string>} - 帳本 ID
  */
-async function addNotebook(coupleId, notebookName, memberIds = [], memberNames = {}, type = 'daily') {
+async function addNotebook(coupleId, notebookName, memberIds = [], memberNames = {}, type = 'daily', order = 0) {
     try {
         // 使用子集合路徑，不需要 couple_id, member_ids, member_names 欄位（路徑已包含）
         const notebooksRef = getNotebooksRef(coupleId);
         const docRef = await addDoc(notebooksRef, {
             name: notebookName,
             type: type,
+            order: order,
             created_at: serverTimestamp(),
             balance: {
                 baobao_owed: 0,
@@ -384,6 +387,31 @@ async function addNotebook(coupleId, notebookName, memberIds = [], memberNames =
         return docRef.id;
     } catch (error) {
         console.error('❌ 新增帳本失敗:', error);
+        throw error;
+    }
+}
+
+/**
+ * 批次更新帳本順序
+ * @param {string} coupleId - 配對 ID
+ * @param {Array<{id: string, order: number}>} updates - 更新列表
+ * @returns {Promise<void>}
+ */
+async function batchUpdateNotebookOrders(coupleId, updates) {
+    try {
+        console.log('📝 批次更新帳本順序...', updates);
+
+        const batch = writeBatch(db);
+
+        updates.forEach(({ id, order }) => {
+            const notebookRef = getNotebookRef(coupleId, id);
+            batch.update(notebookRef, { order: order });
+        });
+
+        await batch.commit();
+        console.log('✅ 帳本順序已批次更新');
+    } catch (error) {
+        console.error('❌ 批次更新帳本順序失敗:', error);
         throw error;
     }
 }
@@ -1297,6 +1325,7 @@ window.FirebaseAPI = {
     deleteTransaction,
     getNotebooks,
     addNotebook,
+    batchUpdateNotebookOrders,
     addCustomCategory,
     getCustomCategories,
     deleteCustomCategory,

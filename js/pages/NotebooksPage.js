@@ -5,6 +5,7 @@ export class NotebooksPage {
     constructor(state, onSwitchCallback) {
         this.state = state;
         this.onSwitchCallback = onSwitchCallback;  // 切換帳本後的回調
+        this.sortableInstance = null;  // SortableJS 實例
 
         // 訂閱帳本列表變更事件
         if (this.state) {
@@ -153,6 +154,61 @@ export class NotebooksPage {
         const addBtn = document.getElementById('btnAddNotebook');
         if (addBtn) {
             addBtn.addEventListener('click', () => this.addNewNotebook());
+        }
+
+        // 初始化拖曳排序功能
+        this.initSortable(container);
+    }
+
+    /**
+     * 初始化 SortableJS 拖曳排序
+     * @param {HTMLElement} container - 帳本列表容器
+     */
+    initSortable(container) {
+        // 銷毀舊的實例
+        if (this.sortableInstance) {
+            this.sortableInstance.destroy();
+        }
+
+        // 檢查 Sortable 是否可用
+        if (typeof Sortable === 'undefined') {
+            console.warn('⚠️ SortableJS 未載入，無法啟用拖曳排序');
+            return;
+        }
+
+        // 建立 SortableJS 實例
+        this.sortableInstance = new Sortable(container, {
+            animation: 150,
+            delay: 200,
+            delayOnTouchOnly: true,
+            ghostClass: 'sortable-ghost',
+            filter: '#btnAddNotebook',  // 排除新增按鈕
+            preventOnFilter: true,
+            onEnd: (evt) => this.handleSortEnd(evt)
+        });
+
+        console.log('✅ 拖曳排序已啟用');
+    }
+
+    /**
+     * 處理拖曳結束事件
+     * @param {Event} evt - SortableJS 事件
+     */
+    async handleSortEnd(evt) {
+        try {
+            // 取得所有帳本項目的 ID（按新順序）
+            const items = evt.to.querySelectorAll('[data-notebook-id]');
+            const newOrderedIds = Array.from(items).map(item => item.dataset.notebookId);
+
+            console.log('📋 新順序:', newOrderedIds);
+
+            // 呼叫 DataManager 更新順序
+            await window.DataManager.reorderNotebooks(newOrderedIds);
+
+            console.log('✅ 帳本順序已儲存');
+        } catch (error) {
+            console.error('❌ 儲存排序失敗:', error);
+            await window.customDialog.error('儲存排序失敗：' + error.message);
         }
     }
 

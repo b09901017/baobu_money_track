@@ -7,6 +7,85 @@
 
 ---
 
+## [5.7.0] - 2026-01-07
+
+### 📚 帳本拖曳排序功能
+
+**「我們的故事書」現在可以自由排序了！**
+
+#### 主要功能
+
+1. **拖曳排序帳本** 🎯
+   - 長按任意帳本，拖曳即可調整順序
+   - 手機防誤觸設計（200ms 延遲）
+   - 流暢的拖曳動畫（150ms 過渡）
+   - 清楚的視覺回饋：半透明、虛線邊框、旋轉效果
+
+2. **永久儲存順序** 💾
+   - 使用 Firebase `writeBatch` 批次更新，節省寫入次數
+   - 重新整理後順序不變
+   - 即時同步到雲端，多裝置保持一致
+
+3. **相容性處理** ✅
+   - 自動為舊帳本補充 `order` 欄位（預設為 0）
+   - 新增帳本自動排在最後
+   - 本地快取即時更新，無需重新載入
+
+#### 技術實現
+
+1. **Firebase API 層（firebase-config.js）**
+   - 新增 `writeBatch` 模組引入
+   - 修改 `getNotebooks()`：查詢時按 `order` 欄位升序排序
+   - 修改 `addNotebook()`：新增 `order` 參數
+   - 新增 `batchUpdateNotebookOrders(coupleId, updates)`：批次更新帳本順序
+
+2. **資料管理層（data.js）**
+   - 修改 `addNotebook()`：自動計算新帳本的 `order` 值（排在最後）
+   - 新增 `reorderNotebooks(newOrderedIds)`：
+     - 接收拖曳後的新 ID 陣列
+     - 呼叫 Firebase API 批次更新
+     - 同步更新本地快取並觸發 UI 更新
+
+3. **UI 層（NotebooksPage.js）**
+   - 新增 `sortableInstance` 實例變數
+   - 新增 `initSortable(container)` 方法：初始化 SortableJS
+     - 設定拖曳參數（動畫、延遲、防誤觸）
+     - 排除「新增按鈕」不可拖曳
+   - 新增 `handleSortEnd(evt)` 方法：處理拖曳結束事件
+
+4. **樣式層（notebooks.css）**
+   - 新增 `.sortable-ghost` 樣式：拖曳時的視覺效果
+   - 新增游標樣式：`cursor: grab` 和 `cursor: grabbing`
+
+5. **模組載入（index.html）**
+   - 在 Firebase Firestore 引入中加入 `writeBatch` 模組
+   - 在 `window.firebaseModules` 中匯出 `writeBatch`
+
+#### 修改檔案
+
+- `js/firebase-config.js`（新增批次更新 API）
+- `js/data.js`（新增排序管理方法）
+- `js/pages/NotebooksPage.js`（整合拖曳功能）
+- `css/components/notebooks.css`（新增拖曳樣式）
+- `index.html`（載入 writeBatch 模組）
+
+#### 設計特色
+
+- **流暢體驗**：150ms 動畫 + 200ms 防誤觸，絕佳的操作手感
+- **視覺回饋**：拖曳時半透明、虛線邊框、旋轉效果，清楚知道正在移動
+- **資料安全**：批次更新、錯誤處理、本地同步，確保資料不遺失
+- **跨裝置一致**：雲端即時同步，所有裝置看到相同順序
+
+#### 使用方式
+
+1. 進入「我們的故事書」頁面
+2. 長按任意帳本封面
+3. 拖曳到想要的位置
+4. 放開手指，順序自動儲存
+5. 重新整理頁面，順序保持不變
+
+---
+
 ## [5.6.2] - 2026-01-07
 
 ### 🎨 UI 層級優化 + 🐛 通知初始化修復

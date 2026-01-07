@@ -635,11 +635,16 @@ class DataManager {
      */
     async addNotebook(name) {
         try {
+            // 計算新帳本的 order 值（排在最後）
+            const newOrder = this.notebooks.length;
+
             const notebookId = await window.FirebaseAPI.addNotebook(
                 this.coupleId,
                 name,
                 this.couple.member_ids,
-                this.couple.member_names
+                this.couple.member_names,
+                'daily',  // 預設類型
+                newOrder  // 傳入 order 值
             );
 
             // 更新快取
@@ -649,6 +654,7 @@ class DataManager {
                 couple_id: this.coupleId,
                 member_ids: this.couple.member_ids,
                 member_names: this.couple.member_names,
+                order: newOrder,
                 created_at: new Date().toISOString()
             };
             this.notebooks.push(newNotebook);
@@ -694,6 +700,48 @@ class DataManager {
      */
     getCurrentNotebook() {
         return this.notebooks.find(nb => nb.id === this.currentNotebook);
+    }
+
+    /**
+     * 重新排序帳本
+     * @param {Array<string>} newOrderedIds - 新的 ID 順序陣列
+     * @returns {Promise<void>}
+     */
+    async reorderNotebooks(newOrderedIds) {
+        try {
+            console.log('🔄 重新排序帳本...', newOrderedIds);
+
+            // 根據新順序產生更新資料
+            const updates = newOrderedIds.map((id, index) => ({
+                id: id,
+                order: index
+            }));
+
+            // 批次更新 Firebase
+            await window.FirebaseAPI.batchUpdateNotebookOrders(this.coupleId, updates);
+
+            // 同步更新本地快取
+            this.notebooks = this.notebooks.map(notebook => {
+                const newIndex = newOrderedIds.indexOf(notebook.id);
+                if (newIndex !== -1) {
+                    return { ...notebook, order: newIndex };
+                }
+                return notebook;
+            });
+
+            // 按 order 重新排序本地陣列
+            this.notebooks.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+            console.log('✅ 帳本順序已更新');
+
+            // 通知訂閱者（觸發 UI 更新）
+            if (window.app && window.app.state) {
+                window.app.state.notify('notebooks', this.notebooks);
+            }
+        } catch (error) {
+            console.error('❌ 重新排序帳本失敗:', error);
+            throw error;
+        }
     }
 
     // ==================== 統計計算 ====================
