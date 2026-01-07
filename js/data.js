@@ -533,32 +533,78 @@ class DataManager {
 
             // 5. 記錄活動（通知系統）
             try {
-                // 計算變更內容
+                // 計算變更內容（記錄所有欄位的變更）
                 const changes = {};
-                if (updates.amount && oldTransaction.amount !== updates.amount) {
+
+                // 金額
+                if (updates.amount !== undefined && oldTransaction.amount !== updates.amount) {
                     changes.amount = { old: oldTransaction.amount, new: updates.amount };
                 }
-                if (updates.item_name && oldTransaction.item_name !== updates.item_name) {
+
+                // 項目名稱
+                if (updates.item_name !== undefined && oldTransaction.item_name !== updates.item_name) {
                     changes.item_name = { old: oldTransaction.item_name, new: updates.item_name };
                 }
-                if (updates.date && oldTransaction.date !== updates.date) {
+
+                // 日期
+                if (updates.date !== undefined && oldTransaction.date !== updates.date) {
                     changes.date = { old: oldTransaction.date, new: updates.date };
                 }
 
-                await window.FirebaseAPI.addActivity(this.coupleId, {
-                    type: 'update',
-                    actor: this.myRole,
-                    transaction: {
-                        id: id,
-                        date: newTransaction.date,
-                        item_name: newTransaction.item_name,
-                        amount: newTransaction.amount,
-                        categories: newTransaction.categories || [],
-                        notebook_id: this.currentNotebook
-                    },
-                    changes: changes
-                });
-                console.log('🔔 修改活動已記錄');
+                // 類別
+                if (updates.categories !== undefined) {
+                    const oldCat = JSON.stringify(oldTransaction.categories || []);
+                    const newCat = JSON.stringify(updates.categories || []);
+                    if (oldCat !== newCat) {
+                        changes.categories = {
+                            old: oldTransaction.categories || [],
+                            new: updates.categories || []
+                        };
+                    }
+                }
+
+                // 備註
+                if (updates.note !== undefined && oldTransaction.note !== updates.note) {
+                    changes.note = { old: oldTransaction.note || '', new: updates.note || '' };
+                }
+
+                // 照片
+                if (updates.photo_url !== undefined && oldTransaction.photo_url !== updates.photo_url) {
+                    changes.photo_url = {
+                        old: oldTransaction.photo_url || null,
+                        new: updates.photo_url || null
+                    };
+                }
+
+                // 付款人
+                if (updates.payer !== undefined && oldTransaction.payer !== updates.payer) {
+                    changes.payer = { old: oldTransaction.payer, new: updates.payer };
+                }
+
+                // 受益人
+                if (updates.beneficiary !== undefined && oldTransaction.beneficiary !== updates.beneficiary) {
+                    changes.beneficiary = { old: oldTransaction.beneficiary, new: updates.beneficiary };
+                }
+
+                // 只在有變更時才記錄活動
+                if (Object.keys(changes).length > 0) {
+                    await window.FirebaseAPI.addActivity(this.coupleId, {
+                        type: 'update',
+                        actor: this.myRole,
+                        transaction: {
+                            id: id,
+                            date: newTransaction.date,
+                            item_name: newTransaction.item_name,
+                            amount: newTransaction.amount,
+                            categories: newTransaction.categories || [],
+                            notebook_id: this.currentNotebook
+                        },
+                        changes: changes
+                    });
+                    console.log('🔔 修改活動已記錄，變更欄位:', Object.keys(changes));
+                } else {
+                    console.log('📝 無實質變更，跳過活動記錄');
+                }
             } catch (error) {
                 console.error('⚠️ 記錄活動失敗（不影響主功能）:', error);
             }
