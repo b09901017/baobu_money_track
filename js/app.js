@@ -133,6 +133,9 @@ class CoupleApp {
         // 初始化通知面板
         this.notificationPanel.init();
 
+        // 將 NotificationPanel 實例掛載到 window（供詳情彈窗使用）
+        window.NotificationPanelInstance = this.notificationPanel;
+
         // 綁定鈴鐺按鈕點擊事件
         const btnNotifications = document.getElementById('btnNotifications');
         if (btnNotifications) {

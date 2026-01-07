@@ -8,6 +8,10 @@ export class NotificationPanel {
         this.isOpen = false;
         this.activities = [];
         this.unreadCount = 0;
+
+        // 分頁相關
+        this.displayedCount = 6; // 初始顯示 6 個
+        this.pageSize = 6; // 每次載入 6 個
     }
 
     /**
@@ -30,6 +34,24 @@ export class NotificationPanel {
         const markAllReadBtn = this.panel.querySelector('[data-action="mark-all-read"]');
         if (markAllReadBtn) {
             markAllReadBtn.addEventListener('click', () => this.markAllAsRead());
+        }
+
+        // 綁定載入更多按鈕
+        const loadMoreBtn = this.panel.querySelector('[data-action="load-more-notifications"]');
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener('click', () => this.loadMore());
+        }
+
+        // 綁定詳情彈窗關閉
+        const detailModal = document.getElementById('notificationDetailModal');
+        const closeDetailBtn = document.getElementById('btnCloseNotificationDetail');
+        const detailOverlay = document.getElementById('notificationDetailOverlay');
+
+        if (closeDetailBtn) {
+            closeDetailBtn.addEventListener('click', () => this.closeDetail());
+        }
+        if (detailOverlay) {
+            detailOverlay.addEventListener('click', () => this.closeDetail());
         }
 
         // 訂閱活動更新
@@ -96,10 +118,11 @@ export class NotificationPanel {
     }
 
     /**
-     * 渲染通知列表
+     * 渲染通知列表（支援分頁）
      */
     render() {
         const listContainer = this.panel?.querySelector('#notificationList');
+        const loadMoreContainer = document.getElementById('notificationLoadMore');
         if (!listContainer) return;
 
         // 如果沒有活動記錄
@@ -113,12 +136,15 @@ export class NotificationPanel {
                     </p>
                 </div>
             `;
+            if (loadMoreContainer) loadMoreContainer.classList.add('hidden');
             return;
         }
 
-        // 渲染活動列表
+        // 渲染活動列表（分頁顯示）
         const myRole = window.DataManager.myRole;
-        const activityItems = this.activities.map(activity => {
+        const displayedActivities = this.activities.slice(0, this.displayedCount);
+
+        const activityItems = displayedActivities.map(activity => {
             const isUnread = !activity.isRead[myRole];
             const actorName = this.getRoleName(activity.actor);
             const message = this.generateMessage(activity);
@@ -151,17 +177,37 @@ export class NotificationPanel {
 
         listContainer.innerHTML = activityItems;
 
-        // 綁定點擊事件（標記單個為已讀）
-        listContainer.querySelectorAll('.notification-item.unread').forEach(item => {
+        // 顯示/隱藏載入更多按鈕
+        if (loadMoreContainer) {
+            if (this.displayedCount < this.activities.length) {
+                loadMoreContainer.classList.remove('hidden');
+            } else {
+                loadMoreContainer.classList.add('hidden');
+            }
+        }
+
+        // 綁定點擊事件（打開詳情）
+        listContainer.querySelectorAll('.notification-item').forEach(item => {
             item.addEventListener('click', () => {
                 const activityId = item.dataset.activityId;
-                this.markAsRead(activityId);
+                const activity = this.activities.find(a => a.id === activityId);
+                if (activity) {
+                    this.showDetail(activity);
+                }
             });
         });
     }
 
     /**
-     * 生成可愛的通知訊息
+     * 載入更多通知
+     */
+    loadMore() {
+        this.displayedCount += this.pageSize;
+        this.render();
+    }
+
+    /**
+     * 生成可愛的通知訊息（智能簡述）
      * @param {Object} activity - 活動記錄
      * @returns {string}
      */
@@ -170,34 +216,172 @@ export class NotificationPanel {
         const { type, transaction, changes } = activity;
         const itemName = transaction.item_name || '一筆交易';
         const amount = `$${transaction.amount}`;
-        const categories = transaction.categories?.join('、') || '';
 
         switch (type) {
             case 'create':
-                // 補記舊帳
-                return `${actorName} 偷偷補記了 <strong>${this.formatDate(transaction.date)}</strong> 的「<strong>${itemName}</strong>」${categories ? ` (${categories})` : ''} <span class="text-macaron-rose font-bold">${amount}</span> 🍽️`;
+                // 補記舊帳 - 簡述版
+                return `${actorName} 補記了 <strong>${this.formatDate(transaction.date)}</strong> 的「<strong>${itemName}</strong>」<span class="text-macaron-rose font-bold">${amount}</span> 🍽️`;
 
             case 'update':
-                // 修改交易
-                let changeText = '';
-                if (changes.amount) {
-                    changeText = `金額從 <strong>$${changes.amount.old}</strong> 改成 <strong class="text-macaron-rose">$${changes.amount.new}</strong>`;
-                } else if (changes.item_name) {
-                    changeText = `項目名稱改成「<strong>${changes.item_name.new}</strong>」`;
-                } else if (changes.date) {
-                    changeText = `日期改成 <strong>${this.formatDate(changes.date.new)}</strong>`;
-                } else {
-                    changeText = '修改了內容';
-                }
-                return `${actorName} 修改了「<strong>${itemName}</strong>」，${changeText} 💸`;
+                // 修改交易 - 智能簡述
+                return this.generateUpdateSummary(actorName, itemName, changes);
 
             case 'delete':
                 // 刪除交易
-                return `${actorName} 把「<strong>${itemName}</strong>」這筆帳擦掉了 <span class="text-warm-brown/60">(${amount})</span> ✏️`;
+                return `${actorName} 刪除了「<strong>${itemName}</strong>」<span class="text-warm-brown/60">(${amount})</span> 🗑️`;
 
             default:
                 return `${actorName} 進行了一個操作`;
         }
+    }
+
+    /**
+     * 生成更新操作的智能簡述
+     * @param {string} actorName - 操作者名稱
+     * @param {string} itemName - 項目名稱
+     * @param {Object} changes - 變更內容
+     * @returns {string}
+     */
+    generateUpdateSummary(actorName, itemName, changes) {
+        if (!changes) return `${actorName} 修改了「<strong>${itemName}</strong>」`;
+
+        const changedFields = [];
+        let primaryChange = null; // 主要變更（金額或名稱）
+
+        // 檢查各個欄位的變更
+        if (changes.amount) {
+            primaryChange = `金額 <strong>$${changes.amount.old}</strong> → <strong class="text-macaron-rose">$${changes.amount.new}</strong>`;
+        } else if (changes.item_name) {
+            primaryChange = `名稱 <strong>${changes.item_name.old}</strong> → <strong>${changes.item_name.new}</strong>`;
+        }
+
+        // 收集其他次要變更
+        if (changes.categories) changedFields.push('類別');
+        if (changes.note) changedFields.push('備註');
+        if (changes.photo_url !== undefined) {
+            if (changes.photo_url.new && !changes.photo_url.old) {
+                changedFields.push('新增照片');
+            } else if (!changes.photo_url.new && changes.photo_url.old) {
+                changedFields.push('刪除照片');
+            } else if (changes.photo_url.new && changes.photo_url.old) {
+                changedFields.push('更換照片');
+            }
+        }
+        if (changes.payer) changedFields.push('付款人');
+        if (changes.beneficiary) changedFields.push('受益人');
+        if (changes.date) changedFields.push('日期');
+
+        // 生成簡述
+        if (primaryChange) {
+            // 有主要變更（金額或名稱）
+            if (changedFields.length > 0) {
+                return `${actorName} 改了「<strong>${itemName}</strong>」的 ${primaryChange} + ${changedFields.join('+')} 💸`;
+            } else {
+                return `${actorName} 改了「<strong>${itemName}</strong>」的 ${primaryChange} 💰`;
+            }
+        } else if (changedFields.length > 0) {
+            // 只有次要變更
+            return `${actorName} 改了「<strong>${itemName}</strong>」的 ${changedFields.join('+')} ✏️`;
+        } else {
+            return `${actorName} 修改了「<strong>${itemName}</strong>」`;
+        }
+    }
+
+    /**
+     * 生成詳細的變更描述（用於詳情彈窗）
+     * @param {Object} activity - 活動記錄
+     * @returns {Object} { summary, details }
+     */
+    generateDetailedMessage(activity) {
+        const { type, transaction, changes } = activity;
+        const actorName = this.getRoleName(activity.actor);
+        const itemName = transaction.item_name || '一筆交易';
+
+        if (type === 'create') {
+            return {
+                summary: `補記了 ${this.formatDate(transaction.date)} 的交易`,
+                details: []
+            };
+        }
+
+        if (type === 'delete') {
+            return {
+                summary: `刪除了這筆交易`,
+                details: []
+            };
+        }
+
+        // update 類型的詳細變更
+        const details = [];
+        if (changes.amount) {
+            details.push({
+                field: '金額',
+                old: `$${changes.amount.old}`,
+                new: `$${changes.amount.new}`
+            });
+        }
+        if (changes.item_name) {
+            details.push({
+                field: '名稱',
+                old: changes.item_name.old,
+                new: changes.item_name.new
+            });
+        }
+        if (changes.categories) {
+            details.push({
+                field: '類別',
+                old: changes.categories.old?.join('、') || '無',
+                new: changes.categories.new?.join('、') || '無'
+            });
+        }
+        if (changes.note) {
+            details.push({
+                field: '備註',
+                old: changes.note.old || '無',
+                new: changes.note.new || '無'
+            });
+        }
+        if (changes.photo_url !== undefined) {
+            let photoChange = '';
+            if (changes.photo_url.new && !changes.photo_url.old) {
+                photoChange = '新增了照片';
+            } else if (!changes.photo_url.new && changes.photo_url.old) {
+                photoChange = '刪除了照片';
+            } else {
+                photoChange = '更換了照片';
+            }
+            details.push({
+                field: '照片',
+                old: changes.photo_url.old ? '有' : '無',
+                new: photoChange
+            });
+        }
+        if (changes.payer) {
+            details.push({
+                field: '付款人',
+                old: this.getRoleName(changes.payer.old),
+                new: this.getRoleName(changes.payer.new)
+            });
+        }
+        if (changes.beneficiary) {
+            details.push({
+                field: '受益人',
+                old: changes.beneficiary.old === 'both' ? '兩人' : this.getRoleName(changes.beneficiary.old),
+                new: changes.beneficiary.new === 'both' ? '兩人' : this.getRoleName(changes.beneficiary.new)
+            });
+        }
+        if (changes.date) {
+            details.push({
+                field: '日期',
+                old: this.formatDate(changes.date.old),
+                new: this.formatDate(changes.date.new)
+            });
+        }
+
+        return {
+            summary: `修改了「${itemName}」`,
+            details
+        };
     }
 
     /**
@@ -302,6 +486,103 @@ export class NotificationPanel {
                 await window.customDialog.error('標記失敗：' + error.message);
             }
         }
+    }
+
+    /**
+     * 顯示通知詳情彈窗
+     * @param {Object} activity - 活動記錄
+     */
+    showDetail(activity) {
+        const modal = document.getElementById('notificationDetailModal');
+        const content = document.getElementById('notificationDetailContent');
+        if (!modal || !content) return;
+
+        const myRole = window.DataManager.myRole;
+        const isUnread = !activity.isRead[myRole];
+        const actorName = this.getRoleName(activity.actor);
+        const { type, transaction } = activity;
+
+        // 生成詳細內容
+        const detailedInfo = this.generateDetailedMessage(activity);
+
+        let html = `
+            <div class="mb-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="notification-avatar ${activity.actor}">
+                        ${activity.actor === 'baobao' ? '🎀' : '🎩'}
+                    </div>
+                    <div>
+                        <div class="font-hand font-bold text-soft-ink text-lg">${actorName}</div>
+                        <div class="text-xs text-warm-brown/60">${this.getTimeAgo(activity.timestamp)}</div>
+                    </div>
+                </div>
+
+                <div class="bg-macaron-cream/30 rounded-xl p-4 mb-4">
+                    <div class="text-sm text-warm-brown/80 mb-2">操作類型</div>
+                    <div class="font-hand font-bold text-soft-ink">
+                        ${type === 'create' ? '📝 補記交易' : type === 'update' ? '✏️ 修改交易' : '🗑️ 刪除交易'}
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-4 border border-macaron-rose/20 mb-4">
+                    <div class="text-sm text-warm-brown/80 mb-2">交易項目</div>
+                    <div class="font-hand font-bold text-soft-ink text-lg mb-1">${transaction.item_name}</div>
+                    <div class="text-macaron-rose font-bold text-xl">$${transaction.amount}</div>
+                </div>
+            </div>
+        `;
+
+        // 如果是 update 且有詳細變更
+        if (type === 'update' && detailedInfo.details && detailedInfo.details.length > 0) {
+            html += `
+                <div class="mb-4">
+                    <div class="text-sm text-warm-brown/80 mb-3 font-bold">📋 變更詳情</div>
+                    <div class="space-y-3">
+                        ${detailedInfo.details.map(detail => `
+                            <div class="bg-macaron-pink/10 rounded-xl p-3 border border-macaron-rose/20">
+                                <div class="text-xs text-warm-brown/70 mb-2">${detail.field}</div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm text-warm-brown/80 line-through">${detail.old}</span>
+                                    <span class="text-macaron-rose">→</span>
+                                    <span class="text-sm font-bold text-macaron-rose">${detail.new}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 如果未讀，添加標記已讀按鈕
+        if (isUnread) {
+            html += `
+                <button class="w-full py-3 rounded-xl bg-gradient-to-r from-macaron-pink to-macaron-rose text-white font-hand font-bold transition-all hover:scale-105 shadow-watercolor-layered" onclick="window.NotificationPanelInstance.markAsReadAndCloseDetail('${activity.id}')">
+                    標記為已讀 ✓
+                </button>
+            `;
+        }
+
+        content.innerHTML = html;
+        modal.classList.remove('hidden');
+    }
+
+    /**
+     * 關閉詳情彈窗
+     */
+    closeDetail() {
+        const modal = document.getElementById('notificationDetailModal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+
+    /**
+     * 標記為已讀並關閉詳情
+     * @param {string} activityId
+     */
+    async markAsReadAndCloseDetail(activityId) {
+        await this.markAsRead(activityId);
+        this.closeDetail();
     }
 
     /**

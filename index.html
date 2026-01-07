@@ -1065,11 +1065,41 @@
             <!-- 動態渲染通知列表 -->
         </div>
 
+        <!-- 載入更多按鈕 -->
+        <div class="notification-load-more hidden" id="notificationLoadMore">
+            <button class="btn-load-more-notifications" data-action="load-more-notifications">
+                載入更多通知 ✨
+            </button>
+        </div>
+
         <!-- 底部操作 -->
         <div class="notification-footer">
             <button class="btn-mark-all-read" data-action="mark-all-read">
                 ✓ 全部標記為已讀
             </button>
+        </div>
+    </div>
+
+    <!-- 通知詳情彈窗 -->
+    <div id="notificationDetailModal" class="fixed inset-0 z-[120] hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="notificationDetailOverlay"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-md bg-paper rounded-3xl shadow-2xl p-6 max-h-[80vh] overflow-y-auto border-2 border-macaron-pink/30">
+            <!-- 裝飾元素 -->
+            <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-20 h-6 bg-gradient-to-r from-macaron-pink to-macaron-rose rounded-full shadow-md"></div>
+            <div class="absolute top-2 right-4 text-shimmer-gold text-xl">🔔</div>
+
+            <!-- 頭部 -->
+            <div class="flex items-center justify-between mb-6 mt-2">
+                <h3 class="text-2xl font-hand font-bold text-soft-ink">通知詳情</h3>
+                <button id="btnCloseNotificationDetail" class="w-10 h-10 rounded-full hover:bg-macaron-pink/10 flex items-center justify-center transition-colors">
+                    <span class="material-symbols-outlined text-warm-brown">close</span>
+                </button>
+            </div>
+
+            <!-- 內容 -->
+            <div id="notificationDetailContent">
+                <!-- 動態生成 -->
+            </div>
         </div>
     </div>
 
