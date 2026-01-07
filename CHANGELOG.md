@@ -7,6 +7,91 @@
 
 ---
 
+## [5.6.0] - 2026-01-07
+
+### 🎨 UI/UX 大升級
+
+**主頁時間軸與日曆頁面的沉浸式體驗優化！**
+
+#### 主要改進
+
+1. **主頁時間軸折疊/展開功能** ✨
+   - 保留原本精緻的 LINE 對話風格日期分隔線
+   - 今天預設展開，其他日期預設收合
+   - 收合時顯示簡潔的統計摘要卡片（共花 | 寶花 | 步花）
+   - 點擊摘要卡片即可展開/收合
+   - 新增全域控制按鈕（一鍵展開/收合所有日期）
+
+2. **統計摘要卡片設計** 💰
+   - 柔和的漸變背景（童話風格）
+   - 清楚的三欄布局（共花 / 🎀 寶花 / 🐾 步花）
+   - Hover 時上浮 + 邊框變色
+   - 底部提示「點擊展開 ✨」
+
+3. **日曆頁面模式切換器** 📅
+   - 全新的 Segmented Control 設計（童話風格）
+   - 📅 單日模式 / 📊 區間模式
+   - 可愛的滑動背景條（粉紅漸變 → 藍紫漸變）
+   - 點擊時的果凍彈跳動畫（jelly-bounce）
+   - 移除冗餘的提示文字，介面更乾淨
+
+4. **動畫效果** 💫
+   - 平滑的高度過渡（0.4s cubic-bezier）
+   - Hover 時輕微上移（translateY -2px）
+   - 點擊時的縮放回饋（scale 0.98）
+   - 圖示放大效果（active 時 scale 1.15）
+
+#### 技術實現
+
+1. **TimelineView.js** 重構（+120 行）
+   - 新增折疊/展開狀態管理（expandedDates, allExpanded）
+   - 新增 `renderDateBlock()` - 渲染日期區塊
+   - 新增 `renderDateDivider()` - 精緻日期分隔線
+   - 新增 `calculateDayStats()` - 計算當日統計
+   - 新增 `bindSummaryClicks()` - 綁定摘要卡片點擊
+   - 新增 `toggleDateExpansion()` - 切換日期展開/收合
+   - 新增 `toggleAllExpansion()` - 切換全部展開/收合
+
+2. **CSS 新增** (transaction-list.css +90 行)
+   - `.date-group` - 日期組容器
+   - `.day-summary-card` - 統計摘要卡片
+   - `.date-transactions-wrapper` - 交易列表包裝器
+   - `.timeline-toggle-btn` - 全域控制按鈕
+
+3. **CSS 新增** (calendar.css +95 行)
+   - `.mode-switcher-container` - Segmented Control 容器
+   - `.mode-option` - 模式選項
+   - `.mode-slider` - 滑動背景條
+   - `@keyframes jelly-bounce` - 果凍彈跳動畫
+
+4. **HTML 更新**
+   - 新增全域展開/收合按鈕（時間軸標題右側）
+   - 重構日曆頁面模式切換器（新版 Segmented Control）
+
+5. **app.js 集成**
+   - 綁定全域展開/收合按鈕事件
+
+6. **CalendarPage.js 更新**
+   - 更新 `toggleMode()` 方法以支援新版切換器
+
+#### 修改檔案
+
+- `js/components/TimelineView.js`（+120 行）
+- `css/components/transaction-list.css`（+90 行）
+- `css/components/calendar.css`（+95 行）
+- `index.html`（修改時間軸標題、日曆切換器）
+- `js/app.js`（+12 行）
+- `js/pages/CalendarPage.js`（重構 toggleMode）
+
+### 🎨 設計特色
+
+- **軟萌童話風格**：馬卡龍色系漸變、柔和圓角、可愛 Emoji
+- **沉浸式體驗**：乾淨介面、直覺操作、即時視覺回饋
+- **流暢動畫**：cubic-bezier 緩動、果凍彈跳、平滑過渡
+- **一致性**：統一的設計語言（色彩、圓角、陰影）
+
+---
+
 ## [5.5.0] - 2026-01-07
 
 ### ✨ 通知中心大升級

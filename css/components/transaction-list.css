@@ -121,3 +121,134 @@
     transform: translateY(-2px);
 }
 
+/* ==================== 日期區塊折疊/展開 ==================== */
+
+/* 日期組容器 */
+.date-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+/* 簡潔的統計摘要卡片 */
+.day-summary-card {
+    margin: 0 var(--spacing-md) var(--spacing-md);
+    padding: var(--spacing-md);
+    background: linear-gradient(135deg, #FFFAF7 0%, #FFF5F0 100%);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 6px rgba(255, 158, 199, 0.1);
+}
+
+.day-summary-card.hidden {
+    display: none !important;
+}
+
+.day-summary-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(255, 158, 199, 0.25);
+    transform: translateY(-2px);
+}
+
+.day-summary-card:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.summary-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: var(--spacing-sm);
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.summary-label {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.summary-value {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.summary-value.total {
+    font-size: 1.3rem;
+    color: var(--primary-color);
+}
+
+.summary-divider {
+    width: 1px;
+    height: 30px;
+    background: linear-gradient(to bottom, transparent, var(--border-color), transparent);
+}
+
+.summary-expand-hint {
+    text-align: center;
+    margin-top: var(--spacing-sm);
+    font-family: 'Fredoka', sans-serif;
+    color: var(--text-secondary);
+}
+
+/* 交易列表容器 */
+.date-transactions-wrapper {
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.date-transactions-wrapper.collapsed {
+    max-height: 0;
+    opacity: 0;
+}
+
+.date-transactions-wrapper.expanded {
+    max-height: 10000px;
+    opacity: 1;
+}
+
+/* ==================== 全域展開/收合按鈕 ==================== */
+.timeline-toggle-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--secondary-color), white);
+    border: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 6px rgba(255, 158, 199, 0.15);
+}
+
+.timeline-toggle-btn:hover {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(255, 158, 199, 0.3);
+    transform: scale(1.1);
+}
+
+.timeline-toggle-btn:active {
+    transform: scale(0.95);
+}
+
+.timeline-toggle-btn .material-symbols-outlined {
+    font-size: 1.2rem;
+    color: var(--text-primary);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.timeline-toggle-btn.all-expanded .material-symbols-outlined {
+    transform: rotate(180deg);
+}
+

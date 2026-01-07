@@ -136,3 +136,100 @@
     color: var(--text-primary);
 }
 
+/* ==================== 模式切換器（Segmented Control）==================== */
+.calendar-mode-switcher {
+    display: flex;
+    justify-content: center;
+}
+
+.mode-switcher-container {
+    position: relative;
+    display: inline-flex;
+    background: linear-gradient(135deg, #FFF9F5 0%, #FFF5F0 100%);
+    border: 3px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: 6px;
+    box-shadow: 0 4px 12px rgba(255, 158, 199, 0.15);
+    gap: 6px;
+}
+
+.mode-option {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    min-width: 100px;
+    padding: 12px 20px;
+    border: none;
+    background: transparent;
+    border-radius: calc(var(--radius-xl) - 6px);
+    font-family: 'Fredoka', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.mode-option:hover {
+    color: var(--text-primary);
+    transform: translateY(-1px);
+}
+
+.mode-option.active {
+    color: white;
+}
+
+.mode-icon {
+    font-size: 1.2rem;
+    line-height: 1;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mode-option.active .mode-icon {
+    transform: scale(1.15);
+}
+
+.mode-text {
+    font-size: 0.95rem;
+}
+
+.mode-slider {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: calc(50% - 9px);
+    height: calc(100% - 12px);
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    border-radius: calc(var(--radius-xl) - 6px);
+    box-shadow: 0 4px 12px rgba(255, 158, 199, 0.4),
+                inset 0 1px 3px rgba(255, 255, 255, 0.5);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+}
+
+/* 滑動到右側（區間模式） */
+.mode-switcher-container.range-mode .mode-slider {
+    transform: translateX(calc(100% + 6px));
+    background: linear-gradient(135deg, var(--accent-2), var(--accent-color));
+}
+
+/* 微互動：點擊果凍彈跳 */
+.mode-option:active {
+    transform: scale(0.95);
+}
+
+.mode-option.active:active .mode-icon {
+    animation: jelly-bounce 0.5s ease;
+}
+
+@keyframes jelly-bounce {
+    0%, 100% { transform: scale(1.15); }
+    25% { transform: scale(1.25) rotate(-5deg); }
+    50% { transform: scale(1.1) rotate(5deg); }
+    75% { transform: scale(1.2) rotate(-3deg); }
+}
+

@@ -425,21 +425,20 @@ export class CalendarPage {
             this.tempRangeEnd = null;
         }
 
-        // 更新按鈕樣式
+        // 更新 Segmented Control 樣式
         const singleBtn = document.getElementById('btnCalendarSingleMode');
         const rangeBtn = document.getElementById('btnCalendarRangeMode');
+        const container = document.querySelector('.mode-switcher-container');
 
-        if (singleBtn && rangeBtn) {
+        if (singleBtn && rangeBtn && container) {
             if (mode === 'single') {
-                singleBtn.classList.add('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-rose', 'text-white', 'shadow-watercolor-layered');
-                singleBtn.classList.remove('bg-white/60', 'text-soft-ink');
-                rangeBtn.classList.remove('bg-gradient-to-br', 'from-macaron-blue', 'to-macaron-purple', 'text-white', 'shadow-watercolor-layered');
-                rangeBtn.classList.add('bg-white/60', 'text-soft-ink');
+                singleBtn.classList.add('active');
+                rangeBtn.classList.remove('active');
+                container.classList.remove('range-mode');
             } else {
-                rangeBtn.classList.add('bg-gradient-to-br', 'from-macaron-blue', 'to-macaron-purple', 'text-white', 'shadow-watercolor-layered');
-                rangeBtn.classList.remove('bg-white/60', 'text-soft-ink');
-                singleBtn.classList.remove('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-rose', 'text-white', 'shadow-watercolor-layered');
-                singleBtn.classList.add('bg-white/60', 'text-soft-ink');
+                rangeBtn.classList.add('active');
+                singleBtn.classList.remove('active');
+                container.classList.add('range-mode');
             }
         }
 

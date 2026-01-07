@@ -144,6 +144,16 @@ class CoupleApp {
             });
         }
 
+        // 綁定全域展開/收合按鈕
+        const btnToggleAllDates = document.getElementById('btnToggleAllDates');
+        if (btnToggleAllDates) {
+            btnToggleAllDates.addEventListener('click', () => {
+                this.timelineView.toggleAllExpansion();
+                // 切換按鈕樣式
+                btnToggleAllDates.classList.toggle('all-expanded');
+            });
+        }
+
         // 更新帳本標題
         this.homePage.updateNotebookTitle();
 
