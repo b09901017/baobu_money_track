@@ -21,6 +21,9 @@ export class TimelineView {
         this.expandedDates = new Set(); // 儲存已展開的日期
         this.allExpanded = false; // 全域展開/收合狀態
 
+        // 快取最後收到的交易列表（用於折疊/展開時重新渲染）
+        this.cachedTransactions = [];
+
         // 訂閱交易變更事件
         this.state.subscribe('transactions', (data) => this.handleTransactionsUpdate(data));
     }
@@ -39,6 +42,9 @@ export class TimelineView {
      */
     handleTransactionsUpdate(data) {
         const { transactions, changes } = data;
+
+        // 更新快取
+        this.cachedTransactions = transactions || [];
 
         // 檢查是否有記錄
         if (!transactions || transactions.length === 0) {
@@ -167,27 +173,64 @@ export class TimelineView {
         // 預先生成交易列表 HTML
         const transactionsHTML = txList.map(tx => TransactionRenderer.renderTimelineItemWithTime(tx)).join('');
 
+        // 生成摘要卡片內容
+        let summaryHTML = '';
+        if (stats.debtInfo) {
+            // 有欠款的情況
+            summaryHTML = `
+                <div class="summary-debt-badge">
+                    <span class="debt-text">${stats.debtInfo.debtor}欠${stats.debtInfo.creditor}</span>
+                    <span class="debt-amount">$${stats.debtInfo.amount.toFixed(0)}</span>
+                </div>
+                <div class="summary-details">
+                    <div class="summary-detail-item">
+                        <span class="detail-label">共花</span>
+                        <span class="detail-value">$${stats.total.toFixed(0)}</span>
+                    </div>
+                    <div class="summary-divider-thin"></div>
+                    <div class="summary-detail-item">
+                        <span class="detail-label">🎀 寶</span>
+                        <span class="detail-value">$${stats.baobaoSpent.toFixed(0)}</span>
+                    </div>
+                    <div class="summary-divider-thin"></div>
+                    <div class="summary-detail-item">
+                        <span class="detail-label">🐾 步</span>
+                        <span class="detail-value">$${stats.bubuSpent.toFixed(0)}</span>
+                    </div>
+                </div>
+            `;
+        } else {
+            // 已結清的情況
+            summaryHTML = `
+                <div class="summary-settled-badge">
+                    <span class="settled-icon">✨</span>
+                    <span class="settled-text">已結清</span>
+                </div>
+                <div class="summary-details">
+                    <div class="summary-detail-item">
+                        <span class="detail-label">共花</span>
+                        <span class="detail-value">$${stats.total.toFixed(0)}</span>
+                    </div>
+                    <div class="summary-divider-thin"></div>
+                    <div class="summary-detail-item">
+                        <span class="detail-label">🎀 寶</span>
+                        <span class="detail-value">$${stats.baobaoSpent.toFixed(0)}</span>
+                    </div>
+                    <div class="summary-divider-thin"></div>
+                    <div class="summary-detail-item">
+                        <span class="detail-label">🐾 步</span>
+                        <span class="detail-value">$${stats.bubuSpent.toFixed(0)}</span>
+                    </div>
+                </div>
+            `;
+        }
+
         return `
             <div class="date-group" data-date="${date}">
                 ${this.renderDateDivider(date, isFirst)}
 
                 <div class="day-summary-card ${isExpanded ? 'hidden' : ''}" data-date="${date}">
-                    <div class="summary-content">
-                        <div class="summary-item">
-                            <span class="summary-label">共花</span>
-                            <span class="summary-value total">$${stats.total}</span>
-                        </div>
-                        <div class="summary-divider"></div>
-                        <div class="summary-item">
-                            <span class="summary-label">🎀 寶花</span>
-                            <span class="summary-value">$${stats.baobaoSpent}</span>
-                        </div>
-                        <div class="summary-divider"></div>
-                        <div class="summary-item">
-                            <span class="summary-label">🐾 步花</span>
-                            <span class="summary-value">$${stats.bubuSpent}</span>
-                        </div>
-                    </div>
+                    ${summaryHTML}
                     <div class="summary-expand-hint">
                         <span class="text-xs opacity-60">點擊展開 ✨</span>
                     </div>
@@ -229,8 +272,8 @@ export class TimelineView {
                 <!-- 左側裝飾線 -->
                 <div class="flex-1 h-px bg-gradient-to-r from-transparent via-macaron-pink/20 to-macaron-pink/30"></div>
 
-                <!-- 日期標籤 - 精緻軟萌 -->
-                <div class="relative mx-3 px-3 py-1 bg-white/80 rounded-full border border-macaron-pink/20 shadow-sm backdrop-blur-sm">
+                <!-- 日期標籤 - 精緻軟萌 + 可點擊 -->
+                <div class="date-divider-label relative mx-3 px-3 py-1 bg-white/80 rounded-full border border-macaron-pink/20 shadow-sm backdrop-blur-sm cursor-pointer transition-all duration-200 hover:bg-macaron-pink/10 hover:border-macaron-pink/40 hover:shadow-md" data-date="${dateStr}">
                     <span class="font-hand text-soft-ink text-xs opacity-70">${displayText}</span>
                 </div>
 
@@ -241,38 +284,94 @@ export class TimelineView {
     }
 
     /**
-     * 計算當日統計（總花費、寶寶花費、步步花費）
+     * 計算當日統計（總花費、寶寶花費、步步花費、當日欠款）
      */
     calculateDayStats(txList) {
         let total = 0;
         let baobaoSpent = 0;
         let bubuSpent = 0;
+        let baobaoOwed = 0;  // 寶寶被欠的金額（步步欠寶寶）
+        let bubuOwed = 0;    // 步步被欠的金額（寶寶欠步步）
 
         txList.forEach(tx => {
-            total += tx.amount;
+            const amount = parseFloat(tx.amount);
+            total += amount;
+
+            // 計算誰付了錢
             if (tx.payer === 'baobao') {
-                baobaoSpent += tx.amount;
+                baobaoSpent += amount;
             } else if (tx.payer === 'bubu') {
-                bubuSpent += tx.amount;
+                bubuSpent += amount;
+            }
+
+            // 計算當日欠款（使用 BalanceManager 的邏輯）
+            const payer = tx.payer;
+            const beneficiary = tx.beneficiary;
+
+            if (payer === 'baobao') {
+                if (beneficiary === 'both') {
+                    baobaoOwed += amount / 2;  // 步步欠寶寶一半
+                } else if (beneficiary === 'bubu') {
+                    baobaoOwed += amount;      // 步步欠寶寶全額
+                }
+            } else if (payer === 'bubu') {
+                if (beneficiary === 'both') {
+                    bubuOwed += amount / 2;    // 寶寶欠步步一半
+                } else if (beneficiary === 'baobao') {
+                    bubuOwed += amount;        // 寶寶欠步步全額
+                }
             }
         });
+
+        // 計算淨欠款
+        const netBalance = baobaoOwed - bubuOwed;
+        let debtInfo = null;
+
+        if (Math.abs(netBalance) >= 0.01) {
+            if (netBalance > 0) {
+                // 步步欠寶寶
+                debtInfo = {
+                    debtor: '🐾 步',
+                    creditor: '🎀 寶',
+                    amount: Math.abs(netBalance)
+                };
+            } else {
+                // 寶寶欠步步
+                debtInfo = {
+                    debtor: '🎀 寶',
+                    creditor: '🐾 步',
+                    amount: Math.abs(netBalance)
+                };
+            }
+        }
 
         return {
             total,
             baobaoSpent,
             bubuSpent,
-            count: txList.length
+            count: txList.length,
+            debtInfo  // { debtor, creditor, amount } 或 null
         };
     }
 
     /**
-     * 綁定摘要卡片點擊事件
+     * 綁定摘要卡片和日期標題點擊事件
      */
     bindSummaryClicks() {
+        // 綁定摘要卡片
         const summaries = this.container.querySelectorAll('.day-summary-card');
         summaries.forEach(summary => {
             summary.addEventListener('click', (e) => {
                 const date = summary.dataset.date;
+                this.toggleDateExpansion(date);
+            });
+        });
+
+        // 綁定日期標題
+        const dateLabels = this.container.querySelectorAll('.date-divider-label');
+        dateLabels.forEach(label => {
+            label.addEventListener('click', (e) => {
+                const date = label.dataset.date;
                 this.toggleDateExpansion(date);
             });
         });
@@ -288,9 +387,8 @@ export class TimelineView {
             this.expandedDates.add(date);
         }
 
-        // 重新渲染（保持目前的交易資料）
-        const currentTransactions = this.state.getState('transactions')?.transactions || [];
-        this.renderTimeline(currentTransactions);
+        // 重新渲染（使用快取的交易資料）
+        this.renderTimeline(this.cachedTransactions);
     }
 
     /**
@@ -299,11 +397,9 @@ export class TimelineView {
     toggleAllExpansion() {
         this.allExpanded = !this.allExpanded;
 
-        const currentTransactions = this.state.getState('transactions')?.transactions || [];
-
         // 按日期分組
         const grouped = {};
-        currentTransactions.forEach(tx => {
+        this.cachedTransactions.forEach(tx => {
             if (!grouped[tx.date]) grouped[tx.date] = [];
             grouped[tx.date].push(tx);
         });
@@ -324,7 +420,7 @@ export class TimelineView {
         }
 
         // 重新渲染
-        this.renderTimeline(currentTransactions);
+        this.renderTimeline(this.cachedTransactions);
     }
 
     /**

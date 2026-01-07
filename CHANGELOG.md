@@ -7,6 +7,65 @@
 
 ---
 
+## [5.6.1] - 2026-01-07
+
+### 🐛 Bug 修復與功能優化
+
+**時間軸交互體驗升級！**
+
+#### 主要改進
+
+1. **修復時間軸折疊/展開 Bug** 🔧
+   - 修復點擊摘要卡片後交易記錄消失的問題
+   - 根本原因：折疊/展開時從 `DataManager.getTransactions()` 獲取資料，但因防抖延遲導致返回空陣列
+   - 解決方案：在 `TimelineView` 中新增交易快取機制（`cachedTransactions`）
+   - 折疊/展開時使用快取資料，確保資料不遺失
+
+2. **日期標題可點擊展開/收合** 🎯
+   - 日期標題（今天、昨天、X月X日）現在可以點擊
+   - 新增 hover 效果（背景變粉、邊框加深、陰影增強）
+   - 提供兩種展開方式：點擊日期標題 或 點擊摘要卡片
+
+3. **重新設計摘要卡片內容** 💰
+   - **有欠款時**：顯示醒目的粉色欠款徽章（例：「🐾 步欠🎀 寶 $100」）
+   - **已結清時**：顯示可愛的綠色已結清徽章（✨ 已結清）
+   - 詳細資訊行：簡潔的三欄布局（共花 | 🎀 寶 | 🐾 步）
+   - 新增當日欠款計算邏輯（使用與 BalanceManager 一致的算法）
+
+#### 技術實現
+
+1. **TimelineView.js**
+   - 新增 `cachedTransactions` 屬性（快取最後收到的交易列表）
+   - 修改 `handleTransactionsUpdate()` - 自動更新快取
+   - 修改 `toggleDateExpansion()` - 使用快取資料而非重新獲取
+   - 修改 `toggleAllExpansion()` - 使用快取資料而非重新獲取
+   - 修改 `calculateDayStats()` - 新增當日欠款計算（baobaoOwed, bubuOwed, debtInfo）
+   - 修改 `renderDateBlock()` - 根據欠款狀態渲染不同徽章
+   - 修改 `renderDateDivider()` - 日期標籤可點擊 + hover 效果
+   - 修改 `bindSummaryClicks()` - 同時綁定摘要卡片和日期標題
+
+2. **transaction-list.css**
+   - 新增 `.summary-debt-badge` - 粉色欠款徽章（漸變背景 + 圓角藥丸）
+   - 新增 `.summary-settled-badge` - 綠色已結清徽章
+   - 新增 `.summary-details` - 詳細資訊行
+   - 新增 `.summary-detail-item` - 單個詳細項目（縮小字體）
+   - 新增 `.summary-divider-thin` - 細分隔線
+   - 移除舊的 `.summary-content` 相關樣式
+
+#### 修改檔案
+
+- `js/components/TimelineView.js`（+3 行快取機制，重構 calculateDayStats 和 renderDateBlock）
+- `css/components/transaction-list.css`（重構摘要卡片樣式）
+
+#### 設計特色
+
+- **智能欠款提示**：自動計算當日淨欠款，優先顯示欠款資訊
+- **軟萌可愛風格**：粉色欠款徽章 + 綠色已結清徽章，保持童話風格
+- **一致性算法**：使用與 BalanceManager 相同的欠款計算邏輯
+- **流暢交互**：多種展開方式，靈活操作
+
+---
+
 ## [5.6.0] - 2026-01-07
 
 ### 🎨 UI/UX 大升級

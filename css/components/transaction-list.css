@@ -154,43 +154,92 @@
     transform: translateY(0) scale(0.98);
 }
 
-.summary-content {
+/* 欠款徽章（有欠款時顯示） */
+.summary-debt-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-md);
+    background: linear-gradient(135deg, #FFF0F5 0%, #FFE5F0 100%);
+    border: 1.5px solid var(--primary-color);
+    border-radius: var(--radius-full);
+    margin-bottom: var(--spacing-sm);
+}
+
+.debt-text {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.debt-amount {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+/* 已結清徽章 */
+.summary-settled-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: var(--spacing-xs) var(--spacing-md);
+    background: linear-gradient(135deg, #F0FFF4 0%, #E5F9EA 100%);
+    border: 1.5px solid #9AE6B4;
+    border-radius: var(--radius-full);
+    margin-bottom: var(--spacing-sm);
+}
+
+.settled-icon {
+    font-size: 1rem;
+}
+
+.settled-text {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #48BB78;
+}
+
+/* 詳情行（共花、寶花、步花） */
+.summary-details {
     display: flex;
     align-items: center;
     justify-content: space-around;
     gap: var(--spacing-sm);
 }
 
-.summary-item {
+.summary-detail-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
 }
 
-.summary-label {
+.detail-label {
     font-family: 'Fredoka', sans-serif;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 500;
     color: var(--text-secondary);
+    opacity: 0.8;
 }
 
-.summary-value {
+.detail-value {
     font-family: 'Fredoka', sans-serif;
-    font-size: 1.1rem;
-    font-weight: 700;
+    font-size: 0.95rem;
+    font-weight: 600;
     color: var(--text-primary);
 }
 
-.summary-value.total {
-    font-size: 1.3rem;
-    color: var(--primary-color);
-}
-
-.summary-divider {
+.summary-divider-thin {
     width: 1px;
-    height: 30px;
+    height: 24px;
     background: linear-gradient(to bottom, transparent, var(--border-color), transparent);
+    opacity: 0.5;
 }
 
 .summary-expand-hint {
