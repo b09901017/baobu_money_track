@@ -330,14 +330,29 @@ async function getNotebooks(coupleId) {
     try {
         console.log('🔍 查詢配對帳本，coupleId:', coupleId);
 
-        // 使用子集合路徑，並按 order 欄位排序
+        // 使用子集合路徑，不使用 orderBy（避免過濾掉沒有 order 欄位的舊帳本）
         const notebooksRef = getNotebooksRef(coupleId);
-        const q = query(notebooksRef, orderBy('order', 'asc'));
-        const querySnapshot = await getDocs(q);
+        const querySnapshot = await getDocs(notebooksRef);
         const notebooks = querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
+
+        // 在客戶端排序：有 order 的按 order，沒有的按 created_at
+        notebooks.sort((a, b) => {
+            // 如果兩者都有 order，按 order 排序
+            if (a.order !== undefined && b.order !== undefined) {
+                return a.order - b.order;
+            }
+            // 如果只有 a 有 order，a 排前面
+            if (a.order !== undefined) return -1;
+            // 如果只有 b 有 order，b 排前面
+            if (b.order !== undefined) return 1;
+            // 如果都沒有 order，按 created_at 排序
+            const dateA = a.created_at ? new Date(a.created_at.seconds ? a.created_at.seconds * 1000 : a.created_at) : new Date(0);
+            const dateB = b.created_at ? new Date(b.created_at.seconds ? b.created_at.seconds * 1000 : b.created_at) : new Date(0);
+            return dateA - dateB;
+        });
 
         console.log(`✅ 已取得 ${notebooks.length} 個配對帳本`);
         return notebooks;
@@ -1127,6 +1142,22 @@ function onNotebooksChange(coupleId, callback) {
                 id: doc.id,
                 ...doc.data()
             }));
+
+            // 在客戶端排序：有 order 的按 order，沒有的按 created_at
+            notebooks.sort((a, b) => {
+                // 如果兩者都有 order，按 order 排序
+                if (a.order !== undefined && b.order !== undefined) {
+                    return a.order - b.order;
+                }
+                // 如果只有 a 有 order，a 排前面
+                if (a.order !== undefined) return -1;
+                // 如果只有 b 有 order，b 排前面
+                if (b.order !== undefined) return 1;
+                // 如果都沒有 order，按 created_at 排序
+                const dateA = a.created_at ? new Date(a.created_at.seconds ? a.created_at.seconds * 1000 : a.created_at) : new Date(0);
+                const dateB = b.created_at ? new Date(b.created_at.seconds ? b.created_at.seconds * 1000 : b.created_at) : new Date(0);
+                return dateA - dateB;
+            });
 
             console.log(`📚 帳本列表更新: ${notebooks.length} 個帳本`);
             callback(notebooks);

@@ -90,6 +90,10 @@ class DataManager {
             console.log('🔧 檢查帳本統計...');
             await this.statsInitializer.initializeAll(this.coupleId, this.notebooks);
 
+            // 2.6. 檢查並初始化帳本順序
+            console.log('🔧 檢查帳本順序...');
+            await this.initializeNotebookOrders();
+
             // 3. 如果沒有帳本，建立預設帳本
             if (this.notebooks.length === 0) {
                 console.log('📝 首次配對，建立預設帳本...');
@@ -157,6 +161,55 @@ class DataManager {
         } catch (error) {
             console.error('❌ 載入交易失敗:', error);
             this.transactions = [];
+        }
+    }
+
+    /**
+     * 初始化帳本順序（為沒有 order 欄位的舊帳本補充）
+     */
+    async initializeNotebookOrders() {
+        try {
+            // 檢查是否有帳本缺少 order 欄位
+            const notebooksWithoutOrder = this.notebooks.filter(nb =>
+                nb.order === undefined || nb.order === null
+            );
+
+            if (notebooksWithoutOrder.length === 0) {
+                console.log('✅ 所有帳本都已有 order 欄位');
+                return;
+            }
+
+            console.log(`⚠️ 發現 ${notebooksWithoutOrder.length} 個帳本缺少 order 欄位，開始初始化...`);
+
+            // 按照 created_at 排序（如果沒有 created_at，則按索引順序）
+            const sortedNotebooks = [...this.notebooks].sort((a, b) => {
+                const dateA = a.created_at ? new Date(a.created_at.seconds ? a.created_at.seconds * 1000 : a.created_at) : new Date(0);
+                const dateB = b.created_at ? new Date(b.created_at.seconds ? b.created_at.seconds * 1000 : b.created_at) : new Date(0);
+                return dateA - dateB;
+            });
+
+            // 為所有帳本賦予 order 值（按照排序後的索引）
+            const updates = sortedNotebooks.map((nb, index) => ({
+                id: nb.id,
+                order: index
+            }));
+
+            // 批次更新到 Firebase
+            await window.FirebaseAPI.batchUpdateNotebookOrders(this.coupleId, updates);
+
+            // 更新本地快取
+            this.notebooks = this.notebooks.map(notebook => {
+                const update = updates.find(u => u.id === notebook.id);
+                return update ? { ...notebook, order: update.order } : notebook;
+            });
+
+            // 按 order 重新排序
+            this.notebooks.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+            console.log('✅ 帳本順序初始化完成');
+        } catch (error) {
+            console.error('❌ 初始化帳本順序失敗:', error);
+            // 不拋出錯誤，避免影響初始化流程
         }
     }
 
