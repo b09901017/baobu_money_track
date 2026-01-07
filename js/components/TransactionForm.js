@@ -93,7 +93,7 @@ export class TransactionForm {
 
         // 重置分類選擇視覺效果
         document.querySelectorAll('.tag-btn > div').forEach(div => {
-            div.classList.remove('bg-gradient-to-br', 'from-[#FF9EAA]', 'to-[#FFB7B2]', 'shadow-watercolor-layered', 'scale-110');
+            div.classList.remove('active');
         });
 
         // 清除照片預覽
@@ -152,7 +152,7 @@ export class TransactionForm {
                     if (categoryBtn) {
                         const iconDiv = categoryBtn.querySelector('div');
                         if (iconDiv) {
-                            iconDiv.classList.add('bg-gradient-to-br', 'from-[#FF9EAA]', 'to-[#FFB7B2]', 'shadow-watercolor-layered', 'scale-110', 'text-white');
+                            iconDiv.classList.add('active');
                         }
                     }
                 });
@@ -175,11 +175,19 @@ export class TransactionForm {
         const index = this.state.selectedCategories.indexOf(category);
 
         if (index > -1) {
+            // 取消選擇
             this.state.selectedCategories.splice(index, 1);
-            iconDiv.classList.remove('bg-gradient-to-br', 'from-[#FF9EAA]', 'to-[#FFB7B2]', 'shadow-watercolor-layered', 'scale-110', 'text-white');
+            iconDiv.classList.remove('active');
         } else {
+            // 選擇分類
             this.state.selectedCategories.push(category);
-            iconDiv.classList.add('bg-gradient-to-br', 'from-[#FF9EAA]', 'to-[#FFB7B2]', 'shadow-watercolor-layered', 'scale-110', 'text-white');
+            iconDiv.classList.add('active');
+
+            // 觸發果凍彈跳動畫（通過移除並重新添加類來重新觸發動畫）
+            iconDiv.style.animation = 'none';
+            setTimeout(() => {
+                iconDiv.style.animation = '';
+            }, 10);
         }
     }
 
@@ -323,7 +331,7 @@ export class TransactionForm {
             categoryBtn.dataset.customCategory = cat.id;
 
             categoryBtn.innerHTML = `
-                <div class="w-16 h-16 rounded-[50% 50% 40% 60% / 50% 40% 60% 50%] bg-macaron-cream/40 hover:bg-macaron-cream/60 flex items-center justify-center text-warm-brown group-hover:text-soft-ink transition-all group-active:scale-95 border-2 border-transparent hover:border-macaron-cream/50">
+                <div class="bg-gradient-to-br from-macaron-cream/60 to-macaron-cream/40">
                     <span class="material-symbols-outlined text-2xl">${cat.icon}</span>
                 </div>
                 <span class="text-sm font-hand font-bold text-warm-brown">${cat.name}</span>

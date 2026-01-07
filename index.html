@@ -723,35 +723,44 @@
                 <div class="mb-10">
                     <label class="block text-warm-brown text-lg font-hand font-bold mb-4 ml-2">哪一章？</label>
                     <div class="grid grid-cols-4 gap-y-6 gap-x-4" id="categoryTags">
-                        <button type="button" class="tag-btn group flex flex-col items-center gap-2" data-category="吃吃">
-                            <div class="w-16 h-16 rounded-[40% 60% 70% 30% / 40% 50% 60% 50%] bg-gradient-to-br from-macaron-pink/30 to-macaron-rose/20 hover:from-macaron-pink/50 hover:to-macaron-rose/40 flex items-center justify-center text-warm-brown group-hover:text-soft-ink transition-all duration-300 group-active:scale-95 border-2 border-white hover:border-macaron-pink/40 shadow-sm hover:shadow-md group-hover:-translate-y-0.5">
+                        <!-- 吃吃 -->
+                        <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="吃吃">
+                            <div class="bg-gradient-to-br from-macaron-pink/40 to-macaron-rose/30">
                                 <span class="material-symbols-outlined text-2xl">restaurant</span>
                             </div>
-                            <span class="text-sm font-hand font-bold text-warm-brown group-hover:text-soft-ink transition-colors">吃吃</span>
+                            <span class="text-sm font-hand font-bold text-warm-brown">吃吃</span>
                         </button>
-                        <button type="button" class="tag-btn group flex flex-col items-center gap-2" data-category="玩">
-                            <div class="w-16 h-16 rounded-[60% 40% 30% 70% / 60% 30% 70% 40%] bg-gradient-to-br from-macaron-blue/30 to-macaron-blue/20 hover:from-macaron-blue/50 hover:to-macaron-blue/40 flex items-center justify-center text-warm-brown group-hover:text-soft-ink transition-all duration-300 group-active:scale-95 border-2 border-white hover:border-macaron-blue/40 shadow-sm hover:shadow-md group-hover:-translate-y-0.5">
+
+                        <!-- 玩樂 -->
+                        <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="玩">
+                            <div class="bg-gradient-to-br from-macaron-blue/40 to-macaron-blue/30">
                                 <span class="material-symbols-outlined text-2xl">local_activity</span>
                             </div>
-                            <span class="text-sm font-hand font-bold text-warm-brown group-hover:text-soft-ink transition-colors">玩樂</span>
+                            <span class="text-sm font-hand font-bold text-warm-brown">玩樂</span>
                         </button>
-                        <button type="button" class="tag-btn group flex flex-col items-center gap-2" data-category="交通">
-                            <div class="w-16 h-16 rounded-[30% 70% 70% 30% / 30% 30% 70% 70%] bg-gradient-to-br from-macaron-green/30 to-macaron-green/20 hover:from-macaron-green/50 hover:to-macaron-green/40 flex items-center justify-center text-warm-brown group-hover:text-soft-ink transition-all duration-300 group-active:scale-95 border-2 border-white hover:border-macaron-green/40 shadow-sm hover:shadow-md group-hover:-translate-y-0.5">
+
+                        <!-- 交通 -->
+                        <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="交通">
+                            <div class="bg-gradient-to-br from-macaron-green/40 to-macaron-green/30">
                                 <span class="material-symbols-outlined text-2xl">directions_subway</span>
                             </div>
-                            <span class="text-sm font-hand font-bold text-warm-brown group-hover:text-soft-ink transition-colors">交通</span>
+                            <span class="text-sm font-hand font-bold text-warm-brown">交通</span>
                         </button>
-                        <button type="button" class="tag-btn group flex flex-col items-center gap-2" data-category="購物">
-                            <div class="w-16 h-16 rounded-[50% 50% 40% 60% / 50% 40% 60% 50%] bg-gradient-to-br from-macaron-purple/30 to-macaron-purple/20 hover:from-macaron-purple/50 hover:to-macaron-purple/40 flex items-center justify-center text-warm-brown group-hover:text-soft-ink transition-all duration-300 group-active:scale-95 border-2 border-white hover:border-macaron-purple/40 shadow-sm hover:shadow-md group-hover:-translate-y-0.5">
+
+                        <!-- 購物 -->
+                        <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="購物">
+                            <div class="bg-gradient-to-br from-macaron-purple/40 to-macaron-purple/30">
                                 <span class="material-symbols-outlined text-2xl">shopping_bag</span>
                             </div>
-                            <span class="text-sm font-hand font-bold text-warm-brown group-hover:text-soft-ink transition-colors">購物</span>
+                            <span class="text-sm font-hand font-bold text-warm-brown">購物</span>
                         </button>
-                        <button type="button" class="tag-btn group flex flex-col items-center gap-2" data-category="生活">
-                            <div class="w-16 h-16 rounded-[40% 60% 60% 40% / 60% 30% 70% 40%] bg-gradient-to-br from-macaron-cream/50 to-macaron-cream/30 hover:from-macaron-cream/70 hover:to-macaron-cream/50 flex items-center justify-center text-warm-brown group-hover:text-soft-ink transition-all duration-300 group-active:scale-95 border-2 border-white hover:border-macaron-cream/50 shadow-sm hover:shadow-md group-hover:-translate-y-0.5">
+
+                        <!-- 生活 -->
+                        <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="生活">
+                            <div class="bg-gradient-to-br from-macaron-cream/60 to-macaron-cream/40">
                                 <span class="material-symbols-outlined text-2xl">cottage</span>
                             </div>
-                            <span class="text-sm font-hand font-bold text-warm-brown group-hover:text-soft-ink transition-colors">生活</span>
+                            <span class="text-sm font-hand font-bold text-warm-brown">生活</span>
                         </button>
                         <button type="button" id="btnAddCustomCategory" class="group flex flex-col items-center gap-2">
                             <div class="w-16 h-16 rounded-full border-2 border-dashed border-warm-brown/30 flex items-center justify-center text-warm-brown/50 hover:border-[#E27D60]/50 hover:text-[#E27D60] transition-all group-active:scale-95 bg-white/30">

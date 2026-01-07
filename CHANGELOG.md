@@ -7,6 +7,80 @@
 
 ---
 
+## [5.3.0] - 2026-01-07
+
+### ✨ UI/UX 優化
+
+**重構類別選擇按鈕為馬卡龍/手帳貼紙風格**
+
+#### 設計改進
+
+1. **視覺風格升級**
+   - ✅ 從生硬的幾何圖形改造為柔和的馬卡龍形狀
+   - ✅ 採用不規則圓潤邊緣（`border-radius: 45% 55% 52% 48% / 48% 45% 55% 52%`）
+   - ✅ 新增立體貼紙感：白色邊框 + 多層陰影 + 內高光
+   - ✅ 更符合 App 的「童話軟萌」整體風格
+
+2. **互動動效**
+   - ✅ **Hover 效果**：貼紙輕微浮起（translateY -3px）+ 微旋轉 1° + 陰影加深
+   - ✅ **點擊效果**：輕微下壓縮放（scale 0.95）
+   - ✅ **果冻彈跳動畫**（jellyBounce）：選中時觸發 7 段式 Q 彈變形效果（0.6秒）
+   - ✅ **打勾標記**：選中時右上角圓形 ✓ 彈出（checkmark 動畫）
+   - ✅ **發光效果**：選中時粉色光暈（4 層漸變 box-shadow）
+
+3. **新增動畫**（css/animations/animations.css）
+   - ✅ `@keyframes jellyBounce`：果凍彈跳動畫（7段變形，模擬 Q 彈效果）
+   - ✅ `@keyframes stickerPop`：貼紙飄入動畫（縮放 + 旋轉）
+   - ✅ `@keyframes checkmark`：打勾標記彈出動畫
+
+#### 技術改進
+
+1. **CSS 重構**（css/components/forms.css）
+   - ✅ 完全重寫 `.tag-btn` 樣式系統
+   - ✅ 新增 `.tag-btn > div` 貼紙容器樣式
+   - ✅ 新增 `.active` 狀態樣式（替代原有的多個 Tailwind 類）
+   - ✅ 新增打勾標記偽元素（`::after`）
+
+2. **JavaScript 簡化**（js/components/TransactionForm.js）
+   - ✅ `toggleCategory()`：移除冗長的 Tailwind 類操作，改用單一 `.active` 類
+   - ✅ `reset()`：簡化重置邏輯
+   - ✅ `fillFormWithTransaction()`：簡化編輯模式填充邏輯
+   - ✅ `renderCustomCategories()`：簡化動態生成的 HTML 結構
+   - ✅ 新增動畫重新觸發機制（確保每次點擊都有果凍效果）
+
+3. **HTML 精簡**（index.html）
+   - ✅ 類別按鈕從 20+ 個 Tailwind 類精簡到 3-4 個
+   - ✅ 保留每個類別的獨特漸變顏色
+   - ✅ 移除冗餘的 hover/active 類（由 CSS 接管）
+
+#### 視覺效果對比
+
+**改造前：**
+- ❌ 椭圓形背景 + 方形 icon，幾何感重
+- ❌ 平面設計，缺乏立體感
+- ❌ 選中狀態只是變色和放大
+
+**改造後：**
+- ✅ 不規則圓潤馬卡龍形狀
+- ✅ 立體貼紙感（白邊 + 多層陰影 + 內高光）
+- ✅ Q 彈果凍動畫 + 發光效果 + 打勾標記
+- ✅ 豐富的微互動（浮起、旋轉、下壓）
+
+### 🔧 技術細節
+
+**修改檔案：**
+- `css/animations/animations.css`（新增 3 個動畫）
+- `css/components/forms.css`（完全重寫類別按鈕樣式）
+- `js/components/TransactionForm.js`（簡化選中狀態邏輯）
+- `index.html`（精簡 HTML 結構）
+
+**代碼優化：**
+- 減少 HTML 中的行內類名數量（提升可維護性）
+- 統一使用 CSS 管理樣式（符合關注點分離原則）
+- JavaScript 邏輯更清晰（單一 `.active` 類替代多個類名）
+
+---
+
 ## [5.2.0] - 2026-01-07
 
 ### 🐛 Bug 修復
