@@ -336,19 +336,28 @@ async function getNotebooks(coupleId) {
  * @param {string} notebookName - 帳本名稱
  * @param {Array} memberIds - 成員 ID 列表（可選，已棄用）
  * @param {Object} memberNames - 成員名稱映射（可選，已棄用）
+ * @param {string} type - 帳本類型（'daily' | 'trip'），預設為 'daily'
  * @returns {Promise<string>} - 帳本 ID
  */
-async function addNotebook(coupleId, notebookName, memberIds = [], memberNames = {}) {
+async function addNotebook(coupleId, notebookName, memberIds = [], memberNames = {}, type = 'daily') {
     try {
         // 使用子集合路徑，不需要 couple_id, member_ids, member_names 欄位（路徑已包含）
         const notebooksRef = getNotebooksRef(coupleId);
         const docRef = await addDoc(notebooksRef, {
             name: notebookName,
+            type: type,
             created_at: serverTimestamp(),
             balance: {
                 baobao_owed: 0,
                 bubu_owed: 0,
                 version: 0,
+                last_updated: serverTimestamp()
+            },
+            stats: {
+                baobao_paid: 0,
+                bubu_paid: 0,
+                total_expense: 0,
+                transaction_count: 0,
                 last_updated: serverTimestamp()
             }
         });
@@ -842,6 +851,88 @@ async function initializeNotebookBalance(coupleId, notebookId, balance) {
 }
 
 /**
+ * 增量更新帳本統計（使用 Firestore Transaction 確保並發安全）
+ * @param {string} coupleId - 配對 ID
+ * @param {string} notebookId - 帳本 ID
+ * @param {number} baobaoPaidDelta - 寶寶支出變化量
+ * @param {number} bubuPaidDelta - 步步支出變化量
+ * @param {number} transactionCountDelta - 交易筆數變化量（新增 +1, 刪除 -1）
+ * @returns {Promise<void>}
+ */
+async function incrementNotebookStats(coupleId, notebookId, baobaoPaidDelta, bubuPaidDelta, transactionCountDelta) {
+    const notebookRef = getNotebookRef(coupleId, notebookId);
+    const maxRetries = 3;
+    let retries = 0;
+
+    while (retries < maxRetries) {
+        try {
+            await runTransaction(db, async (transaction) => {
+                const notebookDoc = await transaction.get(notebookRef);
+
+                if (!notebookDoc.exists()) {
+                    throw new Error('帳本不存在');
+                }
+
+                const currentStats = notebookDoc.data().stats || {
+                    baobao_paid: 0,
+                    bubu_paid: 0,
+                    total_expense: 0,
+                    transaction_count: 0
+                };
+
+                const newStats = {
+                    baobao_paid: currentStats.baobao_paid + baobaoPaidDelta,
+                    bubu_paid: currentStats.bubu_paid + bubuPaidDelta,
+                    total_expense: currentStats.total_expense + baobaoPaidDelta + bubuPaidDelta,
+                    transaction_count: currentStats.transaction_count + transactionCountDelta,
+                    last_updated: serverTimestamp()
+                };
+
+                transaction.update(notebookRef, { stats: newStats });
+                console.log(`✅ 統計已更新:`, newStats);
+            });
+
+            return; // 成功
+        } catch (error) {
+            if (error.code === 'aborted') {
+                // 並發衝突，重試
+                retries++;
+                console.warn(`⚠️ 並發衝突，重試 ${retries}/${maxRetries}...`);
+                await new Promise(resolve => setTimeout(resolve, 100 * retries)); // 指數退避
+            } else {
+                console.error('❌ 更新統計失敗:', error);
+                throw error;
+            }
+        }
+    }
+
+    throw new Error('並發衝突過多，統計更新失敗');
+}
+
+/**
+ * 初始化帳本統計
+ * @param {string} coupleId - 配對 ID
+ * @param {string} notebookId - 帳本 ID
+ * @param {Object} stats - { baobao_paid, bubu_paid, total_expense, transaction_count }
+ * @returns {Promise<void>}
+ */
+async function initializeNotebookStats(coupleId, notebookId, stats) {
+    try {
+        const notebookRef = getNotebookRef(coupleId, notebookId);
+        await updateDoc(notebookRef, {
+            stats: {
+                ...stats,
+                last_updated: serverTimestamp()
+            }
+        });
+        console.log('✅ 帳本統計已初始化:', stats);
+    } catch (error) {
+        console.error('❌ 初始化統計失敗:', error);
+        throw error;
+    }
+}
+
+/**
  * 監聽帳本餘額變更
  * @param {string} coupleId - 配對 ID
  * @param {string} notebookId - 帳本 ID
@@ -1038,6 +1129,10 @@ window.FirebaseAPI = {
     incrementNotebookBalance,
     initializeNotebookBalance,
     onNotebookBalanceChange,
+
+    // 統計管理
+    incrementNotebookStats,
+    initializeNotebookStats,
 
     // 交易監聽
     onRecentTransactionsChange,

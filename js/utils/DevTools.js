@@ -17,6 +17,10 @@ export class DevTools {
   DevTools.repairBalance()           - 修復當前帳本餘額
   DevTools.repairAllBalances()       - 修復所有帳本餘額
 
+統計管理:
+  DevTools.recalculateStats()        - 重算當前帳本統計
+  DevTools.recalculateAllStats()     - 重算所有帳本統計
+
 連線檢查:
   DevTools.checkFirebaseConnection() - 檢查 Firebase 連線
   DevTools.showNetworkStatus()       - 顯示網路狀態
@@ -83,6 +87,36 @@ export class DevTools {
     static async repairAllBalances() {
         const result = await window.balanceRepairTool.repairAllBalances();
         return result;
+    }
+
+    static async recalculateStats() {
+        const notebookId = window.DataManager.currentNotebook;
+        if (!notebookId) {
+            console.error('❌ 無當前帳本');
+            return;
+        }
+        const coupleId = window.DataManager.coupleId;
+        console.log(`🔄 正在重算帳本 ${notebookId} 的統計...`);
+        const result = await window.DataManager.statsInitializer.recalculate(coupleId, notebookId);
+        console.log('✅ 統計重算完成:', result);
+        return result;
+    }
+
+    static async recalculateAllStats() {
+        const coupleId = window.DataManager.coupleId;
+        const notebooks = window.DataManager.notebooks;
+        console.log(`🔄 正在重算所有帳本的統計（共 ${notebooks.length} 個）...`);
+
+        for (const notebook of notebooks) {
+            try {
+                console.log(`🔧 重算帳本 ${notebook.id} (${notebook.name})...`);
+                await window.DataManager.statsInitializer.recalculate(coupleId, notebook.id);
+            } catch (error) {
+                console.error(`❌ 帳本 ${notebook.id} 統計重算失敗:`, error);
+            }
+        }
+
+        console.log('✅ 所有統計重算完成');
     }
 
     static async checkFirebaseConnection() {

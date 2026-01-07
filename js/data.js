@@ -3,6 +3,7 @@
 
 import { BalanceManager } from './core/BalanceManager.js';
 import { BalanceInitializer } from './utils/BalanceInitializer.js';
+import { NotebookStatsInitializer } from './utils/NotebookStatsInitializer.js';
 
 class DataManager {
     constructor() {
@@ -23,6 +24,9 @@ class DataManager {
 
         // 餘額初始化器
         this.balanceInitializer = new BalanceInitializer();
+
+        // 統計初始化器
+        this.statsInitializer = new NotebookStatsInitializer();
 
         // 監聽範圍
         this.listeningStartDate = null;  // 監聽的起始日期
@@ -76,6 +80,10 @@ class DataManager {
             // 2. 檢查並初始化餘額
             console.log('🔧 檢查帳本餘額...');
             await this.balanceInitializer.initializeAll(this.coupleId, this.notebooks);
+
+            // 2.5. 檢查並初始化統計
+            console.log('🔧 檢查帳本統計...');
+            await this.statsInitializer.initializeAll(this.coupleId, this.notebooks);
 
             // 3. 如果沒有帳本，建立預設帳本
             if (this.notebooks.length === 0) {
@@ -223,7 +231,21 @@ class DataManager {
                 console.log('💰 餘額已更新:', { baobaoDelta, bubuDelta });
             }
 
-            // 3. 本地快取會由 onSnapshot 自動更新，不需要手動處理
+            // 3. 增量更新統計
+            const amount = parseFloat(transaction.amount);
+            const baobaoPaidDelta = transaction.payer === 'baobao' ? amount : 0;
+            const bubuPaidDelta = transaction.payer === 'bubu' ? amount : 0;
+
+            await window.FirebaseAPI.incrementNotebookStats(
+                this.coupleId,
+                this.currentNotebook,
+                baobaoPaidDelta,
+                bubuPaidDelta,
+                1  // 交易筆數 +1
+            );
+            console.log('📊 統計已更新:', { baobaoPaidDelta, bubuPaidDelta });
+
+            // 4. 本地快取會由 onSnapshot 自動更新，不需要手動處理
 
             return {
                 id: transactionId,
@@ -380,7 +402,21 @@ class DataManager {
                 console.log('💰 餘額已回退:', { baobaoDelta: -baobaoDelta, bubuDelta: -bubuDelta });
             }
 
-            // 4. 本地快取會由 onSnapshot 自動更新
+            // 4. 反向更新統計
+            const amount = parseFloat(transaction.amount);
+            const baobaoPaidDelta = transaction.payer === 'baobao' ? -amount : 0;
+            const bubuPaidDelta = transaction.payer === 'bubu' ? -amount : 0;
+
+            await window.FirebaseAPI.incrementNotebookStats(
+                this.coupleId,
+                this.currentNotebook,
+                baobaoPaidDelta,  // 反向操作
+                bubuPaidDelta,    // 反向操作
+                -1  // 交易筆數 -1
+            );
+            console.log('📊 統計已回退:', { baobaoPaidDelta, bubuPaidDelta });
+
+            // 5. 本地快取會由 onSnapshot 自動更新
 
             return true;
         } catch (error) {
@@ -426,7 +462,30 @@ class DataManager {
                 console.log('💰 餘額已調整:', { baobaoDelta, bubuDelta });
             }
 
-            // 4. 本地快取會由 onSnapshot 自動更新
+            // 4. 更新統計（先減去舊的，再加上新的）
+            const oldAmount = parseFloat(oldTransaction.amount);
+            const newAmount = parseFloat(newTransaction.amount);
+
+            const oldBaobaoPaid = oldTransaction.payer === 'baobao' ? oldAmount : 0;
+            const oldBubuPaid = oldTransaction.payer === 'bubu' ? oldAmount : 0;
+            const newBaobaoPaid = newTransaction.payer === 'baobao' ? newAmount : 0;
+            const newBubuPaid = newTransaction.payer === 'bubu' ? newAmount : 0;
+
+            const baobaoPaidDelta = newBaobaoPaid - oldBaobaoPaid;
+            const bubuPaidDelta = newBubuPaid - oldBubuPaid;
+
+            if (baobaoPaidDelta !== 0 || bubuPaidDelta !== 0) {
+                await window.FirebaseAPI.incrementNotebookStats(
+                    this.coupleId,
+                    this.currentNotebook,
+                    baobaoPaidDelta,
+                    bubuPaidDelta,
+                    0  // 交易筆數不變
+                );
+                console.log('📊 統計已調整:', { baobaoPaidDelta, bubuPaidDelta });
+            }
+
+            // 5. 本地快取會由 onSnapshot 自動更新
 
             return newTransaction;
         } catch (error) {

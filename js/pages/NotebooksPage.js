@@ -56,31 +56,49 @@ export class NotebooksPage {
         const booksHTML = notebooks.map((nb, index) => {
             const colorScheme = bookColors[index % bookColors.length];
             const isActive = nb.id === currentNotebookId;
-            const isFirst = index === 0;
 
-            const nbTransactions = window.DataManager.transactions.filter(tx => tx.notebook_id === nb.id);
-            let baobaoTotal = 0, bubuTotal = 0, total = 0;
+            // 取得帳本類型（預設為 'daily'）
+            const notebookType = nb.type || 'daily';
 
-            nbTransactions.forEach(tx => {
-                const amount = parseFloat(tx.amount);
-                total += amount;
-                // 使用絕對角色判斷
-                if (tx.payer === 'baobao') baobaoTotal += amount;
-                else bubuTotal += amount;
-            });
+            // 從帳本的 stats 欄位取得統計資料
+            const stats = nb.stats || {
+                baobao_paid: 0,
+                bubu_paid: 0,
+                total_expense: 0,
+                transaction_count: 0
+            };
 
-            let statsHTML = '';
-            if (isFirst) {
-                const balance = window.DataManager.calculateBalance();
-                statsHTML = balance.status === 'settled'
-                    ? '<div class="text-xs text-warm-brown/80">已結清 💖</div>'
-                    : `<div class="text-xs text-warm-brown/80">${balance.debtor}欠${balance.creditor} $${Math.round(balance.amount)}</div>`;
+            // 從帳本的 balance 欄位取得餘額資料
+            const balance = nb.balance || {
+                baobao_owed: 0,
+                bubu_owed: 0
+            };
+
+            // 計算欠款狀態（誰欠誰多少）
+            const difference = balance.baobao_owed - balance.bubu_owed;
+            let balanceText = '';
+            if (Math.abs(difference) < 0.01) {
+                balanceText = '已結清 💖';
+            } else if (difference > 0) {
+                // 寶寶被欠得多 → 步步欠寶寶
+                balanceText = `步步欠寶寶 $${Math.round(Math.abs(difference))}`;
             } else {
+                // 步步被欠得多 → 寶寶欠步步
+                balanceText = `寶寶欠步步 $${Math.round(Math.abs(difference))}`;
+            }
+
+            // 根據帳本類型決定顯示內容
+            let statsHTML = '';
+            if (notebookType === 'daily') {
+                // 日常帳本：固定顯示欠款資訊
+                statsHTML = `<div class="text-xs text-warm-brown/80">${balanceText}</div>`;
+            } else {
+                // 旅遊/時期性帳本：顯示總花費和各自支出
                 statsHTML = `
                     <div class="space-y-0.5 text-xs text-warm-brown/80">
-                        ${baobaoTotal > 0 ? `<div>寶 $${Math.round(baobaoTotal)}</div>` : ''}
-                        ${bubuTotal > 0 ? `<div>步 $${Math.round(bubuTotal)}</div>` : ''}
-                        ${total > 0 ? `<div class="text-[#E27D60] font-bold">共 $${Math.round(total)}</div>` : ''}
+                        ${stats.baobao_paid > 0 ? `<div>寶 $${Math.round(stats.baobao_paid)}</div>` : ''}
+                        ${stats.bubu_paid > 0 ? `<div>步 $${Math.round(stats.bubu_paid)}</div>` : ''}
+                        ${stats.total_expense > 0 ? `<div class="text-[#E27D60] font-bold">共 $${Math.round(stats.total_expense)}</div>` : ''}
                     </div>`;
             }
 

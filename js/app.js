@@ -20,6 +20,7 @@ import { AnalyticsPage } from './pages/AnalyticsPage.js';
 
 import customDialog from './utils/CustomDialog.js';
 import { BalanceRepairTool } from './utils/BalanceRepairTool.js';
+import { NotebookStatsInitializer } from './utils/NotebookStatsInitializer.js';
 import { DevTools } from './utils/DevTools.js';
 
 class CoupleApp {

@@ -7,6 +7,65 @@
 
 ---
 
+## [5.2.0] - 2026-01-07
+
+### 🐛 Bug 修復
+
+**修復帳本列表渲染錯誤與統計資料問題**
+
+#### 問題描述
+1. **Bug 1 - 渲染錯誤**: 列表中的「第一個帳本」錯誤地顯示了「當前被選中帳本」的餘額狀態
+   - **原因**: `NotebooksPage.js:74` 使用 `calculateBalance()` 計算「當前選中帳本」的餘額，而不是第一個帳本的餘額
+
+2. **Bug 2 - 狀態錯誤**: 沒被選中的帳本都會顯示「已結清」或是剛選中帳本的欠款
+   - **原因**: `DataManager` 只載入「當前選中帳本」的交易，未選中的帳本沒有交易資料，前端即時計算時餘額變成 0
+
+#### 修復內容
+
+1. **新增帳本統計欄位**
+   - ✅ 在每個帳本新增 `stats` 欄位（`baobao_paid`, `bubu_paid`, `total_expense`, `transaction_count`）
+   - ✅ 新增 `type` 欄位（`'daily'` | `'trip'`）區分帳本類型
+   - ✅ 統計資料直接儲存在帳本中，避免前端即時計算
+
+2. **Firebase API 擴充** (firebase-config.js)
+   - ✅ `addNotebook()`: 新增帳本時自動初始化 `stats` 和 `type`
+   - ✅ `incrementNotebookStats()`: 增量更新統計（使用 Transaction 確保並發安全）
+   - ✅ `initializeNotebookStats()`: 初始化帳本統計
+
+3. **DataManager 同步更新** (data.js)
+   - ✅ `addTransaction()`: 新增交易時同步更新統計
+   - ✅ `updateTransaction()`: 更新交易時調整統計差異
+   - ✅ `deleteTransaction()`: 刪除交易時回退統計
+   - ✅ 初始化時自動為現有帳本補充統計資料
+
+4. **NotebooksPage 顯示邏輯重構** (NotebooksPage.js:56-103)
+   - ✅ 改用帳本的 `balance` 欄位而不是 `calculateBalance()`（修復 Bug 1）
+   - ✅ 改用帳本的 `stats` 欄位而不是即時計算（修復 Bug 2）
+   - ✅ **日常帳本** (`type === 'daily'`): 固定顯示欠款資訊
+   - ✅ **旅遊帳本** (`type === 'trip'`): 顯示總花費和各自支出
+
+5. **初始化工具** (新檔案：NotebookStatsInitializer.js)
+   - ✅ 自動為現有帳本補充統計資料
+   - ✅ 支援批量初始化和單個帳本重算
+   - ✅ 整合到 DataManager 初始化流程
+
+6. **開發者工具擴充** (DevTools.js)
+   - ✅ `DevTools.recalculateStats()`: 重算當前帳本統計
+   - ✅ `DevTools.recalculateAllStats()`: 重算所有帳本統計
+
+### ✨ 新功能
+
+- **帳本類型區分**: 支援「日常帳本」與「旅遊/時期性帳本」不同的顯示方式
+- **統計資料持久化**: 統計資訊直接儲存在 Firestore，提升效能並避免即時計算錯誤
+
+### 🔧 技術改進
+
+- 使用 Firestore Transaction 確保統計更新的並發安全
+- 減少前端計算負擔，提升帳本列表渲染效能
+- 改善資料一致性，避免因快取不完整導致的顯示錯誤
+
+---
+
 ## [5.1.1] - 2026-01-06
 
 ### 🐛 Bug 修復
