@@ -7,6 +7,93 @@
 
 ---
 
+## [5.4.0] - 2026-01-07
+
+### ✨ 新功能
+
+**活動記錄 & 變更通知系統（解決「偷偷修改」信任問題）**
+
+#### 功能亮點
+
+1. **智能通知規則** - 只在重要變更時才通知，避免過度打擾
+   - ✅ **不通知**：新增「今天」或「昨天」的交易（視為日常記帳）
+   - 🔔 **通知**：新增「3 天以前」的交易（補記舊帳）
+   - 🔔 **通知**：任何「修改」或「刪除」操作（影響餘額）
+
+2. **可愛的通知文案** - 增加情侶間的互動趣味
+   - 補記：「步步偷偷補記了上週的『晚餐』🍽️」
+   - 修改：「寶寶修改了昨天的『飲料』，金額變了喔 💸」
+   - 刪除：「步步把『電影票』這筆帳擦掉了 ✏️」
+
+3. **不打擾的通知中心** - 右上角鈴鐺按鈕
+   - 未讀數量徽章（紅色小圓點，帶彈跳動畫）
+   - 側滑面板顯示活動列表
+   - 點擊單個通知標記為已讀
+   - 一鍵「全部標記為已讀」
+
+4. **童話風格設計** - 符合 App 整體美學
+   - 馬卡龍色系面板
+   - 圓潤可愛的通知卡片
+   - 寶寶/步步頭像標記
+   - 平滑滑入/滑出動畫
+
+#### 技術實現
+
+1. **Firestore 資料結構** (`couples/{coupleId}/activities/{activityId}`)
+   - `type`: 活動類型（'create' | 'update' | 'delete'）
+   - `actor`: 操作者（'baobao' | 'bubu'）
+   - `timestamp`: 操作時間
+   - `transaction`: 交易摘要資訊
+   - `changes`: 變更內容（僅 update 時有）
+   - `isRead`: 雙方已讀狀態
+
+2. **Firebase API** (firebase-config.js +169 行)
+   - `addActivity()`: 新增活動記錄（自動判斷是否需要通知）
+   - `checkIfShouldNotify()`: 智能通知邏輯
+   - `onActivitiesChange()`: 監聽活動記錄（近 30 天）
+   - `markActivityAsRead()`: 標記單個已讀
+   - `markAllActivitiesAsRead()`: 批量標記已讀
+
+3. **DataManager 集成** (data.js +118 行)
+   - `addTransaction()`: 新增交易後記錄活動
+   - `updateTransaction()`: 修改交易後記錄活動（含變更內容）
+   - `deleteTransaction()`: 刪除交易後記錄活動
+   - `startListeningActivities()`: 啟動活動監聽
+   - `handleActivitiesChange()`: 計算未讀數量並通知訂閱者
+
+4. **UI 組件** (NotificationPanel.js 新檔案 315 行)
+   - 可愛的通知訊息生成器
+   - 時間格式化（「剛剛」、「5 分鐘前」、「3 天前」）
+   - 日期格式化（「今天」、「昨天」、「12/25」）
+   - 未讀/已讀狀態視覺區分
+   - 空狀態友善提示
+
+5. **樣式系統** (notifications.css 新檔案 257 行)
+   - 側滑面板動畫（transform translateX）
+   - 未讀通知發光效果 + 左側粉色邊條
+   - 頭像馬卡龍漸層背景
+   - 徽章彈跳動畫
+   - 響應式設計（手機/桌面）
+
+#### 修改檔案
+
+- `js/firebase-config.js`（+169 行）
+- `js/data.js`（+118 行）
+- `js/components/NotificationPanel.js`（新檔案，315 行）
+- `css/components/notifications.css`（新檔案，257 行）
+- `index.html`（+30 行）
+- `js/app.js`（+13 行）
+- `css/main.css`（+1 行）
+
+### 🎨 設計特色
+
+- **情侶友善**：文案溫馨可愛，不像銀行 App 嚴肅
+- **不打擾**：只在重要時刻通知，避免過度干擾
+- **透明化**：所有變更一目了然，建立信任
+- **互動性**：增加情侶間的互動樂趣
+
+---
+
 ## [5.3.0] - 2026-01-07
 
 ### ✨ UI/UX 優化

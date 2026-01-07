@@ -321,9 +321,9 @@
                         </div>
                         <h1 class="text-2xl font-hand font-bold text-soft-ink tracking-wide drop-shadow-sm" id="currentNotebookTitle">寶寶 & 步步的記帳本</h1>
                     </div>
-                    <button class="size-10 flex items-center justify-center rounded-full border-2 border-macaron-pink/50 bg-white text-antique-gold hover:bg-macaron-pink/10 transition-colors shadow-sm relative">
+                    <button id="btnNotifications" class="size-10 flex items-center justify-center rounded-full border-2 border-macaron-pink/50 bg-white text-antique-gold hover:bg-macaron-pink/10 transition-colors shadow-sm relative" data-action="toggle-notifications">
                         <span class="material-symbols-outlined">notifications</span>
-                        <span class="absolute top-2 right-2.5 w-2.5 h-2.5 bg-macaron-rose rounded-full border-2 border-white"></span>
+                        <span id="notificationBadge" class="hidden"></span>
                     </button>
                 </div>
                 <div class="absolute -bottom-2 left-0 right-0 h-2 lace-border opacity-60"></div>
@@ -1042,6 +1042,34 @@
                     知道了
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- 通知面板（活動記錄）-->
+    <div id="notificationPanel" class="hidden">
+        <!-- 頭部 -->
+        <div class="notification-header">
+            <h2 class="notification-title">
+                🔔 通知中心
+            </h2>
+            <p class="notification-subtitle">
+                查看伴侶最近的記帳變更
+            </p>
+            <button class="notification-close" data-action="close-notifications">
+                <span class="material-symbols-outlined text-xl">close</span>
+            </button>
+        </div>
+
+        <!-- 內容區 -->
+        <div class="notification-content" id="notificationList">
+            <!-- 動態渲染通知列表 -->
+        </div>
+
+        <!-- 底部操作 -->
+        <div class="notification-footer">
+            <button class="btn-mark-all-read" data-action="mark-all-read">
+                ✓ 全部標記為已讀
+            </button>
         </div>
     </div>
 

@@ -12,6 +12,7 @@ import { TimelineView } from './components/TimelineView.js';
 import { DateRangePicker } from './components/DateRangePicker.js';
 import { TransactionForm } from './components/TransactionForm.js';
 import { TransactionDetail } from './components/TransactionDetail.js';
+import { NotificationPanel } from './components/NotificationPanel.js';
 
 import { HomePage } from './pages/HomePage.js';
 import { CalendarPage } from './pages/CalendarPage.js';
@@ -71,6 +72,9 @@ class CoupleApp {
 
         // 交易詳情
         this.transactionDetail = new TransactionDetail();
+
+        // 通知面板
+        this.notificationPanel = new NotificationPanel(this.state);
     }
 
     initPages() {
@@ -125,6 +129,17 @@ class CoupleApp {
     async init() {
         // 綁定所有事件
         this.eventBinder.bindAll();
+
+        // 初始化通知面板
+        this.notificationPanel.init();
+
+        // 綁定鈴鐺按鈕點擊事件
+        const btnNotifications = document.getElementById('btnNotifications');
+        if (btnNotifications) {
+            btnNotifications.addEventListener('click', () => {
+                this.notificationPanel.toggle();
+            });
+        }
 
         // 更新帳本標題
         this.homePage.updateNotebookTitle();

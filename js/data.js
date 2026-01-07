@@ -31,6 +31,11 @@ class DataManager {
         // 監聽範圍
         this.listeningStartDate = null;  // 監聽的起始日期
 
+        // 活動記錄（通知系統）
+        this.activities = [];  // 活動列表（快取）
+        this.unreadCount = 0;  // 未讀通知數量
+        this.activitiesUnsubscribe = null;  // 活動監聽器取消函數
+
         // 防抖計時器
         this._debounceTimer = null;
     }
@@ -107,7 +112,10 @@ class DataManager {
                 this.startListeningTransactions();
             }
 
-            // 6. 載入自訂分類
+            // 6. 啟動活動記錄監聽（通知系統）
+            this.startListeningActivities();
+
+            // 7. 載入自訂分類
             await this.loadCustomCategories();
 
             this.isInitialized = true;
@@ -245,7 +253,26 @@ class DataManager {
             );
             console.log('📊 統計已更新:', { baobaoPaidDelta, bubuPaidDelta });
 
-            // 4. 本地快取會由 onSnapshot 自動更新，不需要手動處理
+            // 4. 記錄活動（通知系統）
+            try {
+                await window.FirebaseAPI.addActivity(this.coupleId, {
+                    type: 'create',
+                    actor: this.myRole,
+                    transaction: {
+                        id: transactionId,
+                        date: transaction.date,
+                        item_name: transaction.item_name,
+                        amount: transaction.amount,
+                        categories: transaction.categories || [],
+                        notebook_id: this.currentNotebook
+                    }
+                });
+                console.log('🔔 活動已記錄（若符合通知條件）');
+            } catch (error) {
+                console.error('⚠️ 記錄活動失敗（不影響主功能）:', error);
+            }
+
+            // 5. 本地快取會由 onSnapshot 自動更新，不需要手動處理
 
             return {
                 id: transactionId,
@@ -416,7 +443,26 @@ class DataManager {
             );
             console.log('📊 統計已回退:', { baobaoPaidDelta, bubuPaidDelta });
 
-            // 5. 本地快取會由 onSnapshot 自動更新
+            // 5. 記錄活動（通知系統）
+            try {
+                await window.FirebaseAPI.addActivity(this.coupleId, {
+                    type: 'delete',
+                    actor: this.myRole,
+                    transaction: {
+                        id: id,
+                        date: transaction.date,
+                        item_name: transaction.item_name,
+                        amount: transaction.amount,
+                        categories: transaction.categories || [],
+                        notebook_id: this.currentNotebook
+                    }
+                });
+                console.log('🔔 刪除活動已記錄');
+            } catch (error) {
+                console.error('⚠️ 記錄活動失敗（不影響主功能）:', error);
+            }
+
+            // 6. 本地快取會由 onSnapshot 自動更新
 
             return true;
         } catch (error) {
@@ -485,7 +531,39 @@ class DataManager {
                 console.log('📊 統計已調整:', { baobaoPaidDelta, bubuPaidDelta });
             }
 
-            // 5. 本地快取會由 onSnapshot 自動更新
+            // 5. 記錄活動（通知系統）
+            try {
+                // 計算變更內容
+                const changes = {};
+                if (updates.amount && oldTransaction.amount !== updates.amount) {
+                    changes.amount = { old: oldTransaction.amount, new: updates.amount };
+                }
+                if (updates.item_name && oldTransaction.item_name !== updates.item_name) {
+                    changes.item_name = { old: oldTransaction.item_name, new: updates.item_name };
+                }
+                if (updates.date && oldTransaction.date !== updates.date) {
+                    changes.date = { old: oldTransaction.date, new: updates.date };
+                }
+
+                await window.FirebaseAPI.addActivity(this.coupleId, {
+                    type: 'update',
+                    actor: this.myRole,
+                    transaction: {
+                        id: id,
+                        date: newTransaction.date,
+                        item_name: newTransaction.item_name,
+                        amount: newTransaction.amount,
+                        categories: newTransaction.categories || [],
+                        notebook_id: this.currentNotebook
+                    },
+                    changes: changes
+                });
+                console.log('🔔 修改活動已記錄');
+            } catch (error) {
+                console.error('⚠️ 記錄活動失敗（不影響主功能）:', error);
+            }
+
+            // 6. 本地快取會由 onSnapshot 自動更新
 
             return newTransaction;
         } catch (error) {
@@ -1092,6 +1170,110 @@ class DataManager {
     stopListeningBalance() {
         window.listenerManager.unregister('balance');
         console.log('🛑 已停止監聽餘額');
+    }
+
+    // ==================== 活動記錄（通知系統）====================
+
+    /**
+     * 開始監聽活動記錄
+     */
+    startListeningActivities() {
+        if (!this.coupleId) {
+            console.warn('⚠️ 無配對 ID，無法監聽活動記錄');
+            return;
+        }
+
+        // 停止舊的監聽（如果有）
+        window.listenerManager.unregister('activities');
+
+        console.log('🎧 開始監聽活動記錄（通知系統）...');
+
+        // 註冊監聽器
+        const unsubscribe = window.FirebaseAPI.onActivitiesChange(
+            this.coupleId,
+            (activities) => this.handleActivitiesChange(activities)
+        );
+
+        window.listenerManager.register('activities', unsubscribe);
+    }
+
+    /**
+     * 處理活動記錄變更回調
+     * @param {Array} activities - 活動列表
+     */
+    handleActivitiesChange(activities) {
+        console.log('🔔 活動記錄更新...');
+
+        // 更新本地快取
+        this.activities = activities;
+
+        // 計算未讀數量（對方的未讀通知）
+        const unreadActivities = activities.filter(activity => {
+            // 如果是我的操作，我已經標記為已讀，不計入未讀
+            // 只計算對方操作且我未讀的活動
+            return activity.actor !== this.myRole && !activity.isRead[this.myRole];
+        });
+
+        this.unreadCount = unreadActivities.length;
+        console.log(`📬 未讀通知數量: ${this.unreadCount}`);
+
+        // 通知訂閱者
+        if (window.app && window.app.state) {
+            window.app.state.notify('activities', {
+                activities: this.activities,
+                unreadCount: this.unreadCount
+            });
+        }
+    }
+
+    /**
+     * 停止監聽活動記錄
+     */
+    stopListeningActivities() {
+        window.listenerManager.unregister('activities');
+        console.log('🛑 已停止監聽活動記錄');
+    }
+
+    /**
+     * 獲取未讀通知數量
+     * @returns {number}
+     */
+    getUnreadCount() {
+        return this.unreadCount;
+    }
+
+    /**
+     * 標記活動為已讀
+     * @param {string} activityId - 活動 ID
+     */
+    async markActivityAsRead(activityId) {
+        try {
+            await window.FirebaseAPI.markActivityAsRead(this.coupleId, activityId, this.myRole);
+            console.log(`✅ 活動 ${activityId} 已標記為已讀`);
+        } catch (error) {
+            console.error('❌ 標記已讀失敗:', error);
+        }
+    }
+
+    /**
+     * 標記所有活動為已讀
+     */
+    async markAllActivitiesAsRead() {
+        try {
+            const unreadIds = this.activities
+                .filter(activity => !activity.isRead[this.myRole])
+                .map(activity => activity.id);
+
+            if (unreadIds.length === 0) {
+                console.log('📭 沒有未讀活動');
+                return;
+            }
+
+            await window.FirebaseAPI.markAllActivitiesAsRead(this.coupleId, this.myRole, unreadIds);
+            console.log(`✅ 已標記 ${unreadIds.length} 筆活動為已讀`);
+        } catch (error) {
+            console.error('❌ 批量標記已讀失敗:', error);
+        }
     }
 
     /**

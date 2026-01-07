@@ -22,6 +22,7 @@
 @import './components/fab.css';
 @import './components/bottom-sheet.css';
 @import './components/forms.css';
+@import './components/notifications.css';
 
 /* ==================== 動畫層 ==================== */
 @import './animations/animations.css';

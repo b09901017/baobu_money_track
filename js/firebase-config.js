@@ -77,6 +77,25 @@ function getTransactionRef(coupleId, notebookId, transactionId) {
     return doc(db, 'couples', coupleId, 'notebooks', notebookId, 'transactions', transactionId);
 }
 
+/**
+ * 取得活動記錄集合引用（子集合）
+ * @param {string} coupleId - 配對 ID
+ * @returns {CollectionReference}
+ */
+function getActivitiesRef(coupleId) {
+    return collection(db, 'couples', coupleId, 'activities');
+}
+
+/**
+ * 取得單一活動記錄文件引用
+ * @param {string} coupleId - 配對 ID
+ * @param {string} activityId - 活動 ID
+ * @returns {DocumentReference}
+ */
+function getActivityRef(coupleId, activityId) {
+    return doc(db, 'couples', coupleId, 'activities', activityId);
+}
+
 // ==================== 認證相關 ====================
 
 /**
@@ -1093,6 +1112,174 @@ function onNotebooksChange(coupleId, callback) {
     );
 }
 
+// ==================== 活動記錄（通知系統）====================
+
+/**
+ * 新增活動記錄
+ * @param {string} coupleId - 配對 ID
+ * @param {Object} activityData - 活動資料
+ * @param {string} activityData.type - 活動類型 ('create' | 'update' | 'delete')
+ * @param {string} activityData.actor - 操作者角色 ('baobao' | 'bubu')
+ * @param {Object} activityData.transaction - 交易資訊
+ * @param {Object} [activityData.changes] - 變更內容（僅 update 時有）
+ * @returns {Promise<string>} - 活動 ID
+ */
+async function addActivity(coupleId, activityData) {
+    try {
+        const activitiesRef = getActivitiesRef(coupleId);
+
+        // 決定是否需要通知（根據業務邏輯）
+        const shouldNotify = checkIfShouldNotify(activityData);
+
+        if (!shouldNotify) {
+            console.log('📝 活動不需要通知，跳過記錄');
+            return null;
+        }
+
+        const activity = {
+            type: activityData.type,
+            actor: activityData.actor,
+            timestamp: serverTimestamp(),
+            transaction: {
+                id: activityData.transaction.id,
+                date: activityData.transaction.date,
+                item_name: activityData.transaction.item_name,
+                amount: activityData.transaction.amount,
+                categories: activityData.transaction.categories || [],
+                notebook_id: activityData.transaction.notebook_id
+            },
+            changes: activityData.changes || null,
+            isRead: {
+                baobao: activityData.actor === 'baobao', // 操作者自己標記為已讀
+                bubu: activityData.actor === 'bubu'
+            }
+        };
+
+        const docRef = await addDoc(activitiesRef, activity);
+        console.log('✅ 活動記錄已新增:', docRef.id);
+        return docRef.id;
+    } catch (error) {
+        console.error('❌ 新增活動記錄失敗:', error);
+        // 活動記錄失敗不應影響主功能，僅記錄錯誤
+        return null;
+    }
+}
+
+/**
+ * 判斷是否需要通知
+ * @param {Object} activityData - 活動資料
+ * @returns {boolean}
+ */
+function checkIfShouldNotify(activityData) {
+    const { type, transaction } = activityData;
+
+    // 修改或刪除操作 -> 一律通知
+    if (type === 'update' || type === 'delete') {
+        return true;
+    }
+
+    // 新增操作 -> 檢查日期
+    if (type === 'create') {
+        const transactionDate = new Date(transaction.date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        const threeDaysAgo = new Date(today);
+        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+        // 如果交易日期是「3 天以前」-> 通知（補記舊帳）
+        if (transactionDate < threeDaysAgo) {
+            console.log('📝 偵測到補記舊帳，產生通知');
+            return true;
+        }
+
+        // 今天或昨天的新增 -> 不通知（日常記帳）
+        console.log('📝 日常記帳，不產生通知');
+        return false;
+    }
+
+    return false;
+}
+
+/**
+ * 監聽活動記錄（近 30 天）
+ * @param {string} coupleId - 配對 ID
+ * @param {Function} callback - 回調函數 (activities) => void
+ * @returns {Function} - 取消監聽函數
+ */
+function onActivitiesChange(coupleId, callback) {
+    console.log('🎧 開始監聽活動記錄...');
+
+    // 只監聽近 30 天的活動
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const activitiesRef = getActivitiesRef(coupleId);
+    const q = query(
+        activitiesRef,
+        where('timestamp', '>=', Timestamp.fromDate(thirtyDaysAgo)),
+        orderBy('timestamp', 'desc'),
+        limit(50)
+    );
+
+    return onSnapshot(
+        q,
+        (snapshot) => {
+            const activities = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            console.log(`🔔 活動記錄更新: ${activities.length} 筆`);
+            callback(activities);
+        },
+        (error) => {
+            console.error('❌ 監聽活動記錄失敗:', error);
+            // 活動記錄失敗不應中斷主功能
+        }
+    );
+}
+
+/**
+ * 標記活動為已讀
+ * @param {string} coupleId - 配對 ID
+ * @param {string} activityId - 活動 ID
+ * @param {string} role - 用戶角色 ('baobao' | 'bubu')
+ * @returns {Promise<void>}
+ */
+async function markActivityAsRead(coupleId, activityId, role) {
+    try {
+        const activityRef = getActivityRef(coupleId, activityId);
+        await updateDoc(activityRef, {
+            [`isRead.${role}`]: true
+        });
+        console.log(`✅ 活動 ${activityId} 已標記為已讀（${role}）`);
+    } catch (error) {
+        console.error('❌ 標記已讀失敗:', error);
+        // 標記失敗不應影響使用
+    }
+}
+
+/**
+ * 標記所有活動為已讀
+ * @param {string} coupleId - 配對 ID
+ * @param {string} role - 用戶角色 ('baobao' | 'bubu')
+ * @param {Array<string>} activityIds - 活動 ID 列表
+ * @returns {Promise<void>}
+ */
+async function markAllActivitiesAsRead(coupleId, role, activityIds) {
+    try {
+        const promises = activityIds.map(id => markActivityAsRead(coupleId, id, role));
+        await Promise.all(promises);
+        console.log(`✅ 所有活動已標記為已讀（${role}）`);
+    } catch (error) {
+        console.error('❌ 批量標記已讀失敗:', error);
+    }
+}
+
 // ==================== 導出 API ====================
 
 window.FirebaseAPI = {
@@ -1139,7 +1326,13 @@ window.FirebaseAPI = {
     getEarlierTransactions,
 
     // 帳本監聽
-    onNotebooksChange
+    onNotebooksChange,
+
+    // 活動記錄（通知系統）
+    addActivity,
+    onActivitiesChange,
+    markActivityAsRead,
+    markAllActivitiesAsRead
 };
 
 console.log('✅ FirebaseAPI 已掛載到 window');
