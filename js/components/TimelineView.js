@@ -178,48 +178,46 @@ export class TimelineView {
         if (stats.debtInfo) {
             // 有欠款的情況
             summaryHTML = `
-                <div class="summary-debt-badge">
-                    <span class="debt-text">${stats.debtInfo.debtor}欠${stats.debtInfo.creditor}</span>
-                    <span class="debt-amount">$${stats.debtInfo.amount.toFixed(0)}</span>
-                </div>
-                <div class="summary-details">
-                    <div class="summary-detail-item">
-                        <span class="detail-label">共花</span>
-                        <span class="detail-value">$${stats.total.toFixed(0)}</span>
+                <div class="bookmark-card">
+                    <div class="bookmark-main">
+                        ${stats.debtInfo.debtor}欠${stats.debtInfo.creditor} <span class="bookmark-amount">$${stats.debtInfo.amount.toFixed(0)}</span>
                     </div>
-                    <div class="summary-divider-thin"></div>
-                    <div class="summary-detail-item">
-                        <span class="detail-label">🎀 寶</span>
-                        <span class="detail-value">$${stats.baobaoSpent.toFixed(0)}</span>
-                    </div>
-                    <div class="summary-divider-thin"></div>
-                    <div class="summary-detail-item">
-                        <span class="detail-label">🐾 步</span>
-                        <span class="detail-value">$${stats.bubuSpent.toFixed(0)}</span>
+                    <div class="bookmark-stats">
+                        <div class="stat-col">
+                            <div class="stat-label">共花</div>
+                            <div class="stat-value">$${stats.total.toFixed(0)}</div>
+                        </div>
+                        <div class="stat-col">
+                            <div class="stat-label">寶付</div>
+                            <div class="stat-value">$${stats.baobaoSpent.toFixed(0)}</div>
+                        </div>
+                        <div class="stat-col">
+                            <div class="stat-label">步付</div>
+                            <div class="stat-value">$${stats.bubuSpent.toFixed(0)}</div>
+                        </div>
                     </div>
                 </div>
             `;
         } else {
             // 已結清的情況
             summaryHTML = `
-                <div class="summary-settled-badge">
-                    <span class="settled-icon">✨</span>
-                    <span class="settled-text">已結清</span>
-                </div>
-                <div class="summary-details">
-                    <div class="summary-detail-item">
-                        <span class="detail-label">共花</span>
-                        <span class="detail-value">$${stats.total.toFixed(0)}</span>
+                <div class="bookmark-card settled">
+                    <div class="bookmark-main">
+                        <span class="settled-icon">✨</span> 已結清
                     </div>
-                    <div class="summary-divider-thin"></div>
-                    <div class="summary-detail-item">
-                        <span class="detail-label">🎀 寶</span>
-                        <span class="detail-value">$${stats.baobaoSpent.toFixed(0)}</span>
-                    </div>
-                    <div class="summary-divider-thin"></div>
-                    <div class="summary-detail-item">
-                        <span class="detail-label">🐾 步</span>
-                        <span class="detail-value">$${stats.bubuSpent.toFixed(0)}</span>
+                    <div class="bookmark-stats">
+                        <div class="stat-col">
+                            <div class="stat-label">共花</div>
+                            <div class="stat-value">$${stats.total.toFixed(0)}</div>
+                        </div>
+                        <div class="stat-col">
+                            <div class="stat-label">寶付</div>
+                            <div class="stat-value">$${stats.baobaoSpent.toFixed(0)}</div>
+                        </div>
+                        <div class="stat-col">
+                            <div class="stat-label">步付</div>
+                            <div class="stat-value">$${stats.bubuSpent.toFixed(0)}</div>
+                        </div>
                     </div>
                 </div>
             `;

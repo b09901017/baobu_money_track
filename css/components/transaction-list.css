@@ -154,92 +154,77 @@
     transform: translateY(0) scale(0.98);
 }
 
-/* 欠款徽章（有欠款時顯示） */
-.summary-debt-badge {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--spacing-xs);
-    padding: var(--spacing-xs) var(--spacing-md);
-    background: linear-gradient(135deg, #FFF0F5 0%, #FFE5F0 100%);
-    border: 1.5px solid var(--primary-color);
-    border-radius: var(--radius-full);
-    margin-bottom: var(--spacing-sm);
+/* 牛皮書籤風格卡片 */
+.bookmark-card {
+    background: linear-gradient(135deg, #FFFBF5 0%, #FFF8F0 100%);
+    border-radius: 12px;
+    padding: var(--spacing-md);
+    box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.08),
+        inset 0 1px 2px rgba(255, 255, 255, 0.8);
+    transition: all 0.3s ease;
 }
 
-.debt-text {
+.bookmark-card.settled {
+    background: linear-gradient(135deg, #F8FFF9 0%, #F2FFF4 100%);
+}
+
+/* 主要資訊區 */
+.bookmark-main {
     font-family: 'Fredoka', sans-serif;
-    font-size: 0.85rem;
+    font-size: 1.05rem;
     font-weight: 600;
-    color: var(--primary-color);
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+    letter-spacing: 0.2px;
 }
 
-.debt-amount {
-    font-family: 'Fredoka', sans-serif;
-    font-size: 1rem;
+.bookmark-main .bookmark-amount {
+    font-size: 1.35rem;
     font-weight: 700;
     color: var(--primary-color);
+    margin-left: 6px;
 }
 
-/* 已結清徽章 */
-.summary-settled-badge {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: var(--spacing-xs) var(--spacing-md);
-    background: linear-gradient(135deg, #F0FFF4 0%, #E5F9EA 100%);
-    border: 1.5px solid #9AE6B4;
-    border-radius: var(--radius-full);
-    margin-bottom: var(--spacing-sm);
-}
-
-.settled-icon {
-    font-size: 1rem;
-}
-
-.settled-text {
-    font-family: 'Fredoka', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 600;
+.bookmark-card.settled .bookmark-main {
     color: #48BB78;
 }
 
-/* 詳情行（共花、寶花、步花） */
-.summary-details {
+.bookmark-main .settled-icon {
+    font-size: 1.1rem;
+    margin-right: 4px;
+}
+
+/* 統計資訊區（三欄） */
+.bookmark-stats {
     display: flex;
-    align-items: center;
-    justify-content: space-around;
+    justify-content: space-between;
     gap: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid rgba(0, 0, 0, 0.04);
 }
 
-.summary-detail-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
+.stat-col {
+    flex: 1;
+    text-align: center;
 }
 
-.detail-label {
+.stat-label {
     font-family: 'Fredoka', sans-serif;
     font-size: 0.7rem;
     font-weight: 500;
     color: var(--text-secondary);
-    opacity: 0.8;
+    opacity: 0.7;
+    margin-bottom: 4px;
+    letter-spacing: 0.3px;
 }
 
-.detail-value {
+.stat-value {
     font-family: 'Fredoka', sans-serif;
     font-size: 0.95rem;
     font-weight: 600;
     color: var(--text-primary);
-}
-
-.summary-divider-thin {
-    width: 1px;
-    height: 24px;
-    background: linear-gradient(to bottom, transparent, var(--border-color), transparent);
-    opacity: 0.5;
+    letter-spacing: -0.2px;
 }
 
 .summary-expand-hint {
