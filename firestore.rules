@@ -43,6 +43,21 @@ service cloud.firestore {
           allow read, write: if isCoupleMember(coupleId);
         }
       }
+
+      // ==================== 活動記錄子集合 ====================
+
+      match /activities/{activityId} {
+        // 繼承配對權限：配對成員可以讀取和新增活動記錄
+        allow read, create: if isCoupleMember(coupleId);
+
+        // 只允許更新 isRead 欄位（標記已讀）
+        allow update: if isCoupleMember(coupleId) &&
+                         request.resource.data.diff(resource.data).affectedKeys()
+                           .hasOnly(['isRead']);
+
+        // 禁止刪除活動記錄
+        allow delete: if false;
+      }
     }
 
     // ==================== 自訂分類（保持根集合）====================
