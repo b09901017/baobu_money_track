@@ -1,6 +1,6 @@
+/* 引入原有的 CSS 模組化架構 */
+@import '../css/main.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* 引入原有的 CSS 模組化架構 */
-@import '../css/main.css';
