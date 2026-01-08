@@ -60,11 +60,41 @@ yarn-debug.log*
 yarn-error.log*
 package-lock.json
 yarn.lock
+pnpm-lock.yaml
 
 # ==================== 建置檔案 ====================
 dist/
 build/
 *.map
+
+# ==================== Capacitor ====================
+# Android
+android/app/build/
+android/build/
+android/.gradle/
+android/app/release/
+android/app/debug/
+android/captures/
+android/local.properties
+*.apk
+*.aab
+
+# iOS (如果未來需要)
+ios/App/build/
+ios/App/Pods/
+ios/App/Podfile.lock
+
+# Capacitor 產生的檔案
+.capacitor/
+
+# ==================== Google Project IDX ====================
+# IDX 工作區設定（用戶特定）
+.idx/idx.lock
+.idx/.idx.toml
+
+# IDX 快取與臨時檔案
+.idx/cache/
+.idx/tmp/
 
 # ==================== 日誌檔案 ====================
 logs/

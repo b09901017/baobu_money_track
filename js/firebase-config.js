@@ -1,39 +1,44 @@
-// ==================== Firebase 配置與初始化 ====================
+// ==================== Firebase API 封裝層 ====================
+// 此檔案封裝所有 Firebase 操作，提供統一的 API 介面
+//
+// 注意：Firebase 初始化已在 src/firebaseInit.js 完成
+// 此檔案直接從 window.firebaseModules 讀取（過渡期）
+// TODO: 未來可改為直接 import from 'firebase/*'
 
-// 從 index.html 中載入的 Firebase 模組
+// 過渡期：從 window 讀取 Firebase 模組（由 src/firebaseInit.js 提供）
 const {
-    initializeApp,
-    getFirestore, collection, addDoc, getDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp, onSnapshot, startAfter, enableIndexedDbPersistence, Timestamp, runTransaction, writeBatch,
+    getFirestore, collection, addDoc, getDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp, onSnapshot, startAfter, Timestamp, runTransaction, writeBatch,
     getStorage, ref, uploadBytes, getDownloadURL, deleteObject,
-    getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+    getAuth, GoogleAuthProvider, signInWithPopup, signInWithCredential, signOut, onAuthStateChanged
 } = window.firebaseModules;
 
-// 從配置檔案載入 Firebase 設定（已從 index.html 注入）
-const firebaseConfig = window.firebaseConfig;
+// 從 window 讀取已初始化的 Firebase 實例
+const app = window.firebaseApp || null;  // 備用，通常不需要
+const db = getFirestore();
+const storage = getStorage();
+const auth = getAuth();
 
-// 初始化 Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const storage = getStorage(app);
-const auth = getAuth(app);
+// Capacitor 相關模組（動態載入）
+let Capacitor = null;
+let FirebaseAuthentication = null;
 
-console.log('✅ Firebase 已初始化');
-console.log('📦 專案 ID:', firebaseConfig.projectId);
-
-// 啟用離線持久化
-enableIndexedDbPersistence(db)
-    .then(() => {
-        console.log('✅ 離線持久化已啟用');
-    })
-    .catch((err) => {
-        if (err.code === 'failed-precondition') {
-            console.warn('⚠️ 多個標籤頁同時開啟，離線持久化僅在第一個標籤頁啟用');
-        } else if (err.code === 'unimplemented') {
-            console.warn('⚠️ 瀏覽器不支援 IndexedDB，離線持久化無法使用');
+// 檢測是否為 Native 環境
+async function initCapacitor() {
+    try {
+        if (window.Capacitor) {
+            Capacitor = window.Capacitor;
+            FirebaseAuthentication = (await import('@capacitor-firebase/authentication')).FirebaseAuthentication;
+            console.log('📱 Capacitor 已載入 (Native 環境)');
         } else {
-            console.error('❌ 啟用離線持久化失敗:', err);
+            console.log('🌐 Web 環境');
         }
-    });
+    } catch (error) {
+        console.log('🌐 Web 環境 (Capacitor 未安裝)');
+    }
+}
+
+// 初始化 Capacitor（非同步）
+initCapacitor();
 
 // ==================== 路徑工具函數 ====================
 
@@ -99,21 +104,53 @@ function getActivityRef(coupleId, activityId) {
 // ==================== 認證相關 ====================
 
 /**
- * Google 登入
+ * Google 登入（支援 Web 與 Native 雙平台）
  * @returns {Promise<User>} - Firebase 用戶物件
  */
 async function signInWithGoogle() {
     try {
-        const provider = new GoogleAuthProvider();
-        const result = await signInWithPopup(auth, provider);
-        const user = result.user;
+        // 檢測平台
+        const isNative = Capacitor && Capacitor.isNativePlatform();
 
-        console.log('✅ 登入成功');
-        console.log('👤 用戶:', user.displayName);
-        console.log('📧 Email:', user.email);
+        if (isNative && FirebaseAuthentication) {
+            // ==================== Native 登入流程 ====================
+            console.log('📱 使用 Native Google 登入');
 
-        window.currentUser = user;
-        return user;
+            // 1. 使用 Capacitor Firebase Authentication 插件登入
+            const result = await FirebaseAuthentication.signInWithGoogle();
+
+            // 2. 取得 idToken
+            const idToken = result.credential?.idToken;
+            if (!idToken) {
+                throw new Error('無法取得 ID Token');
+            }
+
+            // 3. 使用 idToken 登入 Firebase
+            const credential = GoogleAuthProvider.credential(idToken);
+            const userCredential = await signInWithCredential(auth, credential);
+            const user = userCredential.user;
+
+            console.log('✅ Native 登入成功');
+            console.log('👤 用戶:', user.displayName);
+            console.log('📧 Email:', user.email);
+
+            window.currentUser = user;
+            return user;
+        } else {
+            // ==================== Web 登入流程 ====================
+            console.log('🌐 使用 Web Google 登入');
+
+            const provider = new GoogleAuthProvider();
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+
+            console.log('✅ Web 登入成功');
+            console.log('👤 用戶:', user.displayName);
+            console.log('📧 Email:', user.email);
+
+            window.currentUser = user;
+            return user;
+        }
     } catch (error) {
         console.error('❌ 登入失敗:', error);
         // 使用自訂對話框或降級到原生 alert

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "106168212860",
+    "project_id": "baobu-app",
+    "storage_bucket": "baobu-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:106168212860:android:9ee805c893124c5e6318f9",
+        "android_client_info": {
+          "package_name": "com.baobu.moneytrack"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "106168212860-901uddjd3s09p0sdci0tt9msr4otvm8v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCkpGizpYrk51RJNMj3nOF-UvWxWus2Kps"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "106168212860-901uddjd3s09p0sdci0tt9msr4otvm8v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
