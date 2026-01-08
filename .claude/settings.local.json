@@ -16,7 +16,8 @@
       "Bash(find:*)",
       "Skill(backend)",
       "Skill(frontend)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(git merge:*)"
     ]
   }
 }
