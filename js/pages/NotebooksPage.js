@@ -178,16 +178,79 @@ export class NotebooksPage {
 
         // 建立 SortableJS 實例
         this.sortableInstance = new Sortable(container, {
-            animation: 150,
+            animation: 200,
+            easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',  // 果凍彈跳效果
             delay: 200,
             delayOnTouchOnly: true,
             ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            dragClass: 'sortable-drag',
             filter: '#btnAddNotebook',  // 排除新增按鈕
             preventOnFilter: true,
+            onStart: (evt) => this.handleSortStart(evt),
+            onMove: (evt) => this.handleSortMove(evt),
             onEnd: (evt) => this.handleSortEnd(evt)
         });
 
         console.log('✅ 拖曳排序已啟用');
+    }
+
+    /**
+     * 處理拖曳開始事件
+     * @param {Event} evt - SortableJS 事件
+     */
+    handleSortStart(evt) {
+        console.log('🎯 開始拖曳');
+
+        // 震動回饋（重擊感）
+        this.vibrate('medium');
+    }
+
+    /**
+     * 處理拖曳移動事件
+     * @param {Event} evt - SortableJS 事件
+     */
+    handleSortMove(evt) {
+        // 輕微震動回饋（位置改變時）
+        this.vibrate('light');
+    }
+
+    /**
+     * 震動回饋封裝
+     * @param {string} type - 震動類型：'light', 'medium', 'heavy', 'success'
+     */
+    vibrate(type = 'light') {
+        // 檢查是否為 Capacitor 環境
+        if (!window.Capacitor || !window.Capacitor.Plugins.Haptics) {
+            // 瀏覽器環境使用 Vibration API
+            if (navigator.vibrate) {
+                const patterns = {
+                    light: 10,
+                    medium: 20,
+                    heavy: 50,
+                    success: [10, 50, 10]
+                };
+                navigator.vibrate(patterns[type] || 10);
+            }
+            return;
+        }
+
+        // Capacitor Haptics API
+        const Haptics = window.Capacitor.Plugins.Haptics;
+        const styles = {
+            light: 'LIGHT',
+            medium: 'MEDIUM',
+            heavy: 'HEAVY',
+            success: 'MEDIUM'
+        };
+
+        if (type === 'success') {
+            // 成功回饋：兩次中等震動
+            Haptics.impact({ style: 'MEDIUM' });
+            setTimeout(() => Haptics.impact({ style: 'MEDIUM' }), 100);
+        } else {
+            Haptics.impact({ style: styles[type] || 'LIGHT' });
+        }
     }
 
     /**
@@ -196,6 +259,9 @@ export class NotebooksPage {
      */
     async handleSortEnd(evt) {
         try {
+            // 成功放置震動回饋
+            this.vibrate('success');
+
             // 取得所有帳本項目的 ID（按新順序）
             const items = evt.to.querySelectorAll('[data-notebook-id]');
             const newOrderedIds = Array.from(items).map(item => item.dataset.notebookId);

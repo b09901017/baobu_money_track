@@ -1,17 +1,22 @@
 /* ==================== Bottom Sheet（童話彈窗）==================== */
 .bottom-sheet {
     position: fixed;
-    inset: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
     z-index: 1000;
     display: none;
+    pointer-events: none;
 }
 
 .bottom-sheet.active {
     display: block;
+    pointer-events: auto;
 }
 
 .bottom-sheet-overlay {
-    position: absolute;
+    position: fixed;
     inset: 0;
     background: rgba(93, 78, 109, 0.6);
     backdrop-filter: blur(4px);
@@ -19,10 +24,8 @@
 }
 
 .bottom-sheet-content {
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
+    position: relative;
+    margin: 0 auto;
     max-width: 480px;
     width: 100%;
     max-height: 90vh;
@@ -35,13 +38,13 @@
 
 @keyframes slideUpBounce {
     0% {
-        transform: translateX(-50%) translateY(100%);
+        transform: translateY(100%);
     }
     70% {
-        transform: translateX(-50%) translateY(-10px);
+        transform: translateY(-10px);
     }
     100% {
-        transform: translateX(-50%) translateY(0);
+        transform: translateY(0);
     }
 }
 

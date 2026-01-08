@@ -59,6 +59,18 @@ export class TransactionForm {
 
         // 渲染自訂分類
         this.renderCustomCategories();
+
+        // 自動 focus 金額欄位（延遲執行以確保動畫完成後才 focus）
+        setTimeout(() => {
+            const amountInput = document.getElementById('transactionAmount');
+            if (amountInput) {
+                amountInput.focus();
+                // 行動裝置上自動打開鍵盤
+                if (window.Capacitor) {
+                    amountInput.click();
+                }
+            }
+        }, 300); // 配合 slideUpBounce 動畫時間
     }
 
     /**

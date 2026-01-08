@@ -156,14 +156,56 @@
 }
 
 /* ==================== 拖曳排序樣式 ==================== */
+/* 拖曳中的幽靈元素（占位符）*/
 .sortable-ghost {
-    opacity: 0.5;
-    background: rgba(174, 198, 207, 0.2);
-    border: 2px dashed var(--macaron-blue);
+    opacity: 0.3;
+    background: linear-gradient(135deg, rgba(255, 182, 193, 0.3), rgba(174, 198, 207, 0.3));
+    border: 3px dashed var(--macaron-blue);
     cursor: grabbing !important;
-    transform: rotate(2deg) scale(1.05);
-    box-shadow: 0 10px 30px rgba(93, 78, 109, 0.3);
-    transition: all 0.2s ease;
+    transform: scale(0.95);
+    box-shadow: none;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: ghostPulse 1s ease-in-out infinite;
+}
+
+/* 被選中的元素（拖曳前）*/
+.sortable-chosen {
+    transform: scale(1.05) rotate(2deg);
+    box-shadow: 0 12px 35px rgba(255, 158, 199, 0.4);
+    z-index: 10;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 正在拖曳的元素 */
+.sortable-drag {
+    opacity: 1 !important;
+    cursor: grabbing !important;
+    transform: scale(1.08) rotate(3deg);
+    box-shadow: 0 15px 40px rgba(93, 78, 109, 0.5);
+    border: 3px solid var(--macaron-rose);
+    animation: dragFloat 0.6s ease-in-out infinite alternate;
+}
+
+/* 幽靈脈動動畫 */
+@keyframes ghostPulse {
+    0%, 100% {
+        transform: scale(0.95);
+        opacity: 0.3;
+    }
+    50% {
+        transform: scale(0.98);
+        opacity: 0.4;
+    }
+}
+
+/* 拖曳漂浮動畫 */
+@keyframes dragFloat {
+    from {
+        transform: scale(1.08) rotate(3deg) translateY(0);
+    }
+    to {
+        transform: scale(1.08) rotate(3deg) translateY(-5px);
+    }
 }
 
 /* 拖曳時的游標樣式 */
