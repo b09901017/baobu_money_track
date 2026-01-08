@@ -7,6 +7,87 @@
 
 ---
 
+## [5.7.1] - 2026-01-09
+
+### 🤖 Android APK 建置修復
+
+**修復 Google 登入功能在 Android 原生環境中的運作問題**
+
+#### 問題現象
+- Android APK 中點擊 Google 登入按鈕出現錯誤
+- 錯誤訊息：`GoogleAuthProviderHandler` 為 null 導致的 NullPointerException
+
+#### 根本原因
+- Capacitor Firebase Authentication 插件採用**按需初始化**策略
+- 必須在 `capacitor.config.json` 中明確聲明需要的認證 provider
+- 未配置時 `GoogleAuthProviderHandler` 不會被初始化
+
+#### 修復內容
+
+1. **新增 Capacitor 插件配置** ⭐ **關鍵修復**
+   - 檔案：`capacitor.config.json`
+   - 新增 `FirebaseAuthentication` 插件配置
+   - 明確聲明使用 `google.com` provider
+   ```json
+   {
+     "plugins": {
+       "FirebaseAuthentication": {
+         "skipNativeAuth": false,
+         "providers": ["google.com"]
+       }
+     }
+   }
+   ```
+
+2. **修正 Java 版本相容性**
+   - 檔案：`android/app/capacitor.build.gradle`
+   - Capacitor 8.0.0 預設 Java 21，本地環境為 Java 17
+   - 修改 `sourceCompatibility` 和 `targetCompatibility` 為 `VERSION_17`
+   - **注意：** 每次 `npx cap sync` 後需要重新修改此檔案
+
+3. **明確註冊 Firebase Authentication 插件**
+   - 檔案：`android/app/src/main/java/com/baobu/moneytrack/MainActivity.java`
+   - 在 `onCreate` 方法中明確呼叫 `registerPlugin()`
+   - 確保插件在應用啟動時被正確載入
+
+#### 新增文件
+- **`ANDROID_BUILD_GUIDE.md`**：完整的 Android 建置指南
+  - 詳細記錄試錯過程與解決方案
+  - 包含常見問題排查步驟
+  - 提供建置腳本範例
+  - 說明下次注意事項與最佳實踐
+
+#### 技術細節
+
+**插件初始化邏輯：**
+```java
+// FirebaseAuthentication.java
+private void initAuthProviderHandlers(FirebaseAuthenticationConfig config) {
+    List<String> providerList = Arrays.asList(config.getProviders());
+    if (providerList.contains(ProviderId.GOOGLE)) {
+        googleAuthProviderHandler = new GoogleAuthProviderHandler(this);
+    }
+}
+```
+
+**建置流程：**
+1. `npx cap sync` - 同步配置到原生專案
+2. 修正 `capacitor.build.gradle` 的 Java 版本
+3. `cd android && ./gradlew clean assembleDebug` - 建置 APK
+
+#### 影響範圍
+- ✅ Android 原生 APK 的 Google 登入功能已修復
+- ✅ Web 版本不受影響（原本就正常運作）
+- ✅ 未來新增其他認證方式（Apple、Facebook 等）時需要在配置中聲明
+
+#### 下次注意事項
+1. 使用 Capacitor 插件前先檢查官方文檔的配置需求
+2. 遇到 NullPointerException 時優先檢查配置完整性
+3. 注意自動生成檔案（如 `capacitor.build.gradle`）的版本管理
+4. 考慮建立自動化建置腳本避免重複手動修改
+
+---
+
 ## [5.7.0] - 2026-01-07
 
 ### 📚 帳本拖曳排序功能
