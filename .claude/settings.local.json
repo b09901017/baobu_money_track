@@ -16,7 +16,10 @@
       "Bash(find:*)",
       "Skill(backend)",
       "Skill(frontend)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(npm init:*)",
+      "Bash(npx tailwindcss init -p)",
+      "Bash(npm run build:*)"
     ]
   }
 }
