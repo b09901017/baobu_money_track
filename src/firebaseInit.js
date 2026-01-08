@@ -13,7 +13,7 @@ import {
   getStorage, ref, uploadBytes, getDownloadURL, deleteObject
 } from 'firebase/storage';
 import {
-  getAuth, GoogleAuthProvider, signInWithPopup,
+  getAuth, GoogleAuthProvider, signInWithPopup, signInWithCredential,
   signOut, onAuthStateChanged
 } from 'firebase/auth';
 
@@ -50,7 +50,7 @@ window.firebaseModules = {
   initializeApp,
   getFirestore, collection, addDoc, getDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp, onSnapshot, startAfter, enableIndexedDbPersistence, Timestamp, runTransaction, writeBatch,
   getStorage, ref, uploadBytes, getDownloadURL, deleteObject,
-  getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+  getAuth, GoogleAuthProvider, signInWithPopup, signInWithCredential, signOut, onAuthStateChanged
 };
 
 window.firebaseConfig = firebaseConfig;
@@ -60,5 +60,5 @@ export {
   app, db, storage, auth,
   collection, addDoc, getDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp, onSnapshot, startAfter, Timestamp, runTransaction, writeBatch,
   ref, uploadBytes, getDownloadURL, deleteObject,
-  GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+  GoogleAuthProvider, signInWithPopup, signInWithCredential, signOut, onAuthStateChanged
 };

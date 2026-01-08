@@ -9,7 +9,7 @@
 const {
     getFirestore, collection, addDoc, getDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp, onSnapshot, startAfter, Timestamp, runTransaction, writeBatch,
     getStorage, ref, uploadBytes, getDownloadURL, deleteObject,
-    getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+    getAuth, GoogleAuthProvider, signInWithPopup, signInWithCredential, signOut, onAuthStateChanged
 } = window.firebaseModules;
 
 // 從 window 讀取已初始化的 Firebase 實例
@@ -17,6 +17,28 @@ const app = window.firebaseApp || null;  // 備用，通常不需要
 const db = getFirestore();
 const storage = getStorage();
 const auth = getAuth();
+
+// Capacitor 相關模組（動態載入）
+let Capacitor = null;
+let FirebaseAuthentication = null;
+
+// 檢測是否為 Native 環境
+async function initCapacitor() {
+    try {
+        if (window.Capacitor) {
+            Capacitor = window.Capacitor;
+            FirebaseAuthentication = (await import('@capacitor-firebase/authentication')).FirebaseAuthentication;
+            console.log('📱 Capacitor 已載入 (Native 環境)');
+        } else {
+            console.log('🌐 Web 環境');
+        }
+    } catch (error) {
+        console.log('🌐 Web 環境 (Capacitor 未安裝)');
+    }
+}
+
+// 初始化 Capacitor（非同步）
+initCapacitor();
 
 // ==================== 路徑工具函數 ====================
 
@@ -82,21 +104,53 @@ function getActivityRef(coupleId, activityId) {
 // ==================== 認證相關 ====================
 
 /**
- * Google 登入
+ * Google 登入（支援 Web 與 Native 雙平台）
  * @returns {Promise<User>} - Firebase 用戶物件
  */
 async function signInWithGoogle() {
     try {
-        const provider = new GoogleAuthProvider();
-        const result = await signInWithPopup(auth, provider);
-        const user = result.user;
+        // 檢測平台
+        const isNative = Capacitor && Capacitor.isNativePlatform();
 
-        console.log('✅ 登入成功');
-        console.log('👤 用戶:', user.displayName);
-        console.log('📧 Email:', user.email);
+        if (isNative && FirebaseAuthentication) {
+            // ==================== Native 登入流程 ====================
+            console.log('📱 使用 Native Google 登入');
 
-        window.currentUser = user;
-        return user;
+            // 1. 使用 Capacitor Firebase Authentication 插件登入
+            const result = await FirebaseAuthentication.signInWithGoogle();
+
+            // 2. 取得 idToken
+            const idToken = result.credential?.idToken;
+            if (!idToken) {
+                throw new Error('無法取得 ID Token');
+            }
+
+            // 3. 使用 idToken 登入 Firebase
+            const credential = GoogleAuthProvider.credential(idToken);
+            const userCredential = await signInWithCredential(auth, credential);
+            const user = userCredential.user;
+
+            console.log('✅ Native 登入成功');
+            console.log('👤 用戶:', user.displayName);
+            console.log('📧 Email:', user.email);
+
+            window.currentUser = user;
+            return user;
+        } else {
+            // ==================== Web 登入流程 ====================
+            console.log('🌐 使用 Web Google 登入');
+
+            const provider = new GoogleAuthProvider();
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+
+            console.log('✅ Web 登入成功');
+            console.log('👤 用戶:', user.displayName);
+            console.log('📧 Email:', user.email);
+
+            window.currentUser = user;
+            return user;
+        }
     } catch (error) {
         console.error('❌ 登入失敗:', error);
         // 使用自訂對話框或降級到原生 alert
