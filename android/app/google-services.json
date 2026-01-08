@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "106168212860-vf45ucvvh38lh9tpv3rqvjdhg4hjge1b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.baobu.moneytrack",
+            "certificate_hash": "f769c1b7101d228edb57b6360b8d28e361063726"
+          }
+        },
+        {
           "client_id": "106168212860-901uddjd3s09p0sdci0tt9msr4otvm8v.apps.googleusercontent.com",
           "client_type": 3
         }
