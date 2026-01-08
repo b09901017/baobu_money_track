@@ -34,9 +34,60 @@ IDX 會自動執行以下動作：
 
 ---
 
-## 🛠️ 步驟 2：驗證環境設定
+## 🔧 步驟 2：修復 Firebase 配置檔案（重要！）
 
-### 2.1 檢查 Node.js 環境
+### 2.1 問題說明
+
+由於 `config/firebase.config.js` 包含 API Key，已被 `.gitignore` 排除，不會上傳到 GitHub。
+因此在 IDX 中需要手動建立這個檔案。
+
+### 2.2 建立 Firebase 配置檔案
+
+在 IDX 終端機中執行以下指令：
+
+```bash
+# 建立 config 目錄（如果不存在）
+mkdir -p config
+
+# 建立 firebase.config.js
+cat > config/firebase.config.js << 'EOF'
+// ==================== Firebase 配置檔案（真實配置）====================
+// ⚠️ 此檔案包含敏感資訊，已被 .gitignore 排除，不會上傳到 GitHub
+
+export const firebaseConfig = {
+    apiKey: "AIzaSyBljCwLMZG1sQOc_CceZ872q2PsBmJ-g3k",
+    authDomain: "baobu-app.firebaseapp.com",
+    projectId: "baobu-app",
+    storageBucket: "baobu-app.firebasestorage.app",
+    messagingSenderId: "106168212860",
+    appId: "1:106168212860:web:344654c947143b636318f9",
+    measurementId: "G-YJ6SY4YGJK"
+};
+EOF
+```
+
+### 2.3 驗證設定成功
+
+等待 Vite 自動重新載入（約 1-2 秒），應該會在終端機看到：
+
+```
+✅ Firebase 已初始化 (via Vite)
+📦 專案 ID: baobu-app
+✅ 離線持久化已啟用
+```
+
+**如果仍有錯誤**，手動重啟 Vite：
+```bash
+# 按 Ctrl+C 停止 Vite
+# 重新啟動
+npm run dev
+```
+
+---
+
+## 🛠️ 步驟 3：驗證環境設定
+
+### 3.1 檢查 Node.js 環境
 
 在 IDX 終端機中執行：
 
@@ -45,19 +96,19 @@ node --version   # 應該顯示 v20.x.x
 npm --version    # 應該顯示 10.x.x
 ```
 
-### 2.2 檢查 Java 環境
+### 3.2 檢查 Java 環境
 
 ```bash
 java -version    # 應該顯示 17.0.x
 ```
 
-### 2.3 檢查 Android SDK
+### 3.3 檢查 Android SDK
 
 ```bash
 echo $ANDROID_HOME   # 應該顯示 Android SDK 路徑
 ```
 
-### 2.4 檢查 Gradle
+### 3.4 檢查 Gradle
 
 ```bash
 cd android
@@ -73,9 +124,9 @@ JVM: 17.0.x
 
 ---
 
-## 📱 步驟 3：啟動 Android 開發環境
+## 📱 步驟 4：啟動 Android 開發環境
 
-### 3.1 同步 Capacitor
+### 4.1 同步 Capacitor
 
 ```bash
 # 確保在專案根目錄
@@ -83,7 +134,7 @@ npm run build       # 建置 Web 資源
 npx cap sync        # 同步到 Android
 ```
 
-### 3.2 開啟 Android Studio
+### 4.2 開啟 Android Studio
 
 ```bash
 npx cap open android
@@ -91,7 +142,7 @@ npx cap open android
 
 **注意：** Project IDX 會在雲端啟動 Android Studio，可能需要等待 1-2 分鐘。
 
-### 3.3 等待 Gradle Sync 完成
+### 4.3 等待 Gradle Sync 完成
 
 Android Studio 開啟後會自動執行：
 1. Gradle Sync（同步依賴）
@@ -101,16 +152,16 @@ Android Studio 開啟後會自動執行：
 
 ---
 
-## 🔑 步驟 4：取得 IDX 環境的 SHA-1 指紋（重要！）
+## 🔑 步驟 5：取得 IDX 環境的 SHA-1 指紋（重要！）
 
-### 4.1 在 IDX 終端機執行
+### 5.1 在 IDX 終端機執行
 
 ```bash
 cd android
 ./gradlew signingReport
 ```
 
-### 4.2 找到 Debug 版本的 SHA-1
+### 5.2 找到 Debug 版本的 SHA-1
 
 在輸出中找到：
 
@@ -124,7 +175,7 @@ SHA1: XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX
 
 複製 `SHA1:` 後面的指紋（格式如 `AA:BB:CC:...`）
 
-### 4.3 加入到 Firebase Console
+### 5.3 加入到 Firebase Console
 
 1. 前往 [Firebase Console](https://console.firebase.google.com/)
 2. 選擇專案 `baobu-app`
@@ -138,7 +189,7 @@ SHA1: XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX
 
 **注意：** 這個 SHA-1 與你本地的**不同**，因為 IDX 使用雲端環境的金鑰。
 
-### 4.4 更新 google-services.json
+### 5.4 更新 google-services.json
 
 1. 在 Firebase Console 同一頁面，點擊「下載 google-services.json」
 2. **重要：** 檔案會下載到你的本地電腦
@@ -150,15 +201,15 @@ SHA1: XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX
 
 ---
 
-## 🚀 步驟 5：建置 APK（在 IDX 中）
+## 🚀 步驟 6：建置 APK（在 IDX 中）
 
-### 5.1 使用 Android Studio（圖形介面）
+### 6.1 使用 Android Studio（圖形介面）
 
 1. 在 Android Studio 中，點擊 `Build` → `Build Bundle(s) / APK(s)` → `Build APK(s)`
 2. 等待建置完成（首次可能需要 5-10 分鐘）
 3. APK 位置：`android/app/build/outputs/apk/debug/app-debug.apk`
 
-### 5.2 使用 Gradle 指令（推薦）
+### 6.2 使用 Gradle 指令（推薦）
 
 在 IDX 終端機中：
 
@@ -171,9 +222,9 @@ cd android
 
 ---
 
-## 📲 步驟 6：測試 APK
+## 📲 步驟 7：測試 APK
 
-### 6.1 使用 IDX 內建模擬器
+### 7.1 使用 IDX 內建模擬器
 
 1. 點擊 IDX 右上角「Android」圖示
 2. 選擇模擬器裝置（建議 Pixel 5, API 33）
@@ -181,7 +232,7 @@ cd android
 4. 等待模擬器啟動（2-3 分鐘）
 5. 在 Android Studio 中點擊「Run」按鈕（綠色三角形）
 
-### 6.2 下載 APK 到本地測試
+### 7.2 下載 APK 到本地測試
 
 1. 在 IDX 檔案總管中，找到 `android/app/build/outputs/apk/debug/app-debug.apk`
 2. 右鍵點擊 → 「下載」
@@ -192,16 +243,16 @@ cd android
 
 ---
 
-## ✅ 步驟 7：驗證 Google 登入
+## ✅ 步驟 8：驗證 Google 登入
 
-### 7.1 測試流程
+### 8.1 測試流程
 
 1. 在 Android 裝置或模擬器上開啟 App
 2. 點擊「Google 登入」按鈕
 3. 應該會顯示 Google 帳號選擇畫面
 4. 選擇帳號後應該能成功登入
 
-### 7.2 如果登入失敗
+### 8.2 如果登入失敗
 
 **檢查 Logcat（Android Studio）：**
 
@@ -219,9 +270,9 @@ cd android
 
 ---
 
-## 🔄 步驟 8：同步變更回本地
+## 🔄 步驟 9：同步變更回本地
 
-### 8.1 在 IDX 中提交變更
+### 9.1 在 IDX 中提交變更
 
 ```bash
 git add android/app/google-services.json
@@ -229,7 +280,7 @@ git commit -m "chore: update google-services.json with IDX SHA-1"
 git push origin main
 ```
 
-### 8.2 在本地同步
+### 9.2 在本地同步
 
 ```bash
 git pull origin main
