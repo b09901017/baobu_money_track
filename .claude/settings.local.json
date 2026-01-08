@@ -30,7 +30,8 @@
       "Bash(timeout 3 tail:*)",
       "Bash(timeout:*)",
       "Bash(ping:*)",
-      "Bash(del nul)"
+      "Bash(del nul)",
+      "Bash(git checkout:*)"
     ]
   }
 }
