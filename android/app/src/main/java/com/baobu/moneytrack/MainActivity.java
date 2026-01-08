@@ -8,6 +8,7 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.Plugin;
 
 public class MainActivity extends BridgeActivity {
     @Override
@@ -17,6 +18,12 @@ public class MainActivity extends BridgeActivity {
 
         // 設定全螢幕模式
         setupFullscreen();
+    }
+
+    @Override
+    public void onBackPressed() {
+        // 通知前端處理返回鍵事件
+        getBridge().triggerWindowJSEvent("backbutton");
     }
 
     private void setupFullscreen() {

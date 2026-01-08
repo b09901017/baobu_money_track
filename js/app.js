@@ -6,6 +6,7 @@ import { EventBinder } from './core/EventBinder.js';
 import { Router } from './core/Router.js';
 import { ListenerManager } from './core/ListenerManager.js';
 import { NetworkMonitor } from './core/NetworkMonitor.js';
+import BackButtonHandler from './core/BackButtonHandler.js';
 
 import { BalanceCard } from './components/BalanceCard.js';
 import { TimelineView } from './components/TimelineView.js';
@@ -114,6 +115,9 @@ class CoupleApp {
         // 網路狀態監控器
         this.networkMonitor = new NetworkMonitor();
         window.networkMonitor = this.networkMonitor;  // 掛載到全域
+
+        // Android 返回鍵處理器
+        BackButtonHandler.init();
 
         // 路由器
         this.router = new Router(

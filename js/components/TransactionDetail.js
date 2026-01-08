@@ -15,6 +15,7 @@ const CATEGORY_DETAIL_COLORS = {
 export class TransactionDetail {
     constructor() {
         this.modal = document.getElementById('transactionDetailModal');
+        this.backButtonUnregister = null;  // 返回鍵取消註冊函數
     }
 
     /**
@@ -114,6 +115,14 @@ export class TransactionDetail {
             }
         } else {
             photoSection.classList.add('hidden');
+        }
+
+        // 註冊返回鍵處理
+        if (window.BackButtonHandler) {
+            this.backButtonUnregister = window.BackButtonHandler.register(
+                'TransactionDetail',
+                () => this.close()
+            );
         }
 
         // 顯示模態框
@@ -250,6 +259,12 @@ export class TransactionDetail {
      * 關閉交易詳情
      */
     close() {
+        // 取消註冊返回鍵處理
+        if (this.backButtonUnregister) {
+            this.backButtonUnregister();
+            this.backButtonUnregister = null;
+        }
+
         if (this.modal) {
             this.modal.classList.add('hidden');
         }

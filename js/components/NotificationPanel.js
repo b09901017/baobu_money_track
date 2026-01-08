@@ -12,6 +12,10 @@ export class NotificationPanel {
         // 分頁相關
         this.displayedCount = 6; // 初始顯示 6 個
         this.pageSize = 6; // 每次載入 6 個
+
+        // 返回鍵處理
+        this.backButtonUnregister = null;
+        this.detailBackButtonUnregister = null;
     }
 
     /**
@@ -96,6 +100,14 @@ export class NotificationPanel {
         this.panel.classList.add('active');
         this.isOpen = true;
 
+        // 註冊返回鍵處理
+        if (window.BackButtonHandler) {
+            this.backButtonUnregister = window.BackButtonHandler.register(
+                'NotificationPanel',
+                () => this.close()
+            );
+        }
+
         // 渲染內容
         this.render();
 
@@ -107,6 +119,12 @@ export class NotificationPanel {
      */
     close() {
         if (!this.panel) return;
+
+        // 取消註冊返回鍵處理
+        if (this.backButtonUnregister) {
+            this.backButtonUnregister();
+            this.backButtonUnregister = null;
+        }
 
         this.panel.classList.remove('active');
         setTimeout(() => {
@@ -563,6 +581,15 @@ export class NotificationPanel {
         }
 
         content.innerHTML = html;
+
+        // 註冊詳情彈窗的返回鍵處理
+        if (window.BackButtonHandler) {
+            this.detailBackButtonUnregister = window.BackButtonHandler.register(
+                'NotificationDetail',
+                () => this.closeDetail()
+            );
+        }
+
         modal.classList.remove('hidden');
     }
 
@@ -570,6 +597,12 @@ export class NotificationPanel {
      * 關閉詳情彈窗
      */
     closeDetail() {
+        // 取消註冊詳情彈窗的返回鍵處理
+        if (this.detailBackButtonUnregister) {
+            this.detailBackButtonUnregister();
+            this.detailBackButtonUnregister = null;
+        }
+
         const modal = document.getElementById('notificationDetailModal');
         if (modal) {
             modal.classList.add('hidden');

@@ -12,6 +12,7 @@ export class TransactionForm {
         this.selectedPhoto = null;  // 儲存選中的照片檔案
         this.editingTransactionId = null;  // 編輯模式下的交易 ID
         this.editingTransaction = null;  // 編輯模式下的交易資料
+        this.backButtonUnregister = null;  // 返回鍵取消註冊函數
     }
 
     /**
@@ -31,6 +32,14 @@ export class TransactionForm {
         this.sheet.classList.remove('hidden');
         this.sheet.classList.add('active');
         console.log('✅ Sheet 已顯示');
+
+        // 註冊返回鍵處理
+        if (window.BackButtonHandler) {
+            this.backButtonUnregister = window.BackButtonHandler.register(
+                'TransactionForm',
+                () => this.close()
+            );
+        }
 
         // 重置表單（會同時設置今天日期）
         this.reset();
@@ -56,6 +65,12 @@ export class TransactionForm {
      * 關閉表單
      */
     close() {
+        // 取消註冊返回鍵處理
+        if (this.backButtonUnregister) {
+            this.backButtonUnregister();
+            this.backButtonUnregister = null;
+        }
+
         if (this.sheet) {
             this.sheet.classList.remove('active');
             this.sheet.classList.add('hidden');

@@ -13,6 +13,7 @@ export class DateRangePicker {
         this.modal = document.getElementById('dateRangeModal');
         this.rangeCalendarGrid = document.getElementById('rangeCalendarGrid');
         this.rangeCalendarMonth = document.getElementById('rangeCalendarMonth');
+        this.backButtonUnregister = null;  // 返回鍵取消註冊函數
     }
 
     /**
@@ -28,6 +29,14 @@ export class DateRangePicker {
         // 更新顯示
         this.updateRangeDisplays();
         this.renderCalendar();
+
+        // 註冊返回鍵處理
+        if (window.BackButtonHandler) {
+            this.backButtonUnregister = window.BackButtonHandler.register(
+                'DateRangePicker',
+                () => this.closeModal()
+            );
+        }
 
         if (this.modal) {
             this.modal.classList.remove('hidden');
@@ -51,6 +60,14 @@ export class DateRangePicker {
         this.updateRangeDisplays();
         this.renderCalendar();
 
+        // 註冊返回鍵處理
+        if (window.BackButtonHandler) {
+            this.backButtonUnregister = window.BackButtonHandler.register(
+                'DateRangePicker',
+                () => this.closeModal()
+            );
+        }
+
         if (this.modal) {
             this.modal.classList.remove('hidden');
         }
@@ -60,6 +77,12 @@ export class DateRangePicker {
      * 關閉日期區間選擇器
      */
     closeModal() {
+        // 取消註冊返回鍵處理
+        if (this.backButtonUnregister) {
+            this.backButtonUnregister();
+            this.backButtonUnregister = null;
+        }
+
         if (this.modal) {
             this.modal.classList.add('hidden');
         }
