@@ -1,11 +1,199 @@
 /* ==================== 響應式設計 ==================== */
+
+/* 手機版優化 - 減少壓迫感 */
 @media (max-width: 480px) {
-    .fab {
-        right: var(--spacing-lg);
+    /* 全域字體縮小 */
+    body {
+        font-size: 14px;
+        line-height: 1.5;
     }
 
+    /* 減少間距 */
+    :root {
+        --spacing-xs: 3px;
+        --spacing-sm: 6px;
+        --spacing-md: 12px;
+        --spacing-lg: 18px;
+        --spacing-xl: 24px;
+    }
+
+    /* 主容器調整 */
+    .app-container {
+        max-width: 100%;
+    }
+
+    .main-content {
+        padding-bottom: 90px;
+    }
+
+    /* FAB 位置 */
+    .fab {
+        right: var(--spacing-lg);
+        width: 52px;
+        height: 52px;
+        font-size: 24px;
+    }
+
+    /* 帳本列表 */
     .notebooks-list {
         grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    /* 頁面標題縮小 */
+    .page-title,
+    h1 {
+        font-size: 22px;
+    }
+
+    h2 {
+        font-size: 18px;
+    }
+
+    h3 {
+        font-size: 16px;
+    }
+
+    /* 結算卡片縮小 */
+    .balance-card {
+        padding: 14px;
+        margin: 12px;
+    }
+
+    .balance-card__title {
+        font-size: 14px;
+    }
+
+    .balance-card__amount {
+        font-size: 26px;
+    }
+
+    .balance-card__subtitle {
+        font-size: 12px;
+    }
+
+    /* 時間軸項目縮小 */
+    .timeline-date {
+        padding: 8px 12px;
+        margin: 12px;
+        font-size: 13px;
+    }
+
+    .transaction-item {
+        padding: 10px 12px;
+        margin: 0 12px 8px;
+    }
+
+    .transaction-item__emoji {
+        width: 38px;
+        height: 38px;
+        font-size: 20px;
+    }
+
+    .transaction-item__name {
+        font-size: 15px;
+    }
+
+    .transaction-item__amount {
+        font-size: 16px;
+    }
+
+    .transaction-item__meta {
+        font-size: 11px;
+    }
+
+    /* 底部導航縮小 */
+    .bottom-nav {
+        height: 70px;
+        padding: 8px 0;
+    }
+
+    .bottom-nav__item {
+        font-size: 11px;
+    }
+
+    .bottom-nav__icon {
+        font-size: 22px;
+    }
+
+    /* 彈窗縮小 */
+    .bottom-sheet {
+        max-height: 85vh;
+    }
+
+    .bottom-sheet__header {
+        padding: 14px 16px;
+    }
+
+    .bottom-sheet__title {
+        font-size: 17px;
+    }
+
+    .bottom-sheet__content {
+        padding: 16px;
+    }
+
+    /* 表單元素縮小 */
+    .form-group label {
+        font-size: 13px;
+        margin-bottom: 6px;
+    }
+
+    .form-input,
+    .form-select {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+
+    .btn {
+        padding: 10px 18px;
+        font-size: 14px;
+    }
+
+    .btn-lg {
+        padding: 12px 22px;
+        font-size: 15px;
+    }
+
+    /* 分類按鈕縮小 */
+    .category-btn {
+        padding: 8px 14px;
+        font-size: 13px;
+    }
+
+    .category-btn .category-icon {
+        font-size: 18px;
+    }
+
+    /* 日曆縮小 */
+    .calendar-day {
+        height: 48px;
+        font-size: 13px;
+    }
+
+    .calendar-day__number {
+        font-size: 15px;
+    }
+
+    .calendar-day__amount {
+        font-size: 10px;
+    }
+
+    /* 分析頁面圖表縮小 */
+    .analytics-card {
+        padding: 14px;
+    }
+
+    .analytics-stat {
+        padding: 10px;
+    }
+
+    .analytics-stat__value {
+        font-size: 20px;
+    }
+
+    .analytics-stat__label {
+        font-size: 11px;
     }
 }
 
@@ -14,4 +202,3 @@
         right: calc(50% - 220px);
     }
 }
-
