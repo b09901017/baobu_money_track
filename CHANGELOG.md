@@ -7,6 +7,120 @@
 
 ---
 
+## [5.8.0] - 2026-01-09
+
+### 🎨 UI/UX 體驗大升級 + 🔙 Android 返回鍵智能處理
+
+**全面提升互動體驗：手機版 UI 優化、表單體驗、拖曳回饋、返回鍵邏輯**
+
+#### 新增功能
+
+1. **Android 返回鍵智能處理系統** 🔙
+   - 建立三級優先級處理系統：
+     - **優先級 1**：關閉開啟的彈窗或表單（TransactionForm、TransactionDetail、NotificationPanel、DateRangePicker）
+     - **優先級 2**：返回首頁（如果在其他頁面）
+     - **優先級 3**：退出應用（僅在首頁且無彈窗時）
+   - 新增 `BackButtonHandler.js` 核心模組（堆疊式管理）
+   - MainActivity 攔截 `onBackPressed()` 事件並傳遞到前端
+   - 支援瀏覽器環境模擬（ESC 鍵）
+   - 所有彈窗組件已整合返回鍵邏輯
+
+2. **手機版 UI 全面優化** 📱
+   - 更激進的元素縮小（字體 12px → 11px，行高 1.4 → 1.3）
+   - 所有間距減少 15-25%（spacing-sm: 4px → 3px 等）
+   - 頂部導航：50px → 46px
+   - 底部導航：60px → 56px
+   - 交易項目圖示：32px → 28px
+   - 結算卡片、表單、按鈕等全面縮小
+   - 提升畫面資訊密度，一次顯示更多內容
+
+3. **新增花費表單體驗優化** 💰
+   - 改為底部對齊（從下方滑出，無上方漏洞感）
+   - 開啟表單自動 focus 金額欄位
+   - 行動裝置自動彈出鍵盤
+   - 延遲 300ms 確保動畫完成再 focus
+   - 優化彈窗布局結構（fixed bottom）
+
+4. **帳本拖曳互動大升級** 🎯
+   - **震動回饋系統**：
+     - 開始拖曳：medium 震動（20ms，重擊感）
+     - 移動位置：light 震動（10ms，輕微回饋）
+     - 放置成功：success 震動（雙擊確認）
+   - **精緻動畫效果**：
+     - 選中狀態（`.sortable-chosen`）：放大 1.05x + 旋轉 2deg + 粉色陰影
+     - 拖曳中（`.sortable-drag`）：放大 1.08x + 旋轉 3deg + 粉色邊框 + 上下漂浮動畫
+     - 占位符（`.sortable-ghost`）：縮小 0.95x + 虛線邊框 + 呼吸脈動動畫
+   - **果凍彈跳 easing**：`cubic-bezier(0.34, 1.56, 0.64, 1)`
+   - **多平台震動支援**：Capacitor Haptics API + Web Vibration API
+
+5. **Android 全螢幕模式** 🖼️
+   - 隱藏狀態列與導航列（透明背景）
+   - 支援瀏海屏延伸至邊緣
+   - 沉浸式行為（滑動暫時顯示系統列）
+   - 從其他 App 返回時保持全螢幕
+
+#### 技術實現
+
+**BackButtonHandler 核心架構：**
+- 堆疊式處理器管理（LIFO，後進先出）
+- `register(name, callback)` 註冊處理器
+- `handleBackButton()` 執行優先級邏輯
+- 支援多層彈窗堆疊（詳情 → 列表 → 首頁）
+
+**震動回饋封裝：**
+```javascript
+vibrate(type) {
+  // Capacitor: Haptics.impact({ style: 'MEDIUM' })
+  // Browser: navigator.vibrate(20)
+}
+```
+
+**拖曳動畫層次：**
+```
+選中 → 拖曳中 → 占位符
+1.05x  →  1.08x  →  0.95x
+2deg   →   3deg   →   0deg
+粉影   →  粉框   →  虛線
+```
+
+#### 檔案變更
+
+**新增：**
+- `js/core/BackButtonHandler.js` - 返回鍵處理器
+
+**修改：**
+- `android/app/src/main/java/com/baobu/moneytrack/MainActivity.java` - 攔截返回鍵
+- `android/app/src/main/res/values/styles.xml` - 全螢幕主題
+- `js/app.js` - 初始化 BackButtonHandler
+- `js/components/TransactionForm.js` - 返回鍵 + 自動 focus
+- `js/components/TransactionDetail.js` - 返回鍵整合
+- `js/components/NotificationPanel.js` - 返回鍵整合（面板 + 詳情）
+- `js/components/DateRangePicker.js` - 返回鍵整合
+- `js/pages/NotebooksPage.js` - 震動回饋 + 拖曳事件
+- `css/components/bottom-sheet.css` - 底部對齊布局
+- `css/components/notebooks.css` - 精緻拖曳動畫
+- `css/utilities/responsive.css` - 手機版 UI 全面縮小
+
+#### 使用者體驗提升
+
+- ✅ 返回鍵關閉表單（而非直接退出 App）
+- ✅ 返回鍵關閉通知面板與詳情
+- ✅ 返回鍵從其他頁面回到首頁
+- ✅ 開啟表單即可直接輸入金額（減少 1 次點擊）
+- ✅ 表單從底部滑出無漏洞感
+- ✅ 拖曳帳本有觸覺回饋（3 階段震動）
+- ✅ 拖曳動畫更精緻（放大/旋轉/漂浮/脈動）
+- ✅ 手機版視野更廣（元素全面縮小）
+- ✅ 全螢幕沉浸式體驗
+
+#### 相容性
+
+- Android：完整支援（返回鍵 + 震動 + 全螢幕）
+- iOS：部分支援（震動，返回鍵需實作）
+- 瀏覽器：模擬支援（ESC 鍵 + Vibration API）
+
+---
+
 ## [5.7.2] - 2026-01-09
 
 ### 🤖 Android APK 自動化建置腳本
