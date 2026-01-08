@@ -2,7 +2,7 @@
 
 > 一個童話風格的情侶共同記帳應用，支援多帳本管理、彈性付款記錄、智能結算功能。
 
-![Version](https://img.shields.io/badge/version-5.7.0-pink)
+![Version](https://img.shields.io/badge/version-5.7.2-pink)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow)
 ![Firebase](https://img.shields.io/badge/Firebase-Integrated-orange)
@@ -139,6 +139,60 @@ baobu_money_track/
 git clone https://github.com/b09901017/baobu_money_track.git
 cd baobu_money_track
 ```
+
+## 📱 Android APK 建置
+
+### 自動化建置腳本（推薦）
+
+本專案提供自動化建置腳本，一鍵完成所有建置流程：
+
+**Windows 系統：**
+```bash
+# 執行建置腳本
+./build-android.bat
+```
+
+**Linux / macOS 系統：**
+```bash
+# 賦予執行權限（首次執行）
+chmod +x build-android.sh
+
+# 執行建置腳本
+./build-android.sh
+```
+
+腳本會自動執行：
+1. ✅ 建置 Web 資源（`npm run build`）
+2. ✅ 同步 Capacitor 配置（`npx cap sync`）
+3. ✅ 修正 Java 版本（VERSION_21 → VERSION_17）
+4. ✅ 建置 Debug APK（`gradlew clean assembleDebug`）
+
+建置完成後，APK 位置：`android/app/build/outputs/apk/debug/app-debug.apk`
+
+### 手動建置流程
+
+如果需要手動建置，請參考完整指南：[ANDROID_BUILD_GUIDE.md](ANDROID_BUILD_GUIDE.md)
+
+### 安裝 APK 到手機
+
+**方法 1：使用 ADB（需要 USB 連接）**
+```bash
+adb install android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+**方法 2：直接傳送到手機**
+1. 找到 APK 檔案：`android/app/build/outputs/apk/debug/app-debug.apk`
+2. 透過 USB、藍牙、雲端硬碟或通訊軟體傳送到手機
+3. 在手機上點擊 APK 檔案安裝（需要允許「未知來源」安裝）
+
+### 重要提醒
+
+- ⚠️ **每次修改程式碼後**，需要重新建置 APK 並重新安裝到手機才能看到變更
+- ⚠️ **Web 版不受影響**：使用 `firebase deploy` 部署後，網頁版會立即更新
+- ⚠️ **Java 版本問題**：本專案使用 Java 17，Capacitor 8.0.0 預設 Java 21，建置腳本會自動修正
+- ⚠️ **Google Sign-In 配置**：確保 `capacitor.config.json` 包含 Firebase Authentication provider 配置
+
+詳細建置過程、常見問題與解決方案，請參閱：[ANDROID_BUILD_GUIDE.md](ANDROID_BUILD_GUIDE.md)
 
 ### 2. 設定 Firebase 配置
 

@@ -7,6 +7,87 @@
 
 ---
 
+## [5.7.2] - 2026-01-09
+
+### 🤖 Android APK 自動化建置腳本
+
+**新增自動化建置腳本，一鍵完成 APK 建置流程**
+
+#### 新增功能
+
+1. **自動化建置腳本** 🚀
+   - 新增 `build-android.sh`（Linux/macOS）
+   - 新增 `build-android.bat`（Windows）
+   - 自動執行完整建置流程：
+     - ✅ Web 資源建置（`npm run build`）
+     - ✅ Capacitor 同步（`npx cap sync`）
+     - ✅ Java 版本修正（VERSION_21 → VERSION_17）
+     - ✅ APK 建置（`gradlew clean assembleDebug`）
+   - 建置完成後自動顯示 APK 位置與安裝提示
+
+2. **文檔更新** 📚
+   - 更新 `README.md`：新增「Android APK 建置」章節
+   - 詳細說明自動化腳本使用方式
+   - 新增手動建置流程參考連結
+   - 新增 APK 安裝到手機的兩種方法
+   - 新增重要提醒事項（Java 版本、配置要求等）
+
+3. **CLAUDE.md 優化**
+   - 版本號更新為 v5.7.2
+   - 建置腳本相關文檔已在 v5.7.1 補充
+
+#### 腳本特色
+
+- ✅ **跨平台支援**：Windows (.bat) / Linux & macOS (.sh)
+- ✅ **錯誤處理**：每個步驟失敗會自動停止並顯示錯誤訊息
+- ✅ **友善提示**：使用 Emoji 和清晰的步驟說明
+- ✅ **自動修正**：使用 PowerShell/sed 自動修正 Java 版本
+- ✅ **完整提示**：建置成功後顯示 APK 位置和安裝方法
+
+#### 使用方式
+
+**Windows：**
+```bash
+./build-android.bat
+```
+
+**Linux / macOS：**
+```bash
+chmod +x build-android.sh  # 首次執行
+./build-android.sh
+```
+
+#### 技術實現
+
+**Windows 版本（build-android.bat）：**
+- 使用 `@echo off` 和 `call` 確保指令正確執行
+- 使用 PowerShell 的 `Get-Content` 和 `Set-Content` 替換檔案內容
+- 使用 `%errorlevel%` 檢查每個步驟的執行狀態
+- 使用 `pause` 讓使用者查看結果後再關閉視窗
+
+**Linux / macOS 版本（build-android.sh）：**
+- 使用 `#!/bin/bash` shebang
+- 使用 `sed` 或 PowerShell（Windows Git Bash）替換檔案內容
+- 使用 `$?` 檢查每個步驟的執行狀態
+- 自動判斷作業系統類型選擇適當的 sed 指令
+
+#### 檔案變更
+
+- **新增：** `build-android.sh` - Linux/macOS 建置腳本
+- **新增：** `build-android.bat` - Windows 建置腳本
+- **修改：** `README.md` - 新增 Android APK 建置章節
+- **修改：** `CHANGELOG.md` - 記錄 v5.7.2 變更
+- **修改：** `CLAUDE.md` - 版本號更新
+
+#### 下次可優化
+
+- [ ] 支援 Release 版本建置（需要 Keystore 配置）
+- [ ] 支援自動安裝到連接的手機（adb install）
+- [ ] 支援建置版本號自動遞增
+- [ ] 支援 APK 自動簽名（目前只有 Debug 版本）
+
+---
+
 ## [5.7.1] - 2026-01-09
 
 ### 🤖 Android APK 建置修復

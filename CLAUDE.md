@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **線上演示：** https://baobu-app.web.app
 
-**當前版本：** v5.7.1 (Android APK 建置修復)
+**當前版本：** v5.7.2 (Android APK 自動化建置腳本)
 
 ---
 
