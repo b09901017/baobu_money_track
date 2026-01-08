@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **線上演示：** https://baobu-app.web.app
 
-**當前版本：** v5.7.0 (帳本拖曳排序功能)
+**當前版本：** v5.7.1 (Android APK 建置修復)
 
 ---
 
@@ -74,6 +74,89 @@ DevTools.cacheStats()
 2. 點擊 ⚙️ 設定圖示
 3. 勾選「Disable cache (while DevTools is open)」
 4. 保持開發者工具開啟，F5 重新整理即可
+
+### Android APK 建置 🤖
+
+**完整指南：** 參見 [ANDROID_BUILD_GUIDE.md](ANDROID_BUILD_GUIDE.md)
+
+#### 快速建置流程
+
+```bash
+# 1. 同步 Capacitor 配置到原生專案
+npx cap sync
+
+# 2. 修正 Java 版本（本地環境 Java 17）
+# 編輯 android/app/capacitor.build.gradle
+# 將 JavaVersion.VERSION_21 改為 JavaVersion.VERSION_17
+
+# 3. 建置 Debug APK
+cd android
+./gradlew clean assembleDebug
+
+# APK 位置：android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+#### ⚠️ 關鍵注意事項
+
+1. **Capacitor 插件配置（必要！）**
+   - 檔案：`capacitor.config.json`
+   - **必須明確聲明使用的認證 provider**
+   ```json
+   {
+     "plugins": {
+       "FirebaseAuthentication": {
+         "skipNativeAuth": false,
+         "providers": ["google.com"]
+       }
+     }
+   }
+   ```
+   - ⚠️ 未配置會導致 `GoogleAuthProviderHandler` 為 null！
+
+2. **Java 版本管理**
+   - Capacitor 8.0.0 預設使用 Java 21
+   - 本地環境為 Java 17，需手動修改
+   - `android/app/capacitor.build.gradle` 會在每次 `npx cap sync` 後重新生成
+   - **每次 sync 後都要重新修改 Java 版本！**
+
+3. **Firebase 配置檢查**
+   - `android/app/google-services.json` 包含正確的 SHA-1 指紋
+   - 取得 SHA-1：`cd android && ./gradlew signingReport`
+   - 將 SHA-1 加入 Firebase Console（專案設定 → Android 應用程式）
+
+4. **MainActivity 插件註冊（已完成）**
+   - 檔案：`android/app/src/main/java/com/baobu/moneytrack/MainActivity.java`
+   - 已明確註冊 `FirebaseAuthenticationPlugin`
+   - 確保插件在應用啟動時被載入
+
+#### 建置自動化腳本（建議）
+
+為避免每次手動修改，可建立 `build-android.sh`：
+
+```bash
+#!/bin/bash
+echo "🚀 開始建置 Android APK..."
+
+# 同步配置
+npx cap sync
+
+# 修正 Java 版本
+sed -i 's/JavaVersion\.VERSION_21/JavaVersion.VERSION_17/g' android/app/capacitor.build.gradle
+
+# 建置 APK
+cd android && ./gradlew clean assembleDebug
+
+echo "✅ 建置完成！APK: android/app/build/outputs/apk/debug/app-debug.apk"
+```
+
+#### 常見問題與解決
+
+| 錯誤 | 原因 | 解決方式 |
+|------|------|---------|
+| `GoogleAuthProviderHandler` null | 未配置 provider | 加入 `capacitor.config.json` 配置 |
+| `invalid source release: 21` | Java 版本不符 | 修改 `capacitor.build.gradle` 為 Java 17 |
+| `SHA-1` 錯誤 | 指紋未加入 Firebase | 執行 `gradlew signingReport` 取得並加入 |
+| Google 登入失敗 | 配置或網路問題 | 檢查 Logcat 錯誤訊息 |
 
 ---
 
@@ -379,13 +462,42 @@ Types: feat, fix, style, refactor, docs, test, chore
    - 開啟開發者工具並停用快取
    - DevTools 僅在本地環境自動載入
 
+6. **Android APK 建置關鍵事項** 🤖
+   - **Capacitor 插件配置優先於代碼**：遇到插件相關的 NullPointerException，先檢查 `capacitor.config.json` 是否完整配置
+   - **按需初始化策略**：Capacitor Firebase Authentication 只初始化配置中聲明的 provider，未聲明的 Handler 會是 null
+   - **自動生成檔案管理**：`capacitor.build.gradle` 會在每次 `npx cap sync` 後重新生成，需要自動化腳本或手動重新修改
+   - **Java 版本一致性**：確保 Gradle 配置的 Java 版本與本地環境一致（本專案：Java 17）
+   - **Firebase 原生配置**：`google-services.json` 必須包含當前環境的 SHA-1 指紋（本地、IDX、CI/CD 各不相同）
+   - **先配置後編碼**：新增 Capacitor 插件時，先查閱官方文檔確認配置需求，再開始寫代碼
+
 ---
 
 ## 參考文件
 
-- [CHANGELOG.md](CHANGELOG.md) - 版本更新歷史
+### 核心文檔
+- [CHANGELOG.md](CHANGELOG.md) - 版本更新歷史（包含詳細技術實現）
 - [README.md](README.md) - 專案說明與部署指南
 - [DESIGN.md](DESIGN.md) - 童話風格設計規範
+
+### Android 開發文檔 🤖
+- [ANDROID_BUILD_GUIDE.md](ANDROID_BUILD_GUIDE.md) - **完整 Android APK 建置指南**
+  - 詳細試錯過程（5 次嘗試）
+  - 根本原因分析
+  - 完整解決方案
+  - 常見問題排查
+  - 建置自動化腳本
+  - 下次注意事項與最佳實踐
+- [IDX_TROUBLESHOOTING.md](IDX_TROUBLESHOOTING.md) - Google Project IDX 環境問題排查
+- [IDX_GUIDE.md](IDX_GUIDE.md) - Google Project IDX 完整操作指南（已過時，參考用）
+
+### Firebase 配置
 - FIRESTORE_INDEXES.md - Firestore 索引需求
 - firestore.rules - Firestore 安全規則
 - storage.rules - Firebase Storage 安全規則
+- `android/app/google-services.json` - Firebase Android 配置（包含 SHA-1）
+
+### Capacitor 配置
+- [capacitor.config.json](capacitor.config.json) - **關鍵配置文件**
+  - ⚠️ 必須明確聲明使用的插件與 provider
+  - Firebase Authentication 需要聲明 `providers: ["google.com"]`
+  - 未來新增認證方式（Apple、Facebook）也需在此聲明
