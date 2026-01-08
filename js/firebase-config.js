@@ -1,39 +1,22 @@
-// ==================== Firebase 配置與初始化 ====================
+// ==================== Firebase API 封裝層 ====================
+// 此檔案封裝所有 Firebase 操作，提供統一的 API 介面
+//
+// 注意：Firebase 初始化已在 src/firebaseInit.js 完成
+// 此檔案直接從 window.firebaseModules 讀取（過渡期）
+// TODO: 未來可改為直接 import from 'firebase/*'
 
-// 從 index.html 中載入的 Firebase 模組
+// 過渡期：從 window 讀取 Firebase 模組（由 src/firebaseInit.js 提供）
 const {
-    initializeApp,
-    getFirestore, collection, addDoc, getDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp, onSnapshot, startAfter, enableIndexedDbPersistence, Timestamp, runTransaction, writeBatch,
+    getFirestore, collection, addDoc, getDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp, onSnapshot, startAfter, Timestamp, runTransaction, writeBatch,
     getStorage, ref, uploadBytes, getDownloadURL, deleteObject,
     getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
 } = window.firebaseModules;
 
-// 從配置檔案載入 Firebase 設定（已從 index.html 注入）
-const firebaseConfig = window.firebaseConfig;
-
-// 初始化 Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const storage = getStorage(app);
-const auth = getAuth(app);
-
-console.log('✅ Firebase 已初始化');
-console.log('📦 專案 ID:', firebaseConfig.projectId);
-
-// 啟用離線持久化
-enableIndexedDbPersistence(db)
-    .then(() => {
-        console.log('✅ 離線持久化已啟用');
-    })
-    .catch((err) => {
-        if (err.code === 'failed-precondition') {
-            console.warn('⚠️ 多個標籤頁同時開啟，離線持久化僅在第一個標籤頁啟用');
-        } else if (err.code === 'unimplemented') {
-            console.warn('⚠️ 瀏覽器不支援 IndexedDB，離線持久化無法使用');
-        } else {
-            console.error('❌ 啟用離線持久化失敗:', err);
-        }
-    });
+// 從 window 讀取已初始化的 Firebase 實例
+const app = window.firebaseApp || null;  // 備用，通常不需要
+const db = getFirestore();
+const storage = getStorage();
+const auth = getAuth();
 
 // ==================== 路徑工具函數 ====================
 
