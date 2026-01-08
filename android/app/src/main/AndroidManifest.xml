@@ -37,5 +37,18 @@
 
     <!-- Permissions -->
 
+    <!-- 網路存取（Firebase 與 API 呼叫必須） -->
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- 網路狀態檢查（離線支援與同步機制） -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- 相機與照片上傳（記帳照片功能） -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+                     android:maxSdkVersion="32" />
+
+    <!-- 通知功能（活動提醒與通知中心） -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>

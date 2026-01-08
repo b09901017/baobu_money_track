@@ -87,6 +87,15 @@ ios/App/Podfile.lock
 # Capacitor 產生的檔案
 .capacitor/
 
+# ==================== Google Project IDX ====================
+# IDX 工作區設定（用戶特定）
+.idx/idx.lock
+.idx/.idx.toml
+
+# IDX 快取與臨時檔案
+.idx/cache/
+.idx/tmp/
+
 # ==================== 日誌檔案 ====================
 logs/
 *.log
