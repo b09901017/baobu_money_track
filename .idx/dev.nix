@@ -2,6 +2,9 @@
 # 此檔案定義雲端開發環境的依賴與設定
 
 { pkgs, ... }: {
+  # 🔴 修正 1: 必須加入 channel 設定 (使用 stable-23.11 或 stable-24.05)
+  channel = "stable-23.11"; 
+
   # 使用的套件
   packages = [
     pkgs.nodejs_20        # Node.js 20.x LTS
@@ -31,7 +34,7 @@
       "esbenp.prettier-vscode"           # Prettier
       "bradlc.vscode-tailwindcss"        # Tailwind CSS IntelliSense
       "ms-azuretools.vscode-docker"      # Docker 支援
-      "GitHub.copilot"                   # GitHub Copilot (可選)
+      # "GitHub.copilot"                 # 🔴 修正 2: 建議先註解掉 Copilot，以免因市場相容性問題導致匯入失敗
     ];
 
     # 工作區設定
@@ -39,6 +42,7 @@
       # 啟動時執行的指令
       onCreate = {
         npm-install = "npm install";
+        # 🔴 修正 3: 確保多行字串語法正確閉合
         setup = ''
           echo "🎉 開發環境已就緒！"
           echo "📦 執行 npm run dev 啟動開發伺服器"
