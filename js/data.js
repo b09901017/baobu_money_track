@@ -1496,6 +1496,175 @@ class DataManager {
         }
     }
 
+    // ==================== 趨勢分析（v5.9.0 新增）====================
+
+    /**
+     * 計算趨勢資料（按日/週/月統計）
+     * @param {Array} transactions - 交易列表
+     * @param {String} granularity - 時間粒度 ('daily' | 'weekly' | 'monthly')
+     * @param {String} category - 類別篩選（null = 全部）
+     * @param {String} role - 角色篩選 ('baobao' | 'bubu' | 'both')
+     * @returns {Object} - { data: [{label, values: [baobao, bubu, total]}], legends: [...] }
+     */
+    getTrendData(transactions, granularity = 'daily', category = null, role = 'both') {
+        if (!transactions || transactions.length === 0) {
+            return { data: [], legends: [] };
+        }
+
+        // 篩選類別（如果指定）
+        let filteredTxs = transactions;
+        if (category) {
+            filteredTxs = transactions.filter(tx => {
+                const categories = tx.categories || [];
+                return categories.includes(category);
+            });
+        }
+
+        // 按時間分組統計
+        const grouped = {};
+
+        filteredTxs.forEach(tx => {
+            const dateKey = this.getDateKey(tx.date, granularity);
+            if (!grouped[dateKey]) {
+                grouped[dateKey] = {
+                    baobao: 0,
+                    bubu: 0,
+                    total: 0
+                };
+            }
+
+            const amount = parseFloat(tx.amount);
+            grouped[dateKey].total += amount;
+
+            // 根據付款人累加
+            if (tx.payer === 'baobao') {
+                grouped[dateKey].baobao += amount;
+            } else if (tx.payer === 'bubu') {
+                grouped[dateKey].bubu += amount;
+            }
+        });
+
+        // 轉換為圖表資料格式
+        const sortedKeys = Object.keys(grouped).sort();
+        const data = sortedKeys.map(key => {
+            const item = grouped[key];
+            return {
+                label: key,
+                values: [item.baobao, item.bubu, item.total]
+            };
+        });
+
+        // 根據 role 決定圖例
+        let legends = [];
+        if (role === 'both') {
+            legends = ['寶寶', '步步', '總花費'];
+        } else if (role === 'baobao') {
+            legends = ['寶寶'];
+        } else if (role === 'bubu') {
+            legends = ['步步'];
+        }
+
+        return { data, legends };
+    }
+
+    /**
+     * 將日期轉換為對應粒度的 Key
+     * @param {String} dateStr - 日期字串 (YYYY-MM-DD)
+     * @param {String} granularity - 時間粒度
+     * @returns {String} - 日期 Key
+     */
+    getDateKey(dateStr, granularity) {
+        const date = new Date(dateStr);
+
+        switch (granularity) {
+            case 'daily':
+                // YYYY-MM-DD
+                return dateStr;
+
+            case 'weekly':
+                // YYYY-Wxx（ISO 週數）
+                const weekNumber = this.getISOWeek(date);
+                return `${date.getFullYear()}-W${weekNumber.toString().padStart(2, '0')}`;
+
+            case 'monthly':
+                // YYYY-MM
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                return `${date.getFullYear()}-${month}`;
+
+            default:
+                return dateStr;
+        }
+    }
+
+    /**
+     * 計算 ISO 週數
+     * @param {Date} date - 日期物件
+     * @returns {Number} - 週數（1-53）
+     */
+    getISOWeek(date) {
+        const target = new Date(date.valueOf());
+        const dayNr = (date.getDay() + 6) % 7;
+        target.setDate(target.getDate() - dayNr + 3);
+        const firstThursday = target.valueOf();
+        target.setMonth(0, 1);
+        if (target.getDay() !== 4) {
+            target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
+        }
+        return 1 + Math.ceil((firstThursday - target) / 604800000);
+    }
+
+    /**
+     * 計算趨勢統計摘要
+     * @param {Array} transactions - 交易列表
+     * @param {String} granularity - 時間粒度
+     * @param {String} category - 類別篩選（null = 全部）
+     * @returns {Object} - { average, max, min, maxDetail, count }
+     */
+    getTrendSummary(transactions, granularity = 'daily', category = null) {
+        // 套用類別篩選（與 getTrendData 一致）
+        let filteredTxs = transactions;
+        if (category) {
+            filteredTxs = transactions.filter(tx => {
+                const categories = tx.categories || [];
+                return categories.includes(category);
+            });
+        }
+
+        const { data } = this.getTrendData(filteredTxs, granularity, null, 'both');
+
+        if (data.length === 0) {
+            return { average: 0, max: 0, min: 0, maxDetail: null, count: 0 };
+        }
+
+        // 計算總花費的平均值、最大值、最小值
+        const totals = data.map(item => item.values[2]);
+        const average = totals.reduce((sum, val) => sum + val, 0) / totals.length;
+        const max = Math.max(...totals);
+        const min = Math.min(...totals);
+
+        // 找出最高值的詳細資訊
+        const maxIndex = totals.indexOf(max);
+        const maxLabel = data[maxIndex].label;
+
+        // 找出該時間段內的所有交易
+        const maxTransactions = filteredTxs.filter(tx => {
+            const dateKey = this.getDateKey(tx.date, granularity);
+            return dateKey === maxLabel;
+        });
+
+        const maxDetail = {
+            label: maxLabel,
+            amount: max,
+            count: maxTransactions.length,
+            transactions: maxTransactions
+        };
+
+        // 計算總筆數
+        const count = filteredTxs.length;
+
+        return { average, max, min, maxDetail, count };
+    }
+
     /**
      * 清理資源（登出時調用）
      */

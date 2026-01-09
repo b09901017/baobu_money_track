@@ -1,4 +1,139 @@
 
+## [5.9.0] - 2026-01-10
+
+### 📈 趨勢分析功能大升級（六大優化完成）
+
+**分析頁面新增趨勢分析 Tab，支援每日/每週/每月花費趨勢圖表，並完成六項用戶體驗優化**
+
+#### 主要新增功能
+
+1. **趨勢分析核心功能** 📊
+   - 新增「趨勢分析」Tab（與統計分析並列）
+   - 支援每日（daily）、每週（weekly）、每月（monthly）時間粒度
+   - 日期範圍選擇：7 天、30 天、90 天、自訂範圍
+   - 類別篩選：全部、吃吃、住住、行行、玩玩等
+   - 雙圖表模式：折線圖（Trend Chart）和長條圖（Vertical Bar Chart）
+   - 統計摘要卡片：平均、最高、筆數（點擊最高卡片顯示詳情）
+
+2. **自訂日期範圍選擇** 📅
+   - 趨勢分析支援「自訂」按鈕，開啟日期區間選擇器
+   - DateRangePicker 新增 `openModalForTrend()` 方法
+   - 使用 `isTrendDateSelection` 標記區分不同頁面的日期選擇
+   - AnalyticsPage 新增 `applyCustomTrendRange()` 方法處理自訂範圍
+
+3. **最高值詳情彈窗** 💡
+   - 點擊「最高」卡片顯示該時段的交易明細
+   - 彈窗顯示：時段標籤、總金額、交易筆數
+   - 列出前 5 筆交易（項目名稱、類別、日期、金額）
+   - 童話風格設計（水彩陰影、圓角、漸層色）
+
+4. **類別篩選最高值修正** 🔧
+   - 修復：切換類別時最高值不更新的問題
+   - `getTrendSummary()` 方法新增 `category` 參數
+   - 計算最高值前先依類別篩選交易
+   - 返回 `maxDetail` 物件（包含該時段所有交易）
+
+5. **移動端觸控互動支援** 📱
+   - TrendChart.js 新增長按（500ms）顯示 tooltip
+   - VerticalBarChart.js 新增長按（500ms）顯示 tooltip
+   - 點擊外部區域自動關閉 tooltip
+   - 新增 `bindGlobalTouchEvents()` 和 `destroy()` 方法
+
+6. **圖表全螢幕放大檢視** 🔍
+   - 圖表右上角新增放大按鈕（expand icon）
+   - 點擊後全螢幕黑底彈窗顯示大尺寸圖表
+   - 自動調整圖表尺寸（最大 1200x600）
+   - 右上角關閉按鈕（X icon）返回原頁面
+
+#### 技術實現
+
+**新增檔案：**
+- `js/components/TrendChart.js` (644 行) - SVG 折線圖組件
+- `js/components/VerticalBarChart.js` (601 行) - SVG 長條圖組件
+- `css/components/trend-analysis.css` (375 行) - 趨勢分析樣式
+
+**修改檔案：**
+- `js/data.js` - 新增 `getTrendData()`, `getDateKey()`, `getISOWeek()`, 修改 `getTrendSummary()`
+- `js/pages/AnalyticsPage.js` - 新增趨勢分析邏輯、圖表渲染、全螢幕功能
+- `js/components/DateRangePicker.js` - 新增 `openModalForTrend()`, `applyForTrend()`
+- `js/core/EventBinder.js` - 綁定趨勢分析所有事件（範圍、粒度、類別、圖表切換、放大）
+- `index.html` - 新增趨勢分析 Tab 與全螢幕彈窗
+- `css/main.css` - 引入 `trend-analysis.css`
+
+#### 資料結構與演算法
+
+**趨勢資料格式：**
+```javascript
+// data.js → getTrendData()
+return {
+  data: [
+    { label: '2024-01-15', values: [150, 200, 350] },  // 每日
+    { label: '2024-W03', values: [1050, 1200, 2250] }, // 每週
+    { label: '2024-01', values: [4500, 5200, 9700] }   // 每月
+  ],
+  legends: ['寶寶', '步步', '總花費']
+};
+```
+
+**ISO 週數計算：**
+- 使用 `getISOWeek()` 計算符合 ISO 8601 標準的週數
+- 每週從星期一開始（getDay() === 1）
+- 年度第一週：包含 1 月 4 日的那一週
+
+**移動端觸控事件流程：**
+1. `touchstart` → 啟動 500ms 計時器
+2. 500ms 後 → 顯示 tooltip，標記 `currentTouchPoint`
+3. `touchend` / `touchcancel` → 清除計時器
+4. 點擊外部 → 隱藏 tooltip，清除標記
+
+#### UI/UX 設計亮點
+
+1. **Tab 切換動畫** ✨
+   - 光澤掃過效果（`::before` 漸層平移）
+   - 內容淡入上升動畫（`fadeInUp 0.4s`）
+
+2. **按鈕互動效果** 🎯
+   - 懸停：上浮 + 放大（`translateY(-2px) scale(1.05)`）
+   - 選中：果凍彈跳動畫（`jellyBounce 0.5s`）
+
+3. **圖表動畫** 🎨
+   - 折線圖：線條繪製動畫（`stroke-dashoffset`）
+   - 數據點：彈入動畫（`popIn 0.3s`）
+   - 長條圖：上升動畫（`cubic-bezier` 彈性曲線）
+
+4. **Tooltip 樣式** 💬
+   - 毛玻璃背景（`backdrop-filter: blur(10px)`）
+   - 淡入動畫（`tooltipFadeIn 0.15s`）
+   - 粉色邊框（`border: 2px solid #FFB5D8`）
+
+5. **全螢幕彈窗** 🖼️
+   - 黑底半透明（`bg-black/95 backdrop-blur-md`）
+   - 白色圓角內容區（`rounded-2xl shadow-watercolor-layered`）
+   - 平滑過渡動畫
+
+#### 響應式設計
+
+**移動端優化（max-width: 768px）：**
+- 按鈕文字縮小（`font-size: 10px`）
+- 按鈕內邊距減少（`padding: 0.4rem 0.6rem`）
+- 統計摘要文字縮小（`font-size: 1rem`）
+- 圖表容器內邊距減少（`padding: 0.75rem`）
+
+#### 測試與驗證
+
+✅ 用戶測試通過：「我測試成功了！很棒 你很用心呢！」
+
+**測試項目：**
+1. Tab 切換動畫流暢
+2. 日期範圍選擇正常（包含自訂範圍）
+3. 時間粒度切換計算正確
+4. 類別篩選最高值更新正常
+5. 最高卡片點擊顯示詳情彈窗
+6. 移動端長按顯示 tooltip
+7. 圖表全螢幕放大正常
+
+---
+
 ## [5.8.3] - 2026-01-10
 
 ### 📚 文檔重整與工作流程優化

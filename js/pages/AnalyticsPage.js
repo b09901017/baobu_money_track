@@ -4,6 +4,8 @@
 import { TransactionRenderer } from '../components/TransactionRenderer.js';
 import { PieChart } from '../components/PieChart.js';
 import { BarChart } from '../components/BarChart.js';
+import TrendChart from '../components/TrendChart.js';
+import VerticalBarChart from '../components/VerticalBarChart.js';
 
 export class AnalyticsPage {
     constructor(state, onTransactionClickCallback) {
@@ -25,11 +27,32 @@ export class AnalyticsPage {
         // 當前週期（用於重新計算）
         this.currentPeriod = 'month';
 
+        // ========== 趨勢分析參數（v5.9.0 新增）==========
+        this.trendSettings = {
+            range: 7,               // 日期範圍（天數）
+            granularity: 'daily',   // 時間粒度 ('daily' | 'weekly' | 'monthly')
+            category: null,         // 類別篩選（null = 全部）
+            chartType: 'line',      // 圖表類型 ('line' | 'bar')
+            currentTab: 'stats'     // 當前 Tab ('stats' | 'trend')
+        };
+
+        // 圖表實例
+        this.trendLineChart = null;
+        this.trendBarChart = null;
+
+        // 儲存當前趨勢資料（用於全螢幕顯示）v5.9.0 新增
+        this.currentTrendData = null;
+        this.currentLegends = null;
+
         // 訂閱交易變更（新增）
         this.state.subscribe('transactions', (data) => {
             console.log('📊 AnalyticsPage 收到交易更新');
             // 重新計算統計（保持當前篩選條件）
-            this.update(this.currentPeriod);
+            if (this.trendSettings.currentTab === 'stats') {
+                this.update(this.currentPeriod);
+            } else {
+                this.updateTrendAnalysis();
+            }
         });
 
         console.log('📊 AnalyticsPage 已建立並訂閱交易變更');
@@ -543,5 +566,435 @@ export class AnalyticsPage {
             startDate: window.DataManager.formatDate(startDate),
             endDate: window.DataManager.formatDate(endDate)
         };
+    }
+
+    // ==================== 趨勢分析（v5.9.0 新增）====================
+
+    /**
+     * 切換 Tab（統計 / 趨勢）
+     */
+    switchTab(tab) {
+        this.trendSettings.currentTab = tab;
+
+        // 更新 Tab 按鈕樣式
+        document.querySelectorAll('.analytics-tab').forEach(btn => {
+            if (btn.dataset.tab === tab) {
+                btn.classList.add('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-rose', 'text-white', 'shadow-sm');
+                btn.classList.remove('text-soft-ink', 'hover:bg-macaron-cream/50');
+            } else {
+                btn.classList.remove('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-rose', 'text-white', 'shadow-sm');
+                btn.classList.add('text-soft-ink', 'hover:bg-macaron-cream/50');
+            }
+        });
+
+        // 切換內容區域
+        document.querySelectorAll('.analytics-tab-content').forEach(content => {
+            content.classList.add('hidden');
+        });
+
+        if (tab === 'stats') {
+            document.getElementById('statsTabContent').classList.remove('hidden');
+        } else if (tab === 'trend') {
+            document.getElementById('trendTabContent').classList.remove('hidden');
+            this.updateTrendAnalysis(); // 初次進入時更新趨勢圖
+        }
+    }
+
+    /**
+     * 更新趨勢分析
+     */
+    async updateTrendAnalysis() {
+        const { range, granularity, category } = this.trendSettings;
+
+        // 計算日期範圍
+        const today = new Date();
+        const startDate = new Date(today);
+        startDate.setDate(today.getDate() - range);
+
+        const transactions = await window.DataManager.getTransactionsByDateRange(
+            window.DataManager.formatDate(startDate),
+            window.DataManager.formatDate(today)
+        );
+
+        // 取得趨勢資料
+        const { data, legends } = window.DataManager.getTrendData(
+            transactions,
+            granularity,
+            category === 'all' ? null : category,
+            'both'
+        );
+
+        // 更新統計摘要（傳遞 category 參數）
+        const summary = window.DataManager.getTrendSummary(
+            transactions,
+            granularity,
+            category === 'all' ? null : category
+        );
+        this.updateTrendSummary(summary);
+
+        // 儲存當前資料（用於全螢幕顯示）v5.9.0 新增
+        this.currentTrendData = data;
+        this.currentLegends = legends;
+
+        // 渲染圖表
+        if (this.trendSettings.chartType === 'line') {
+            this.renderTrendLineChart(data, legends);
+        } else {
+            this.renderTrendBarChart(data, legends);
+        }
+    }
+
+    /**
+     * 渲染折線圖
+     */
+    renderTrendLineChart(data, legends) {
+        const container = document.getElementById('trendLineChart');
+        container.innerHTML = '';
+
+        if (!this.trendLineChart) {
+            this.trendLineChart = new TrendChart(container, {
+                width: 800,
+                height: 300,
+                colors: ['#FFB5D8', '#A8D8FF', '#B8F0D8'],
+                smooth: true,
+                showGrid: true,
+                showPoints: true,
+                showArea: true,
+                animate: true
+            });
+        }
+
+        this.trendLineChart.render(data, legends);
+    }
+
+    /**
+     * 渲染直立式長條圖
+     */
+    renderTrendBarChart(data, legends) {
+        const container = document.getElementById('trendBarChart');
+        container.innerHTML = '';
+
+        if (!this.trendBarChart) {
+            this.trendBarChart = new VerticalBarChart(container, {
+                width: 800,
+                height: 300,
+                colors: ['#FFB5D8', '#A8D8FF', '#B8F0D8'],
+                showGrid: true,
+                showValues: false,
+                barWidth: 0.6,
+                animate: true
+            });
+        }
+
+        this.trendBarChart.render(data, legends);
+    }
+
+    /**
+     * 更新趨勢統計摘要
+     */
+    updateTrendSummary(summary) {
+        // 儲存 maxDetail 供點擊使用
+        this.currentMaxDetail = summary.maxDetail;
+
+        document.getElementById('trendAverage').textContent = `$${Math.round(summary.average)}`;
+        document.getElementById('trendMax').textContent = `$${Math.round(summary.max)}`;
+        document.getElementById('trendCount').textContent = `${summary.count} 筆`;
+
+        // 最高值卡片加上點擊提示（如果有資料）
+        const maxCard = document.querySelector('#trendMax').closest('.bg-gradient-to-br');
+        if (maxCard) {
+            if (summary.maxDetail) {
+                maxCard.style.cursor = 'pointer';
+                maxCard.classList.add('hover:scale-105', 'transition-transform');
+            } else {
+                maxCard.style.cursor = 'default';
+                maxCard.classList.remove('hover:scale-105', 'transition-transform');
+            }
+        }
+    }
+
+    /**
+     * 顯示最高值詳情氣泡
+     */
+    showMaxDetail() {
+        if (!this.currentMaxDetail) return;
+
+        const detail = this.currentMaxDetail;
+        const { label, amount, count, transactions } = detail;
+
+        // 格式化標籤
+        let formattedLabel = label;
+        if (label.includes('W')) {
+            formattedLabel = label.replace('W', '第') + '週';
+        } else if (label.length === 7) {
+            formattedLabel = label.substring(0, 7) + ' 月';
+        } else if (label.length === 10) {
+            formattedLabel = label;
+        }
+
+        // 建立氣泡內容
+        let content = `
+            <div class="max-detail-bubble">
+                <div class="text-center mb-3">
+                    <div class="text-sm font-hand font-bold text-warm-brown mb-1">📌 最高花費時段</div>
+                    <div class="text-lg font-display font-bold text-soft-ink">${formattedLabel}</div>
+                    <div class="text-2xl font-display font-bold text-macaron-rose mt-1">$${Math.round(amount)}</div>
+                    <div class="text-xs text-warm-brown/70 mt-1">共 ${count} 筆交易</div>
+                </div>
+                <div class="border-t border-macaron-pink/30 pt-3 mt-3 max-h-48 overflow-y-auto">
+                    <div class="text-xs font-hand font-bold text-warm-brown mb-2">交易明細：</div>
+        `;
+
+        // 列出前 5 筆交易
+        const displayTxs = transactions.slice(0, 5);
+        displayTxs.forEach(tx => {
+            const categories = tx.categories && tx.categories.length > 0
+                ? tx.categories.join(', ')
+                : '未分類';
+            content += `
+                <div class="flex items-center justify-between py-1.5 border-b border-macaron-cream/50 last:border-0">
+                    <div class="flex-1">
+                        <div class="text-xs font-bold text-soft-ink">${tx.item_name}</div>
+                        <div class="text-[10px] text-warm-brown/60">${categories} • ${tx.date}</div>
+                    </div>
+                    <div class="text-xs font-bold text-macaron-rose">$${Math.round(tx.amount)}</div>
+                </div>
+            `;
+        });
+
+        if (transactions.length > 5) {
+            content += `<div class="text-[10px] text-center text-warm-brown/60 mt-2">還有 ${transactions.length - 5} 筆...</div>`;
+        }
+
+        content += `</div></div>`;
+
+        // 顯示氣泡（使用 domUtils 的 showToast 或自訂彈窗）
+        this.showMaxDetailModal(content);
+    }
+
+    /**
+     * 顯示最高值詳情彈窗
+     */
+    showMaxDetailModal(content) {
+        // 檢查是否已存在彈窗
+        let modal = document.getElementById('maxDetailModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'maxDetailModal';
+            modal.className = 'fixed inset-0 z-[200] flex items-center justify-center hidden';
+            modal.innerHTML = `
+                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="maxDetailOverlay"></div>
+                <div class="relative bg-white rounded-3xl p-6 shadow-watercolor-layered max-w-sm w-11/12 mx-4 transform transition-all" id="maxDetailContent">
+                    <button class="absolute top-4 right-4 w-8 h-8 rounded-full bg-macaron-cream/50 hover:bg-macaron-pink/20 flex items-center justify-center transition-colors" id="btnCloseMaxDetail">
+                        <span class="material-symbols-outlined text-sm text-warm-brown">close</span>
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            // 綁定關閉事件
+            document.getElementById('btnCloseMaxDetail').addEventListener('click', () => this.closeMaxDetailModal());
+            document.getElementById('maxDetailOverlay').addEventListener('click', () => this.closeMaxDetailModal());
+        }
+
+        // 更新內容
+        const contentDiv = document.getElementById('maxDetailContent');
+        const closeBtn = contentDiv.querySelector('#btnCloseMaxDetail');
+        contentDiv.innerHTML = content;
+        contentDiv.appendChild(closeBtn);
+
+        // 顯示彈窗
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            contentDiv.style.transform = 'scale(1)';
+            contentDiv.style.opacity = '1';
+        }, 10);
+    }
+
+    /**
+     * 關閉最高值詳情彈窗
+     */
+    closeMaxDetailModal() {
+        const modal = document.getElementById('maxDetailModal');
+        const content = document.getElementById('maxDetailContent');
+        if (modal && content) {
+            content.style.transform = 'scale(0.95)';
+            content.style.opacity = '0';
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 150);
+        }
+    }
+
+    /**
+     * 切換日期範圍
+     */
+    changeTrendRange(range) {
+        this.trendSettings.range = parseInt(range);
+        this.updateButtonStyles('.trend-range-btn', 'range', range);
+        this.updateTrendAnalysis();
+    }
+
+    /**
+     * 切換時間粒度
+     */
+    changeTrendGranularity(granularity) {
+        this.trendSettings.granularity = granularity;
+        this.updateButtonStyles('.trend-granularity-btn', 'granularity', granularity);
+        this.updateTrendAnalysis();
+    }
+
+    /**
+     * 切換類別篩選
+     */
+    changeTrendCategory(category) {
+        this.trendSettings.category = category;
+        this.updateButtonStyles('.trend-category-btn', 'category', category);
+        this.updateTrendAnalysis();
+    }
+
+    /**
+     * 切換圖表類型
+     */
+    switchTrendChartType(type) {
+        this.trendSettings.chartType = type;
+
+        // 更新按鈕樣式
+        const lineBtn = document.getElementById('btnTrendLineView');
+        const barBtn = document.getElementById('btnTrendBarView');
+
+        if (type === 'line') {
+            lineBtn.classList.add('bg-gradient-to-br', 'from-macaron-purple', 'to-macaron-blue', 'text-white', 'shadow-sm');
+            lineBtn.classList.remove('text-soft-ink');
+            barBtn.classList.remove('bg-gradient-to-br', 'from-macaron-purple', 'to-macaron-blue', 'text-white', 'shadow-sm');
+            barBtn.classList.add('text-soft-ink');
+
+            document.getElementById('trendLineChartContainer').classList.remove('hidden');
+            document.getElementById('trendBarChartContainer').classList.add('hidden');
+        } else {
+            barBtn.classList.add('bg-gradient-to-br', 'from-macaron-purple', 'to-macaron-blue', 'text-white', 'shadow-sm');
+            barBtn.classList.remove('text-soft-ink');
+            lineBtn.classList.remove('bg-gradient-to-br', 'from-macaron-purple', 'to-macaron-blue', 'text-white', 'shadow-sm');
+            lineBtn.classList.add('text-soft-ink');
+
+            document.getElementById('trendLineChartContainer').classList.add('hidden');
+            document.getElementById('trendBarChartContainer').classList.remove('hidden');
+        }
+
+        this.updateTrendAnalysis();
+    }
+
+    /**
+     * 更新按鈕樣式（通用方法）
+     */
+    updateButtonStyles(selector, dataAttr, value) {
+        document.querySelectorAll(selector).forEach(btn => {
+            const btnValue = btn.dataset[dataAttr];
+            if (btnValue === value || btnValue === value.toString()) {
+                // 選中樣式
+                if (selector === '.trend-category-btn') {
+                    btn.classList.add('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-rose', 'text-white', 'shadow-sm');
+                    btn.classList.remove('text-soft-ink', 'bg-white', 'border');
+                } else if (selector === '.trend-granularity-btn') {
+                    btn.classList.add('bg-gradient-to-br', 'from-macaron-blue', 'to-macaron-purple', 'text-white', 'shadow-sm');
+                    btn.classList.remove('text-soft-ink');
+                } else {
+                    btn.classList.add('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-rose', 'text-white', 'shadow-sm');
+                    btn.classList.remove('text-soft-ink');
+                }
+            } else {
+                // 未選中樣式
+                if (selector === '.trend-category-btn') {
+                    btn.classList.remove('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-rose', 'text-white', 'shadow-sm');
+                    btn.classList.add('text-soft-ink', 'bg-white');
+                    if (btnValue !== 'all') {
+                        btn.classList.add('border');
+                    }
+                } else if (selector === '.trend-granularity-btn') {
+                    btn.classList.remove('bg-gradient-to-br', 'from-macaron-blue', 'to-macaron-purple', 'text-white', 'shadow-sm');
+                    btn.classList.add('text-soft-ink');
+                } else {
+                    btn.classList.remove('bg-gradient-to-br', 'from-macaron-pink', 'to-macaron-rose', 'text-white', 'shadow-sm');
+                    btn.classList.add('text-soft-ink');
+                }
+            }
+        });
+    }
+
+    /**
+     * 套用自訂日期範圍（趨勢分析）v5.9.0 新增
+     * @param {string} startStr - 開始日期字串 (YYYY-MM-DD)
+     * @param {string} endStr - 結束日期字串 (YYYY-MM-DD)
+     */
+    applyCustomTrendRange(startStr, endStr) {
+        // 儲存自訂日期範圍
+        this.trendSettings.customStartDate = startStr;
+        this.trendSettings.customEndDate = endStr;
+        this.trendSettings.range = 'custom';
+
+        // 更新趨勢分析
+        this.updateTrendAnalysis();
+    }
+
+    /**
+     * 放大圖表至全螢幕（v5.9.0 新增）
+     * @param {string} chartType - 圖表類型 ('line' | 'bar')
+     */
+    expandChart(chartType) {
+        const modal = document.getElementById('chartFullscreenModal');
+        const content = document.getElementById('chartFullscreenContent');
+        const title = document.getElementById('chartFullscreenTitle');
+
+        if (!modal || !content || !this.currentTrendData || !this.currentLegends) return;
+
+        // 設定標題
+        const granularityText = {
+            daily: '每日',
+            weekly: '每週',
+            monthly: '每月'
+        }[this.trendSettings.granularity] || '趨勢';
+
+        title.textContent = `${granularityText}花費趨勢`;
+
+        // 清空內容
+        content.innerHTML = '';
+
+        // 建立全螢幕圖表實例
+        const chartContainer = document.createElement('div');
+        chartContainer.id = 'fullscreenChartContainer';
+        chartContainer.style.width = '100%';
+        chartContainer.style.height = '100%';
+        content.appendChild(chartContainer);
+
+        // 根據類型渲染圖表
+        if (chartType === 'line') {
+            const chart = new TrendChart(chartContainer, {
+                width: Math.min(window.innerWidth - 80, 1200),
+                height: Math.min(window.innerHeight - 200, 600),
+                animate: true,
+                smooth: true
+            });
+            chart.render(this.currentTrendData, this.currentLegends);
+        } else if (chartType === 'bar') {
+            const chart = new VerticalBarChart(chartContainer, {
+                width: Math.min(window.innerWidth - 80, 1200),
+                height: Math.min(window.innerHeight - 200, 600),
+                animate: true
+            });
+            chart.render(this.currentTrendData, this.currentLegends);
+        }
+
+        // 顯示彈窗
+        modal.classList.remove('hidden');
+    }
+
+    /**
+     * 關閉全螢幕圖表（v5.9.0 新增）
+     */
+    closeChartFullscreen() {
+        const modal = document.getElementById('chartFullscreenModal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
     }
 }

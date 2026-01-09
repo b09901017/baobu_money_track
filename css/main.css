@@ -19,6 +19,7 @@
 @import './components/calendar.css';
 @import './components/notebooks.css';
 @import './components/analytics.css';
+@import './components/trend-analysis.css'; /* v5.9.0 新增：趨勢分析 */
 @import './components/fab.css';
 @import './components/bottom-sheet.css';
 @import './components/forms.css';

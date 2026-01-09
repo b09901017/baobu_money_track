@@ -395,6 +395,122 @@ export class EventBinder {
                 }
             });
         }
+
+        // ========== 趨勢分析（v5.9.0 新增）==========
+
+        // Tab 切換（統計 / 趨勢）
+        const btnStatsTab = document.getElementById('btnStatsTab');
+        const btnTrendTab = document.getElementById('btnTrendTab');
+
+        if (btnStatsTab) {
+            btnStatsTab.addEventListener('click', () => {
+                if (this.app.analyticsPage) {
+                    this.app.analyticsPage.switchTab('stats');
+                }
+            });
+        }
+
+        if (btnTrendTab) {
+            btnTrendTab.addEventListener('click', () => {
+                if (this.app.analyticsPage) {
+                    this.app.analyticsPage.switchTab('trend');
+                }
+            });
+        }
+
+        // 日期範圍選擇
+        document.querySelectorAll('.trend-range-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const range = e.currentTarget.dataset.range;
+                if (range === 'custom') {
+                    // 開啟日期選擇器
+                    if (this.app.dateRangePicker) {
+                        this.app.dateRangePicker.openModalForTrend(e.currentTarget);
+                    }
+                } else if (range && this.app.analyticsPage) {
+                    this.app.analyticsPage.changeTrendRange(range);
+                }
+            });
+        });
+
+        // 時間粒度選擇
+        document.querySelectorAll('.trend-granularity-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const granularity = e.currentTarget.dataset.granularity;
+                if (granularity && this.app.analyticsPage) {
+                    this.app.analyticsPage.changeTrendGranularity(granularity);
+                }
+            });
+        });
+
+        // 類別篩選
+        document.querySelectorAll('.trend-category-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const category = e.currentTarget.dataset.category;
+                if (category && this.app.analyticsPage) {
+                    this.app.analyticsPage.changeTrendCategory(category);
+                }
+            });
+        });
+
+        // 圖表類型切換（折線圖 / 長條圖）
+        const btnTrendLineView = document.getElementById('btnTrendLineView');
+        const btnTrendBarView = document.getElementById('btnTrendBarView');
+
+        if (btnTrendLineView) {
+            btnTrendLineView.addEventListener('click', () => {
+                if (this.app.analyticsPage) {
+                    this.app.analyticsPage.switchTrendChartType('line');
+                }
+            });
+        }
+
+        if (btnTrendBarView) {
+            btnTrendBarView.addEventListener('click', () => {
+                if (this.app.analyticsPage) {
+                    this.app.analyticsPage.switchTrendChartType('bar');
+                }
+            });
+        }
+
+        // 最高值卡片點擊顯示詳情
+        const trendMaxCard = document.getElementById('trendMaxCard');
+        if (trendMaxCard) {
+            trendMaxCard.addEventListener('click', () => {
+                if (this.app.analyticsPage) {
+                    this.app.analyticsPage.showMaxDetail();
+                }
+            });
+        }
+
+        // 圖表放大檢視按鈕（v5.9.0 新增）
+        const btnExpandLineChart = document.getElementById('btnExpandLineChart');
+        const btnExpandBarChart = document.getElementById('btnExpandBarChart');
+        const btnCloseChartFullscreen = document.getElementById('btnCloseChartFullscreen');
+
+        if (btnExpandLineChart) {
+            btnExpandLineChart.addEventListener('click', () => {
+                if (this.app.analyticsPage) {
+                    this.app.analyticsPage.expandChart('line');
+                }
+            });
+        }
+
+        if (btnExpandBarChart) {
+            btnExpandBarChart.addEventListener('click', () => {
+                if (this.app.analyticsPage) {
+                    this.app.analyticsPage.expandChart('bar');
+                }
+            });
+        }
+
+        if (btnCloseChartFullscreen) {
+            btnCloseChartFullscreen.addEventListener('click', () => {
+                if (this.app.analyticsPage) {
+                    this.app.analyticsPage.closeChartFullscreen();
+                }
+            });
+        }
     }
 
     bindDetailModal() {

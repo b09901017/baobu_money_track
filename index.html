@@ -416,12 +416,24 @@
                     <p class="mt-2 text-sm text-warm-brown/80 font-hand text-lg">Analyze your spending journey</p>
                 </div>
 
-                <!-- 日期篩選 -->
-                <div class="flex gap-2 mb-6 p-1.5 bg-white/60 rounded-full">
-                    <button class="filter-btn flex-1 py-2 rounded-full font-hand font-bold text-sm transition-all bg-gradient-to-br from-macaron-pink to-[#E8A87C] text-white" data-period="month">本月</button>
-                    <button class="filter-btn flex-1 py-2 rounded-full font-hand font-bold text-sm transition-all text-soft-ink" data-period="week">本週</button>
-                    <button class="filter-btn flex-1 py-2 rounded-full font-hand font-bold text-sm transition-all text-soft-ink" data-period="custom">自訂</button>
+                <!-- Tab 切換：統計 / 趨勢 -->
+                <div class="flex gap-2 mb-6 p-1.5 bg-white/70 rounded-2xl shadow-watercolor-soft">
+                    <button id="btnStatsTab" class="analytics-tab flex-1 py-3 rounded-xl font-hand font-bold text-sm transition-all bg-gradient-to-br from-macaron-pink to-macaron-rose text-white shadow-sm" data-tab="stats">
+                        📊 統計分析
+                    </button>
+                    <button id="btnTrendTab" class="analytics-tab flex-1 py-3 rounded-xl font-hand font-bold text-sm transition-all text-soft-ink hover:bg-macaron-cream/50" data-tab="trend">
+                        📈 趨勢分析
+                    </button>
                 </div>
+
+                <!-- ========== 統計分析 Tab ========== -->
+                <div id="statsTabContent" class="analytics-tab-content">
+                    <!-- 日期篩選 -->
+                    <div class="flex gap-2 mb-6 p-1.5 bg-white/60 rounded-full">
+                        <button class="filter-btn flex-1 py-2 rounded-full font-hand font-bold text-sm transition-all bg-gradient-to-br from-macaron-pink to-[#E8A87C] text-white" data-period="month">本月</button>
+                        <button class="filter-btn flex-1 py-2 rounded-full font-hand font-bold text-sm transition-all text-soft-ink" data-period="week">本週</button>
+                        <button class="filter-btn flex-1 py-2 rounded-full font-hand font-bold text-sm transition-all text-soft-ink" data-period="custom">自訂</button>
+                    </div>
 
                 <!-- 統計卡片 -->
                 <div class="grid grid-cols-3 gap-3 mb-6">
@@ -486,18 +498,132 @@
                     </div>
                 </div>
 
-                <!-- 交易明細 -->
-                <div>
-                    <div class="flex items-center justify-between mb-4 px-2">
-                        <h3 class="text-lg font-hand font-bold text-soft-ink">交易明細</h3>
-                        <button id="btnClearFilter" class="hidden text-xs font-hand text-macaron-rose hover:text-macaron-pink transition-colors px-2 py-1 rounded-full hover:bg-macaron-pink/10">
-                            清除篩選 ✕
-                        </button>
-                    </div>
-                    <div id="analyticsTransactionList" class="space-y-3">
-                        <!-- 交易明細 -->
+                    <!-- 交易明細 -->
+                    <div>
+                        <div class="flex items-center justify-between mb-4 px-2">
+                            <h3 class="text-lg font-hand font-bold text-soft-ink">交易明細</h3>
+                            <button id="btnClearFilter" class="hidden text-xs font-hand text-macaron-rose hover:text-macaron-pink transition-colors px-2 py-1 rounded-full hover:bg-macaron-pink/10">
+                                清除篩選 ✕
+                            </button>
+                        </div>
+                        <div id="analyticsTransactionList" class="space-y-3">
+                            <!-- 交易明細 -->
+                        </div>
                     </div>
                 </div>
+                <!-- ========== 統計分析 Tab 結束 ========== -->
+
+                <!-- ========== 趨勢分析 Tab ========== -->
+                <div id="trendTabContent" class="analytics-tab-content hidden">
+                    <!-- 日期範圍選擇 -->
+                    <div class="bg-white rounded-2xl p-4 shadow-watercolor-layered mb-6">
+                        <h3 class="text-sm font-hand font-bold text-soft-ink mb-3">📅 選擇日期範圍</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button class="trend-range-btn py-2 rounded-full font-hand font-bold text-xs transition-all bg-gradient-to-br from-macaron-pink to-macaron-rose text-white shadow-sm" data-range="7">
+                                近 7 天
+                            </button>
+                            <button class="trend-range-btn py-2 rounded-full font-hand font-bold text-xs transition-all text-soft-ink" data-range="30">
+                                近 30 天
+                            </button>
+                            <button class="trend-range-btn py-2 rounded-full font-hand font-bold text-xs transition-all text-soft-ink" data-range="90">
+                                近 90 天
+                            </button>
+                            <button class="trend-range-btn py-2 rounded-full font-hand font-bold text-xs transition-all text-soft-ink" data-range="custom" id="btnTrendCustomRange">
+                                自訂
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 時間粒度選擇 -->
+                    <div class="bg-white rounded-2xl p-4 shadow-watercolor-layered mb-6">
+                        <h3 class="text-sm font-hand font-bold text-soft-ink mb-3">⏱️ 時間粒度</h3>
+                        <div class="flex gap-2 p-1 bg-macaron-cream/30 rounded-full">
+                            <button class="trend-granularity-btn flex-1 py-2 rounded-full font-hand font-bold text-xs transition-all bg-gradient-to-br from-macaron-blue to-macaron-purple text-white shadow-sm" data-granularity="daily">
+                                每日
+                            </button>
+                            <button class="trend-granularity-btn flex-1 py-2 rounded-full font-hand font-bold text-xs transition-all text-soft-ink" data-granularity="weekly">
+                                每週
+                            </button>
+                            <button class="trend-granularity-btn flex-1 py-2 rounded-full font-hand font-bold text-xs transition-all text-soft-ink" data-granularity="monthly">
+                                每月
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 類別篩選 -->
+                    <div class="bg-white rounded-2xl p-4 shadow-watercolor-layered mb-6">
+                        <h3 class="text-sm font-hand font-bold text-soft-ink mb-3">🏷️ 類別篩選</h3>
+                        <div class="flex flex-wrap gap-2">
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all bg-gradient-to-br from-macaron-pink to-macaron-rose text-white shadow-sm" data-category="all">
+                                全部類別
+                            </button>
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-pink/30" data-category="吃吃">
+                                🍽️ 吃吃
+                            </button>
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-blue/30" data-category="玩">
+                                🎮 玩
+                            </button>
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-green/30" data-category="交通">
+                                🚌 交通
+                            </button>
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-purple/30" data-category="購物">
+                                🛍️ 購物
+                            </button>
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-warm-brown/30" data-category="生活">
+                                🏡 生活
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 圖表類型切換 -->
+                    <div class="flex gap-2 mb-4 p-1 bg-macaron-cream/30 rounded-full">
+                        <button id="btnTrendLineView" class="flex-1 py-2 rounded-full font-hand font-bold text-xs transition-all bg-gradient-to-br from-macaron-purple to-macaron-blue text-white shadow-sm">
+                            📈 折線圖
+                        </button>
+                        <button id="btnTrendBarView" class="flex-1 py-2 rounded-full font-hand font-bold text-xs transition-all text-soft-ink">
+                            📊 長條圖
+                        </button>
+                    </div>
+
+                    <!-- 趨勢統計摘要 -->
+                    <div class="grid grid-cols-3 gap-3 mb-6">
+                        <div class="bg-gradient-to-br from-macaron-pink/20 to-macaron-rose/20 rounded-xl p-3 text-center border border-macaron-pink/30">
+                            <p class="text-xs font-hand font-bold text-warm-brown mb-1">平均</p>
+                            <h3 class="text-lg font-display font-bold text-soft-ink" id="trendAverage">$0</h3>
+                        </div>
+                        <div class="bg-gradient-to-br from-macaron-green/20 to-macaron-blue/20 rounded-xl p-3 text-center border border-macaron-green/30 cursor-pointer hover:scale-105 transition-transform" id="trendMaxCard">
+                            <p class="text-xs font-hand font-bold text-warm-brown mb-1">最高 💡</p>
+                            <h3 class="text-lg font-display font-bold text-soft-ink" id="trendMax">$0</h3>
+                        </div>
+                        <div class="bg-gradient-to-br from-macaron-purple/20 to-macaron-lavender/20 rounded-xl p-3 text-center border border-macaron-purple/30">
+                            <p class="text-xs font-hand font-bold text-warm-brown mb-1">筆數</p>
+                            <h3 class="text-lg font-display font-bold text-soft-ink" id="trendCount">0 筆</h3>
+                        </div>
+                    </div>
+
+                    <!-- 折線圖容器 -->
+                    <div id="trendLineChartContainer" class="bg-white rounded-2xl p-4 shadow-watercolor-layered mb-6 relative">
+                        <!-- 放大按鈕 -->
+                        <button type="button" id="btnExpandLineChart" class="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm p-2 rounded-xl shadow-md hover:shadow-lg transition-all hover:scale-110 text-macaron-pink">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                            </svg>
+                        </button>
+                        <div id="trendLineChart"></div>
+                    </div>
+
+                    <!-- 長條圖容器 -->
+                    <div id="trendBarChartContainer" class="hidden bg-white rounded-2xl p-4 shadow-watercolor-layered mb-6 relative">
+                        <!-- 放大按鈕 -->
+                        <button type="button" id="btnExpandBarChart" class="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm p-2 rounded-xl shadow-md hover:shadow-lg transition-all hover:scale-110 text-macaron-pink">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                            </svg>
+                        </button>
+                        <div id="trendBarChart"></div>
+                    </div>
+                </div>
+                <!-- ========== 趨勢分析 Tab 結束 ========== -->
             </div>
 
         </main>
@@ -1035,6 +1161,32 @@
             <!-- 內容 -->
             <div id="notificationDetailContent">
                 <!-- 動態生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 圖表全螢幕檢視彈窗（v5.9.0 新增） -->
+    <div id="chartFullscreenModal" class="fixed inset-0 z-[300] hidden bg-black/95 backdrop-blur-md">
+        <div class="relative w-full h-full flex flex-col">
+            <!-- 關閉按鈕 -->
+            <div class="absolute top-4 right-4 z-10">
+                <button type="button" id="btnCloseChartFullscreen" class="bg-white/90 backdrop-blur-sm p-3 rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-110 text-warm-brown">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- 圖表標題 -->
+            <div class="pt-8 pb-4 px-6 text-center">
+                <h2 id="chartFullscreenTitle" class="text-xl font-display font-bold text-macaron-cream">趨勢分析</h2>
+            </div>
+
+            <!-- 圖表容器 -->
+            <div class="flex-1 overflow-auto px-4 pb-4">
+                <div id="chartFullscreenContent" class="bg-white rounded-2xl p-6 shadow-watercolor-layered h-full min-h-[500px]">
+                    <!-- 動態渲染圖表 -->
+                </div>
             </div>
         </div>
     </div>

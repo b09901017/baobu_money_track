@@ -48,6 +48,38 @@ export class DateRangePicker {
      */
     openModalForAnalytics(customBtn) {
         this.state.isAnalyticsDateSelection = true;
+        this.state.isTrendDateSelection = false;  // 標記非趨勢分析
+        this.state.analyticsCustomBtn = customBtn;
+
+        // 重置選擇狀態
+        this.state.tempRangeStart = null;
+        this.state.tempRangeEnd = null;
+        this.state.isSelectingEnd = false;
+        this.state.rangeCalendarMonth = new Date();
+
+        // 更新顯示
+        this.updateRangeDisplays();
+        this.renderCalendar();
+
+        // 註冊返回鍵處理
+        if (window.BackButtonHandler) {
+            this.backButtonUnregister = window.BackButtonHandler.register(
+                'DateRangePicker',
+                () => this.closeModal()
+            );
+        }
+
+        if (this.modal) {
+            this.modal.classList.remove('hidden');
+        }
+    }
+
+    /**
+     * 開啟日期區間選擇器（趨勢分析頁面）v5.9.0 新增
+     */
+    openModalForTrend(customBtn) {
+        this.state.isAnalyticsDateSelection = true;  // 使用相同的標記
+        this.state.isTrendDateSelection = true;      // 額外標記為趨勢分析
         this.state.analyticsCustomBtn = customBtn;
 
         // 重置選擇狀態
@@ -292,8 +324,12 @@ export class DateRangePicker {
             return;
         }
 
+        // 檢查是否為趨勢分析頁面的日期選擇（v5.9.0 新增）
+        if (this.state.isTrendDateSelection) {
+            this.applyForTrend(start, end);
+        }
         // 檢查是否為分析頁面的日期選擇
-        if (this.state.isAnalyticsDateSelection) {
+        else if (this.state.isAnalyticsDateSelection) {
             this.applyForAnalytics(start, end);
         } else {
             this.applyForTimeline(start, end);
@@ -342,6 +378,36 @@ export class DateRangePicker {
 
         if (this.onAnalyticsApplyCallback) {
             this.onAnalyticsApplyCallback('custom');
+        }
+    }
+
+    /**
+     * 套用到趨勢分析頁面（v5.9.0 新增）
+     * @param {Date} start - 開始日期
+     * @param {Date} end - 結束日期
+     */
+    applyForTrend(start, end) {
+        const startStr = window.DataManager.formatDate(start);
+        const endStr = window.DataManager.formatDate(end);
+
+        // 更新按鈕樣式
+        document.querySelectorAll('.trend-range-btn').forEach(b => {
+            b.classList.remove('bg-gradient-to-br', 'from-macaron-pink', 'to-[#E8A87C]', 'text-white');
+            b.classList.add('text-soft-ink');
+        });
+
+        if (this.state.analyticsCustomBtn) {
+            this.state.analyticsCustomBtn.classList.add('bg-gradient-to-br', 'from-macaron-pink', 'to-[#E8A87C]', 'text-white');
+            this.state.analyticsCustomBtn.classList.remove('text-soft-ink');
+        }
+
+        this.state.isAnalyticsDateSelection = false;
+        this.state.isTrendDateSelection = false;
+        this.closeModal();
+
+        // 調用 AnalyticsPage 的自訂日期範圍方法
+        if (window.app && window.app.analyticsPage) {
+            window.app.analyticsPage.applyCustomTrendRange(startStr, endStr);
         }
     }
 }
