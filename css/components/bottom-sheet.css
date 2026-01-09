@@ -24,29 +24,40 @@
 }
 
 .bottom-sheet-content {
-    position: relative;
-    margin: 0 auto;
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
     max-width: 480px;
     width: 100%;
     max-height: 90vh;
     background: white;
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
     overflow-y: auto;
-    animation: slideUpBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
     box-shadow: 0 -8px 32px rgba(93, 78, 109, 0.2);
+    /* 確保貼齊手機真正的底部（包含導航列區域） */
+    padding-bottom: env(safe-area-inset-bottom);
+    /* 用於拖曳時的即時位置更新 */
+    transition: none;
+    will-change: transform;
 }
 
-@keyframes slideUpBounce {
-    0% {
-        transform: translateY(100%);
-    }
-    70% {
-        transform: translateY(-10px);
-    }
-    100% {
-        transform: translateY(0);
-    }
+/* 開啟動畫（只在初次開啟時使用） */
+.bottom-sheet-content.opening {
+    animation: slideUpBounce 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* 關閉動畫 */
+.bottom-sheet-content.closing {
+    animation: slideDownOut 0.6s cubic-bezier(0.32, 0, 0.67, 0);
+}
+
+/* 回彈動畫 */
+.bottom-sheet-content.snapping-back {
+    animation: snapBackBounce 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* slideUpBounce 動畫定義在 animations/animations.css */
 
 .sheet-header {
     display: flex;

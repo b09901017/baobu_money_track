@@ -91,15 +91,62 @@
     }
 }
 
+/* 滑上來動畫 - 更絲滑的彈性效果 */
 @keyframes slideUpBounce {
     0% {
         transform: translateX(-50%) translateY(100%);
+        opacity: 0;
     }
-    60% {
-        transform: translateX(-50%) translateY(-10%);
+    45% {
+        transform: translateX(-50%) translateY(-2%);
+        opacity: 1;
+    }
+    65% {
+        transform: translateX(-50%) translateY(1%);
     }
     80% {
-        transform: translateX(-50%) translateY(5%);
+        transform: translateX(-50%) translateY(-0.5%);
+    }
+    100% {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+}
+
+/* 向下滑出動畫 - 流暢加速 */
+@keyframes slideDownOut {
+    0% {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+    20% {
+        opacity: 0.8;
+    }
+    100% {
+        transform: translateX(-50%) translateY(100%);
+        opacity: 0;
+    }
+}
+
+/* 向上回彈動畫 - 精緻的彈簧效果 */
+@keyframes snapBackBounce {
+    0% {
+        transform: translateX(-50%) translateY(var(--drag-y, 0));
+    }
+    30% {
+        transform: translateX(-50%) translateY(calc(var(--drag-y, 0) * 0.3 - 12px));
+    }
+    50% {
+        transform: translateX(-50%) translateY(-8px);
+    }
+    65% {
+        transform: translateX(-50%) translateY(3px);
+    }
+    78% {
+        transform: translateX(-50%) translateY(-1.5px);
+    }
+    90% {
+        transform: translateX(-50%) translateY(0.5px);
     }
     100% {
         transform: translateX(-50%) translateY(0);

@@ -13,6 +13,141 @@ export class TransactionForm {
         this.editingTransactionId = null;  // 編輯模式下的交易 ID
         this.editingTransaction = null;  // 編輯模式下的交易資料
         this.backButtonUnregister = null;  // 返回鍵取消註冊函數
+
+        // 拖曳相關狀態
+        this.isDragging = false;
+        this.startY = 0;
+        this.currentY = 0;
+        this.sheetContent = null;
+
+        // 初始化拖曳功能
+        this.initDragHandlers();
+    }
+
+    /**
+     * 初始化拖曳事件處理
+     */
+    initDragHandlers() {
+        const dragHandle = document.getElementById('btnCloseSheet');
+        if (!dragHandle) return;
+
+        this.sheetContent = this.sheet?.querySelector('.bottom-sheet-content');
+        if (!this.sheetContent) return;
+
+        // 觸控開始
+        dragHandle.addEventListener('touchstart', (e) => {
+            if (!this.sheet.classList.contains('active')) return;
+
+            this.isDragging = true;
+            this.startY = e.touches[0].clientY;
+            this.currentY = this.startY;
+
+            // 移除所有動畫類別，準備拖曳
+            this.sheetContent.classList.remove('snapping-back', 'closing');
+            this.sheetContent.style.transition = 'none';
+        }, { passive: true });
+
+        // 觸控移動
+        dragHandle.addEventListener('touchmove', (e) => {
+            if (!this.isDragging) return;
+
+            this.currentY = e.touches[0].clientY;
+            const deltaY = this.currentY - this.startY;
+
+            // 只允許向下拖曳，向上拖曳則有阻力
+            let translateY = 0;
+            if (deltaY > 0) {
+                // 向下拖曳：直接移動
+                translateY = deltaY;
+            } else {
+                // 向上拖曳：添加阻力（減少到 20%）
+                translateY = deltaY * 0.2;
+            }
+
+            // 即時更新位置
+            this.sheetContent.style.transform = `translateX(-50%) translateY(${translateY}px)`;
+
+            // 根據拖曳距離調整背景透明度
+            const opacity = Math.max(0.3, 1 - (Math.abs(deltaY) / window.innerHeight));
+            const overlay = this.sheet.querySelector('.bottom-sheet-overlay');
+            if (overlay) {
+                overlay.style.opacity = opacity;
+            }
+        }, { passive: true });
+
+        // 觸控結束
+        const handleTouchEnd = () => {
+            if (!this.isDragging) return;
+
+            const deltaY = this.currentY - this.startY;
+            const threshold = window.innerHeight * 0.3; // 30% 的高度作為閾值
+
+            if (deltaY > threshold) {
+                // 向下拖曳超過閾值：關閉表單
+                this.closeWithAnimation();
+            } else {
+                // 未超過閾值：回彈
+                this.snapBack(deltaY);
+            }
+
+            this.isDragging = false;
+        };
+
+        dragHandle.addEventListener('touchend', handleTouchEnd, { passive: true });
+        dragHandle.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+    }
+
+    /**
+     * 帶動畫的關閉
+     */
+    closeWithAnimation() {
+        this.sheetContent.style.transition = '';
+        this.sheetContent.style.transform = '';
+        this.sheetContent.classList.add('closing');
+
+        // 恢復背景透明度
+        const overlay = this.sheet.querySelector('.bottom-sheet-overlay');
+        if (overlay) {
+            overlay.style.transition = 'opacity 0.6s ease';
+            overlay.style.opacity = '0';
+        }
+
+        // 等待動畫結束後真正關閉
+        setTimeout(() => {
+            this.close();
+            this.sheetContent.classList.remove('closing');
+            if (overlay) {
+                overlay.style.transition = '';
+                overlay.style.opacity = '';
+            }
+        }, 600); // 配合 slideDownOut 動畫時間（0.6 秒）
+    }
+
+    /**
+     * 回彈動畫
+     */
+    snapBack(deltaY) {
+        // 設定 CSS 變數，讓動畫知道從哪個位置開始
+        this.sheetContent.style.setProperty('--drag-y', `${deltaY}px`);
+        this.sheetContent.style.transition = '';
+        this.sheetContent.style.transform = '';
+        this.sheetContent.classList.add('snapping-back');
+
+        // 恢復背景透明度
+        const overlay = this.sheet.querySelector('.bottom-sheet-overlay');
+        if (overlay) {
+            overlay.style.transition = 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1)';
+            overlay.style.opacity = '';
+        }
+
+        // 動畫結束後移除類別
+        setTimeout(() => {
+            this.sheetContent.classList.remove('snapping-back');
+            this.sheetContent.style.removeProperty('--drag-y');
+            if (overlay) {
+                overlay.style.transition = '';
+            }
+        }, 800); // 配合 snapBackBounce 動畫時間（0.8 秒）
     }
 
     /**
@@ -32,6 +167,15 @@ export class TransactionForm {
         this.sheet.classList.remove('hidden');
         this.sheet.classList.add('active');
         console.log('✅ Sheet 已顯示');
+
+        // 添加開啟動畫類別
+        if (this.sheetContent) {
+            this.sheetContent.classList.add('opening');
+            // 動畫結束後移除類別，避免重複播放
+            setTimeout(() => {
+                this.sheetContent.classList.remove('opening');
+            }, 800); // 配合動畫時間
+        }
 
         // 註冊返回鍵處理
         if (window.BackButtonHandler) {
@@ -70,7 +214,7 @@ export class TransactionForm {
                     amountInput.click();
                 }
             }
-        }, 300); // 配合 slideUpBounce 動畫時間
+        }, 800); // 配合 slideUpBounce 動畫時間（0.8 秒）
     }
 
     /**
