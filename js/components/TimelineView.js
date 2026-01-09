@@ -1,7 +1,9 @@
-// ==================== 時間軸視圖組件 ====================
-// 無限滾動時間軸，顯示所有交易記錄
+// ==================== 時間軸視圖組件（扁平流式階層）====================
+// 扁平化 LINE 風格：Year > Month > Week > Day
+// 支援結算分割與折疊/展開
 
 import { TransactionRenderer } from './TransactionRenderer.js';
+import { TimelineGrouper } from '../utils/TimelineGrouper.js';
 
 export class TimelineView {
     constructor(state, onTransactionClickCallback) {
@@ -13,16 +15,17 @@ export class TimelineView {
         this.timelineContainer = document.getElementById('timelineContainer');
         this.loadMoreContainer = document.getElementById('loadMoreContainer');
 
-        // 無限滾動參數
-        this.transactionsLoaded = 30; // 初始載入 30 筆
-        this.loadMoreCount = 30; // 每次載入更多 30 筆
+        // 🆕 階層式展開狀態管理
+        this.expandedYears = new Set();   // 已展開的年份
+        this.expandedMonths = new Set();  // 已展開的月份 (格式: "2025-3")
+        this.expandedWeeks = new Set();   // 已展開的週 (格式: "2025-3-10")
+        this.expandedDays = new Set();    // 已展開的日期 (格式: "2025-03-15")
 
-        // 折疊/展開狀態管理
-        this.expandedDates = new Set(); // 儲存已展開的日期
-        this.allExpanded = false; // 全域展開/收合狀態
-
-        // 快取最後收到的交易列表（用於折疊/展開時重新渲染）
+        // 快取最後收到的交易列表
         this.cachedTransactions = [];
+
+        // 快取階層式結構
+        this.hierarchyCache = [];
 
         // 訂閱交易變更事件
         this.state.subscribe('transactions', (data) => this.handleTransactionsUpdate(data));
@@ -32,21 +35,17 @@ export class TimelineView {
      * 初始化時間軸
      */
     async init() {
-        // 初始資料將由訂閱自動更新，無需主動載入
-        // DataManager 會在 init() 時啟動監聽並推送初始資料
+        // 初始資料將由訂閱自動更新
     }
 
     /**
      * 處理交易變更訂閱
-     * @param {Object} data - { transactions, changes }
      */
     handleTransactionsUpdate(data) {
         const { transactions, changes } = data;
 
-        // 更新快取
         this.cachedTransactions = transactions || [];
 
-        // 檢查是否有記錄
         if (!transactions || transactions.length === 0) {
             if (this.timelineContainer) this.timelineContainer.classList.add('hidden');
             if (this.loadMoreContainer) this.loadMoreContainer.classList.add('hidden');
@@ -57,175 +56,264 @@ export class TimelineView {
         if (this.timelineContainer) this.timelineContainer.classList.remove('hidden');
         if (this.emptyState) this.emptyState.classList.add('hidden');
 
-        // 渲染交易記錄
-        this.renderTimeline(transactions);
+        // 初始化展開狀態（只在首次載入時）
+        if (this.expandedYears.size === 0) {
+            this.initializeDefaultExpansion(transactions);
+        }
 
-        // 判斷是否可以載入更多（如果已載入的交易數達到監聽起始日期）
-        const listeningStartDate = window.DataManager.listeningStartDate;
-        if (listeningStartDate) {
-            const oldestTransaction = transactions[transactions.length - 1];
-            if (oldestTransaction && oldestTransaction.date <= listeningStartDate) {
-                if (this.loadMoreContainer) this.loadMoreContainer.classList.remove('hidden');
-            } else {
-                if (this.loadMoreContainer) this.loadMoreContainer.classList.add('hidden');
-            }
+        // 渲染扁平流式時間軸
+        this.renderFlatTimeline(transactions);
+
+        // 隱藏「載入更多」按鈕
+        if (this.loadMoreContainer) {
+            this.loadMoreContainer.classList.add('hidden');
         }
     }
 
     /**
-     * 載入交易記錄
-     * @param {boolean} append - 是否追加到現有記錄
+     * 初始化預設展開狀態（展開當月）
      */
-    async loadTransactions(append = false) {
-        // 獲取最近 N 筆交易記錄
-        const transactions = await window.DataManager.getRecentTransactions(this.transactionsLoaded);
+    initializeDefaultExpansion(transactions) {
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1;
+        const currentWeek = TimelineGrouper.getWeekNumber(now);
 
-        // 檢查是否有記錄
-        if (transactions.length === 0 && !append) {
-            if (this.timelineContainer) this.timelineContainer.classList.add('hidden');
-            if (this.loadMoreContainer) this.loadMoreContainer.classList.add('hidden');
-            if (this.emptyState) this.emptyState.classList.remove('hidden');
-            return;
-        }
+        // 展開當年
+        this.expandedYears.add(currentYear);
 
-        if (this.timelineContainer) this.timelineContainer.classList.remove('hidden');
-        if (this.emptyState) this.emptyState.classList.add('hidden');
+        // 展開當月
+        this.expandedMonths.add(`${currentYear}-${currentMonth}`);
 
-        // 記錄已經按 created_at 排序（由 getRecentTransactions 完成）
+        // 展開當週
+        this.expandedWeeks.add(`${currentYear}-${currentMonth}-${currentWeek}`);
 
-        // 渲染交易記錄
-        this.renderTimeline(transactions, append);
+        // 展開今天
+        const today = this.formatDate(now);
+        this.expandedDays.add(today);
 
-        // 顯示或隱藏「載入更多」按鈕
-        if (transactions.length >= this.transactionsLoaded) {
-            if (this.loadMoreContainer) this.loadMoreContainer.classList.remove('hidden');
-        } else {
-            if (this.loadMoreContainer) this.loadMoreContainer.classList.add('hidden');
-        }
+        console.log('📅 預設展開當月:', `${currentYear}-${currentMonth}`);
     }
 
     /**
-     * 載入更多記錄（批次載入更早的交易）
+     * 🆕 渲染扁平流式時間軸（LINE 風格）
      */
-    async loadMore() {
-        await window.DataManager.loadEarlierTransactions(this.loadMoreCount);
-        // DataManager 會自動合併資料並透過訂閱通知更新
-    }
-
-    /**
-     * 渲染時間軸（對話式布局 + 折疊/展開）
-     * @param {Array} transactions - 交易列表
-     * @param {boolean} append - 是否追加
-     */
-    renderTimeline(transactions, append = false) {
+    renderFlatTimeline(transactions) {
         if (!this.container) return;
 
-        // 按日期分組
-        const grouped = {};
-        transactions.forEach(tx => {
-            if (!grouped[tx.date]) grouped[tx.date] = [];
-            grouped[tx.date].push(tx);
-        });
-
-        // 只顯示有花費的天，並按日期排序（最新的在上面）
-        const datesWithTransactions = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
-
-        // 初始化展開狀態（只在第一次渲染時）
-        if (!append && this.expandedDates.size === 0) {
-            const today = new Date().toISOString().split('T')[0];
-            datesWithTransactions.forEach(date => {
-                if (date === today) {
-                    this.expandedDates.add(date); // 今天預設展開
-                }
-            });
-        }
+        // 使用 TimelineGrouper 轉換為階層結構
+        this.hierarchyCache = TimelineGrouper.groupByHierarchy(transactions);
 
         let html = '';
-        datesWithTransactions.forEach((date, dateIndex) => {
-            const txList = grouped[date];
-            const isExpanded = this.expandedDates.has(date);
 
-            // 該日期的所有交易（按時間排序）
-            txList.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1;
+        const currentWeek = TimelineGrouper.getWeekNumber(now);
 
-            // 渲染日期區塊（精緻分隔線 + 摘要/展開內容）
-            html += this.renderDateBlock(date, txList, isExpanded, dateIndex === 0 && !append);
+        // 遍歷每個年份
+        this.hierarchyCache.forEach((yearData, yearIndex) => {
+            const { year, months, summary } = yearData;
+            const isYearExpanded = this.expandedYears.has(year);
+            const isCurrentYear = year === currentYear;
+
+            // 檢查是否需要並排顯示（當年且展開）
+            const shouldStackLabels = isCurrentYear && isYearExpanded;
+
+            if (shouldStackLabels) {
+                // 🆕 並排模式：渲染年/月/週標籤在同一行
+                html += this.renderStackedLabels(yearData, currentYear, currentMonth, currentWeek);
+            } else {
+                // 原有模式：年份標籤
+                html += this.renderDivider(year, '年', summary, `year-${year}`, false);
+
+                // 年份總結卡片（收合時顯示）
+                if (!isYearExpanded) {
+                    html += this.renderSummaryCard(summary, `year-${year}`, 'year');
+                } else {
+                    // 展開：渲染所有月份
+                    months.forEach((monthData) => {
+                        html += this.renderMonthFlow(monthData, year, false);
+                    });
+                }
+            }
         });
 
-        if (append) {
-            this.container.innerHTML += html;
-        } else {
-            this.container.innerHTML = html;
-        }
+        this.container.innerHTML = html;
 
-        // 綁定摘要區塊點擊事件
-        this.bindSummaryClicks();
-        // 綁定交易項目點擊事件
+        // 綁定事件
+        this.bindFlatEvents();
         TransactionRenderer.bindClickEvents(this.container, this.onTransactionClickCallback);
     }
 
     /**
-     * 渲染日期區塊（包含精緻分隔線、摘要卡片、交易列表）
+     * 🆕 渲染並排標籤（年/月/週）
      */
-    renderDateBlock(date, txList, isExpanded, isFirst) {
-        const stats = this.calculateDayStats(txList);
+    renderStackedLabels(yearData, currentYear, currentMonth, currentWeek) {
+        const { year, months } = yearData;
+        let html = '';
 
-        // 預先生成交易列表 HTML
-        const transactionsHTML = txList.map(tx => TransactionRenderer.renderTimelineItemWithTime(tx)).join('');
+        // 找到當月資料
+        const currentMonthData = months.find(m => m.month === currentMonth);
 
-        // 生成摘要卡片內容
-        let summaryHTML = '';
-        if (stats.debtInfo) {
-            // 有欠款的情況
-            summaryHTML = `
-                <div class="bookmark-card">
-                    <div class="bookmark-main">
-                        ${stats.debtInfo.debtor}欠${stats.debtInfo.creditor} <span class="bookmark-amount">$${stats.debtInfo.amount.toFixed(0)}</span>
+        if (currentMonthData && this.expandedMonths.has(`${currentYear}-${currentMonth}`)) {
+            // 找到當週資料
+            const currentWeekData = currentMonthData.weeks.find(w => w.weekNumber === currentWeek);
+
+            if (currentWeekData && this.expandedWeeks.has(`${currentYear}-${currentMonth}-${currentWeek}`)) {
+                // 🎯 三層都展開：並排顯示年/月/週
+                html += `
+                    <div class="stacked-labels-container">
+                        <div class="flex-1 h-px bg-gradient-to-r from-transparent via-macaron-pink/20 to-macaron-pink/30"></div>
+                        <div class="stacked-labels">
+                            ${this.renderDivider(year, '年', yearData.summary, `year-${year}`, true)}
+                            ${this.renderDivider(currentMonth, '月', currentMonthData.summary, `month-${currentYear}-${currentMonth}`, true)}
+                            ${this.renderDivider(currentWeek, '週', currentWeekData.summary, `week-${currentYear}-${currentMonth}-${currentWeek}`, true)}
+                        </div>
+                        <div class="flex-1 h-px bg-gradient-to-r from-macaron-pink/30 via-macaron-pink/20 to-transparent"></div>
                     </div>
-                    <div class="bookmark-stats">
-                        <div class="stat-col">
-                            <div class="stat-label">共花</div>
-                            <div class="stat-value">$${stats.total.toFixed(0)}</div>
+                `;
+
+                // 渲染當週的所有日期
+                currentWeekData.days.forEach((dayData) => {
+                    html += this.renderDayFlow(dayData);
+                });
+
+                // 渲染當月其他週
+                currentMonthData.weeks.forEach((weekData) => {
+                    if (weekData.weekNumber !== currentWeek) {
+                        html += this.renderWeekFlow(weekData, currentYear, currentMonth, false);
+                    }
+                });
+
+                // 渲染當年其他月份
+                months.forEach((monthData) => {
+                    if (monthData.month !== currentMonth) {
+                        html += this.renderMonthFlow(monthData, currentYear, false);
+                    }
+                });
+            } else {
+                // 只有年/月展開：並排顯示年/月
+                html += `
+                    <div class="stacked-labels-container">
+                        <div class="flex-1 h-px bg-gradient-to-r from-transparent via-macaron-pink/20 to-macaron-pink/30"></div>
+                        <div class="stacked-labels">
+                            ${this.renderDivider(year, '年', yearData.summary, `year-${year}`, true)}
+                            ${this.renderDivider(currentMonth, '月', currentMonthData.summary, `month-${currentYear}-${currentMonth}`, true)}
                         </div>
-                        <div class="stat-col">
-                            <div class="stat-label">寶付</div>
-                            <div class="stat-value">$${stats.baobaoSpent.toFixed(0)}</div>
-                        </div>
-                        <div class="stat-col">
-                            <div class="stat-label">步付</div>
-                            <div class="stat-value">$${stats.bubuSpent.toFixed(0)}</div>
-                        </div>
+                        <div class="flex-1 h-px bg-gradient-to-r from-macaron-pink/30 via-macaron-pink/20 to-transparent"></div>
                     </div>
-                </div>
-            `;
+                `;
+
+                // 渲染當月所有週
+                currentMonthData.weeks.forEach((weekData) => {
+                    html += this.renderWeekFlow(weekData, currentYear, currentMonth, false);
+                });
+
+                // 渲染當年其他月份
+                months.forEach((monthData) => {
+                    if (monthData.month !== currentMonth) {
+                        html += this.renderMonthFlow(monthData, currentYear, false);
+                    }
+                });
+            }
         } else {
-            // 已結清的情況
-            summaryHTML = `
-                <div class="bookmark-card settled">
-                    <div class="bookmark-main">
-                        <span class="settled-icon">✨</span> 已結清
-                    </div>
-                    <div class="bookmark-stats">
-                        <div class="stat-col">
-                            <div class="stat-label">共花</div>
-                            <div class="stat-value">$${stats.total.toFixed(0)}</div>
-                        </div>
-                        <div class="stat-col">
-                            <div class="stat-label">寶付</div>
-                            <div class="stat-value">$${stats.baobaoSpent.toFixed(0)}</div>
-                        </div>
-                        <div class="stat-col">
-                            <div class="stat-label">步付</div>
-                            <div class="stat-value">$${stats.bubuSpent.toFixed(0)}</div>
-                        </div>
-                    </div>
-                </div>
-            `;
+            // 只有年展開：單獨顯示年標籤
+            html += this.renderDivider(year, '年', yearData.summary, `year-${year}`, false);
+
+            // 渲染所有月份
+            months.forEach((monthData) => {
+                html += this.renderMonthFlow(monthData, year, false);
+            });
         }
 
+        return html;
+    }
+
+    /**
+     * 渲染月份流（包含週和日期）
+     */
+    renderMonthFlow(monthData, year, skipStacking = false) {
+        const { month, weeks, settlementBefore, summary } = monthData;
+        const monthKey = `${year}-${month}`;
+        const isMonthExpanded = this.expandedMonths.has(monthKey);
+
+        let html = '';
+
+        // 🔮 結算分隔線
+        if (settlementBefore) {
+            html += this.renderSettlementDivider(settlementBefore);
+        }
+
+        // 月份標籤（如果不是並排模式）
+        if (!skipStacking) {
+            html += this.renderDivider(month, '月', summary, `month-${monthKey}`, false);
+        }
+
+        // 月份總結卡片（收合時顯示）
+        if (!isMonthExpanded) {
+            html += this.renderSummaryCard(summary, `month-${monthKey}`, 'month');
+        } else {
+            // 展開：渲染所有週
+            weeks.forEach((weekData) => {
+                html += this.renderWeekFlow(weekData, year, month, false);
+            });
+        }
+
+        return html;
+    }
+
+    /**
+     * 渲染週流（包含日期）
+     */
+    renderWeekFlow(weekData, year, month, skipStacking = false) {
+        const { weekNumber, days, settlementBefore, summary } = weekData;
+        const weekKey = `${year}-${month}-${weekNumber}`;
+        const isWeekExpanded = this.expandedWeeks.has(weekKey);
+
+        let html = '';
+
+        // 🔮 結算分隔線
+        if (settlementBefore) {
+            html += this.renderSettlementDivider(settlementBefore);
+        }
+
+        // 週標籤（如果不是並排模式）
+        if (!skipStacking) {
+            html += this.renderDivider(weekNumber, '週', summary, `week-${weekKey}`, false);
+        }
+
+        // 週總結卡片（收合時顯示）
+        if (!isWeekExpanded) {
+            html += this.renderSummaryCard(summary, `week-${weekKey}`, 'week');
+        } else {
+            // 展開：渲染所有日期
+            days.forEach((dayData) => {
+                html += this.renderDayFlow(dayData);
+            });
+        }
+
+        return html;
+    }
+
+    /**
+     * 渲染日期流（原有邏輯）
+     */
+    renderDayFlow(dayData) {
+        const { date, transactions, summary } = dayData;
+        const isExpanded = this.expandedDays.has(date);
+
+        // 預先生成交易列表 HTML
+        const transactionsHTML = transactions
+            .map(tx => TransactionRenderer.renderTimelineItemWithTime(tx))
+            .join('');
+
+        // 生成摘要卡片內容
+        let summaryHTML = this.generateDaySummaryHTML(summary);
+
         return `
-            <div class="date-group" data-date="${date}">
-                ${this.renderDateDivider(date, isFirst)}
+            <div class="flat-day-group" data-date="${date}">
+                ${this.renderDateDivider(date)}
 
                 <div class="day-summary-card ${isExpanded ? 'hidden' : ''}" data-date="${date}">
                     ${summaryHTML}
@@ -242,9 +330,173 @@ export class TimelineView {
     }
 
     /**
-     * 渲染精緻的日期分隔線（保留原本的 LINE 風格）
+     * 🆕 渲染統一的精緻小標籤（年/月/週）- 支援並排
      */
-    renderDateDivider(dateStr, isFirst = false) {
+    renderDivider(value, unit, summary, dataKey, isStacked = false) {
+        let displayText = '';
+        if (unit === '年') {
+            displayText = `${value} 年`;
+        } else if (unit === '月') {
+            displayText = `${value}月`;
+        } else if (unit === '週') {
+            displayText = `第 ${value} 週`;
+        }
+
+        // 如果是並排模式，使用簡化版標籤
+        if (isStacked) {
+            return `
+                <div class="hierarchy-divider-label-inline relative px-3 py-1 bg-white/90 rounded-full border-2 border-macaron-pink/30 shadow-md backdrop-blur-sm cursor-pointer transition-all duration-200 hover:bg-macaron-pink/10 hover:border-macaron-pink/50 hover:shadow-lg" data-key="${dataKey}">
+                    <span class="font-hand text-soft-ink text-sm font-semibold opacity-80">${displayText}</span>
+                </div>
+            `;
+        }
+
+        // 原有的完整版標籤
+        return `
+            <div class="relative flex items-center justify-center mt-6 mb-4">
+                <div class="flex-1 h-px bg-gradient-to-r from-transparent via-macaron-pink/20 to-macaron-pink/30"></div>
+                <div class="hierarchy-divider-label relative mx-3 px-4 py-1.5 bg-white/90 rounded-full border-2 border-macaron-pink/30 shadow-md backdrop-blur-sm cursor-pointer transition-all duration-200 hover:bg-macaron-pink/10 hover:border-macaron-pink/50 hover:shadow-lg" data-key="${dataKey}">
+                    <span class="font-hand text-soft-ink text-sm font-semibold opacity-80">${displayText}</span>
+                </div>
+                <div class="flex-1 h-px bg-gradient-to-r from-macaron-pink/30 via-macaron-pink/20 to-transparent"></div>
+            </div>
+        `;
+    }
+
+    /**
+     * 🆕 渲染總結卡片（年/月/週收合時顯示）
+     */
+    renderSummaryCard(summary, dataKey, type) {
+        let summaryHTML = '';
+        if (summary.debtInfo) {
+            summaryHTML = `
+                <div class="bookmark-card">
+                    <div class="bookmark-main">
+                        ${summary.debtInfo.debtor}欠${summary.debtInfo.creditor} <span class="bookmark-amount">$${summary.debtInfo.amount.toFixed(0)}</span>
+                    </div>
+                    <div class="bookmark-stats">
+                        <div class="stat-col">
+                            <div class="stat-label">共花</div>
+                            <div class="stat-value">$${summary.total.toFixed(0)}</div>
+                        </div>
+                        <div class="stat-col">
+                            <div class="stat-label">寶付</div>
+                            <div class="stat-value">$${summary.baobaoSpent.toFixed(0)}</div>
+                        </div>
+                        <div class="stat-col">
+                            <div class="stat-label">步付</div>
+                            <div class="stat-value">$${summary.bubuSpent.toFixed(0)}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            summaryHTML = `
+                <div class="bookmark-card settled">
+                    <div class="bookmark-main">
+                        <span class="settled-icon">✨</span> 已結清
+                    </div>
+                    <div class="bookmark-stats">
+                        <div class="stat-col">
+                            <div class="stat-label">共花</div>
+                            <div class="stat-value">$${summary.total.toFixed(0)}</div>
+                        </div>
+                        <div class="stat-col">
+                            <div class="stat-label">寶付</div>
+                            <div class="stat-value">$${summary.baobaoSpent.toFixed(0)}</div>
+                        </div>
+                        <div class="stat-col">
+                            <div class="stat-label">步付</div>
+                            <div class="stat-value">$${summary.bubuSpent.toFixed(0)}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="hierarchy-summary-card" data-key="${dataKey}">
+                ${summaryHTML}
+                <div class="summary-expand-hint">
+                    <span class="text-xs opacity-60">點擊展開 ✨</span>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * 生成日期摘要 HTML
+     */
+    generateDaySummaryHTML(summary) {
+        if (summary.debtInfo) {
+            return `
+                <div class="bookmark-card">
+                    <div class="bookmark-main">
+                        ${summary.debtInfo.debtor}欠${summary.debtInfo.creditor} <span class="bookmark-amount">$${summary.debtInfo.amount.toFixed(0)}</span>
+                    </div>
+                    <div class="bookmark-stats">
+                        <div class="stat-col">
+                            <div class="stat-label">共花</div>
+                            <div class="stat-value">$${summary.total.toFixed(0)}</div>
+                        </div>
+                        <div class="stat-col">
+                            <div class="stat-label">寶付</div>
+                            <div class="stat-value">$${summary.baobaoSpent.toFixed(0)}</div>
+                        </div>
+                        <div class="stat-col">
+                            <div class="stat-label">步付</div>
+                            <div class="stat-value">$${summary.bubuSpent.toFixed(0)}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            return `
+                <div class="bookmark-card settled">
+                    <div class="bookmark-main">
+                        <span class="settled-icon">✨</span> 已結清
+                    </div>
+                    <div class="bookmark-stats">
+                        <div class="stat-col">
+                            <div class="stat-label">共花</div>
+                            <div class="stat-value">$${summary.total.toFixed(0)}</div>
+                        </div>
+                        <div class="stat-col">
+                            <div class="stat-label">寶付</div>
+                            <div class="stat-value">$${summary.baobaoSpent.toFixed(0)}</div>
+                        </div>
+                        <div class="stat-col">
+                            <div class="stat-label">步付</div>
+                            <div class="stat-value">$${summary.bubuSpent.toFixed(0)}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    /**
+     * 渲染結算分隔線
+     */
+    renderSettlementDivider(date) {
+        const formattedDate = this.formatSettlementDate(date);
+        return `
+            <div class="settlement-divider">
+                <div class="settlement-line"></div>
+                <div class="settlement-label">
+                    <span class="settlement-icon">✨</span>
+                    <span class="settlement-text">結清於 ${formattedDate}</span>
+                    <span class="settlement-icon">✨</span>
+                </div>
+                <div class="settlement-line"></div>
+            </div>
+        `;
+    }
+
+    /**
+     * 渲染日期分隔線（保留原邏輯）
+     */
+    renderDateDivider(dateStr) {
         const date = new Date(dateStr);
         const today = new Date();
         const yesterday = new Date(today);
@@ -252,7 +504,6 @@ export class TimelineView {
 
         let displayText = '';
 
-        // 判斷是今天、昨天還是其他
         if (this.isSameDay(date, today)) {
             displayText = '今天';
         } else if (this.isSameDay(date, yesterday)) {
@@ -266,159 +517,96 @@ export class TimelineView {
         }
 
         return `
-            <div class="relative flex items-center justify-center ${isFirst ? 'mt-0' : 'mt-6'} mb-4">
-                <!-- 左側裝飾線 -->
+            <div class="relative flex items-center justify-center mt-6 mb-4">
                 <div class="flex-1 h-px bg-gradient-to-r from-transparent via-macaron-pink/20 to-macaron-pink/30"></div>
-
-                <!-- 日期標籤 - 精緻軟萌 + 可點擊 -->
                 <div class="date-divider-label relative mx-3 px-3 py-1 bg-white/80 rounded-full border border-macaron-pink/20 shadow-sm backdrop-blur-sm cursor-pointer transition-all duration-200 hover:bg-macaron-pink/10 hover:border-macaron-pink/40 hover:shadow-md" data-date="${dateStr}">
                     <span class="font-hand text-soft-ink text-xs opacity-70">${displayText}</span>
                 </div>
-
-                <!-- 右側裝飾線 -->
                 <div class="flex-1 h-px bg-gradient-to-r from-macaron-pink/30 via-macaron-pink/20 to-transparent"></div>
             </div>
         `;
     }
 
     /**
-     * 計算當日統計（總花費、寶寶花費、步步花費、當日欠款）
+     * 🆕 綁定扁平流式事件
      */
-    calculateDayStats(txList) {
-        let total = 0;
-        let baobaoSpent = 0;
-        let bubuSpent = 0;
-        let baobaoOwed = 0;  // 寶寶被欠的金額（步步欠寶寶）
-        let bubuOwed = 0;    // 步步被欠的金額（寶寶欠步步）
-
-        txList.forEach(tx => {
-            const amount = parseFloat(tx.amount);
-            total += amount;
-
-            // 計算誰付了錢
-            if (tx.payer === 'baobao') {
-                baobaoSpent += amount;
-            } else if (tx.payer === 'bubu') {
-                bubuSpent += amount;
-            }
-
-            // 計算當日欠款（使用 BalanceManager 的邏輯）
-            const payer = tx.payer;
-            const beneficiary = tx.beneficiary;
-
-            if (payer === 'baobao') {
-                if (beneficiary === 'both') {
-                    baobaoOwed += amount / 2;  // 步步欠寶寶一半
-                } else if (beneficiary === 'bubu') {
-                    baobaoOwed += amount;      // 步步欠寶寶全額
-                }
-            } else if (payer === 'bubu') {
-                if (beneficiary === 'both') {
-                    bubuOwed += amount / 2;    // 寶寶欠步步一半
-                } else if (beneficiary === 'baobao') {
-                    bubuOwed += amount;        // 寶寶欠步步全額
-                }
-            }
+    bindFlatEvents() {
+        // 綁定年/月/週標籤點擊（包含並排標籤）
+        const hierarchyLabels = this.container.querySelectorAll('.hierarchy-divider-label, .hierarchy-divider-label-inline');
+        hierarchyLabels.forEach(label => {
+            label.addEventListener('click', (e) => {
+                const key = label.dataset.key;
+                this.toggleHierarchy(key);
+            });
         });
 
-        // 計算淨欠款
-        const netBalance = baobaoOwed - bubuOwed;
-        let debtInfo = null;
+        // 綁定年/月/週總結卡片點擊
+        const hierarchySummaries = this.container.querySelectorAll('.hierarchy-summary-card');
+        hierarchySummaries.forEach(card => {
+            card.addEventListener('click', (e) => {
+                const key = card.dataset.key;
+                this.toggleHierarchy(key);
+            });
+        });
 
-        if (Math.abs(netBalance) >= 0.01) {
-            if (netBalance > 0) {
-                // 步步欠寶寶
-                debtInfo = {
-                    debtor: '🐾 步',
-                    creditor: '🎀 寶',
-                    amount: Math.abs(netBalance)
-                };
-            } else {
-                // 寶寶欠步步
-                debtInfo = {
-                    debtor: '🎀 寶',
-                    creditor: '🐾 步',
-                    amount: Math.abs(netBalance)
-                };
-            }
-        }
-
-        return {
-            total,
-            baobaoSpent,
-            bubuSpent,
-            count: txList.length,
-            debtInfo  // { debtor, creditor, amount } 或 null
-        };
-    }
-
-    /**
-     * 綁定摘要卡片和日期標題點擊事件
-     */
-    bindSummaryClicks() {
-        // 綁定摘要卡片
+        // 綁定日期標籤和摘要卡片
         const summaries = this.container.querySelectorAll('.day-summary-card');
         summaries.forEach(summary => {
             summary.addEventListener('click', (e) => {
                 const date = summary.dataset.date;
-                this.toggleDateExpansion(date);
+                this.toggleDay(date);
             });
         });
 
-        // 綁定日期標題
         const dateLabels = this.container.querySelectorAll('.date-divider-label');
         dateLabels.forEach(label => {
             label.addEventListener('click', (e) => {
                 const date = label.dataset.date;
-                this.toggleDateExpansion(date);
+                this.toggleDay(date);
             });
         });
+    }
+
+    /**
+     * 🆕 切換階層展開/收合（統一處理年/月/週）
+     */
+    toggleHierarchy(key) {
+        if (key.startsWith('year-')) {
+            const year = parseInt(key.replace('year-', ''));
+            if (this.expandedYears.has(year)) {
+                this.expandedYears.delete(year);
+            } else {
+                this.expandedYears.add(year);
+            }
+        } else if (key.startsWith('month-')) {
+            const monthKey = key.replace('month-', '');
+            if (this.expandedMonths.has(monthKey)) {
+                this.expandedMonths.delete(monthKey);
+            } else {
+                this.expandedMonths.add(monthKey);
+            }
+        } else if (key.startsWith('week-')) {
+            const weekKey = key.replace('week-', '');
+            if (this.expandedWeeks.has(weekKey)) {
+                this.expandedWeeks.delete(weekKey);
+            } else {
+                this.expandedWeeks.add(weekKey);
+            }
+        }
+
+        this.renderFlatTimeline(this.cachedTransactions);
     }
 
     /**
      * 切換日期展開/收合
      */
-    toggleDateExpansion(date) {
-        if (this.expandedDates.has(date)) {
-            this.expandedDates.delete(date);
+    toggleDay(date) {
+        if (this.expandedDays.has(date)) {
+            this.expandedDays.delete(date);
         } else {
-            this.expandedDates.add(date);
+            this.expandedDays.add(date);
         }
-
-        // 重新渲染（使用快取的交易資料）
-        this.renderTimeline(this.cachedTransactions);
-    }
-
-    /**
-     * 切換全部展開/收合
-     */
-    toggleAllExpansion() {
-        this.allExpanded = !this.allExpanded;
-
-        // 按日期分組
-        const grouped = {};
-        this.cachedTransactions.forEach(tx => {
-            if (!grouped[tx.date]) grouped[tx.date] = [];
-            grouped[tx.date].push(tx);
-        });
-
-        const dates = Object.keys(grouped);
-
-        if (this.allExpanded) {
-            // 全部展開
-            dates.forEach(date => this.expandedDates.add(date));
-        } else {
-            // 全部收合
-            this.expandedDates.clear();
-            // 保持今天展開
-            const today = new Date().toISOString().split('T')[0];
-            if (dates.includes(today)) {
-                this.expandedDates.add(today);
-            }
-        }
-
-        // 重新渲染
-        this.renderTimeline(this.cachedTransactions);
+        this.renderFlatTimeline(this.cachedTransactions);
     }
 
     /**
@@ -431,11 +619,38 @@ export class TimelineView {
     }
 
     /**
-     * 刷新時間軸（在新增/編輯/刪除交易後）
-     * 注意：現在透過即時監聽自動更新，無需手動呼叫 refresh()
+     * 格式化日期為 YYYY-MM-DD
+     */
+    formatDate(date) {
+        const d = new Date(date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    /**
+     * 格式化結算日期顯示
+     */
+    formatSettlementDate(dateStr) {
+        const date = new Date(dateStr);
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        return `${year}/${month}/${day}`;
+    }
+
+    /**
+     * 刷新時間軸（保留相容性）
      */
     async refresh() {
-        // 透過 onSnapshot 即時監聽，交易變更會自動推送
-        // 此方法保留以維持相容性，但實際上不執行任何操作
+        // 透過 onSnapshot 即時監聽
+    }
+
+    /**
+     * 載入更多記錄（保留但不再使用）
+     */
+    async loadMore() {
+        console.log('⚠️ 已載入完整歷史記錄');
     }
 }

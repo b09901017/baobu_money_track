@@ -432,25 +432,22 @@ class DataManager {
      * @returns {Promise<Array>} - 交易列表
      */
     async getTransactionsByDateRange(startDate, endDate) {
-        // 檢查是否在監聽範圍內（近 3 個月）
-        const threeMonthsAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-        const threeMonthsAgoStr = this.formatDate(threeMonthsAgo);
+        // 🆕 優先使用本地快取（已載入完整歷史）
+        const cachedTransactions = this.transactions
+            .filter(tx =>
+                tx.notebook_id === this.currentNotebook &&
+                tx.date >= startDate &&
+                tx.date <= endDate
+            )
+            .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        const isWithinListeningRange = startDate >= threeMonthsAgoStr;
-
-        if (isWithinListeningRange) {
-            // 使用本地快取（已由 onSnapshot 自動更新）
+        // 如果快取有資料，直接返回
+        if (cachedTransactions.length > 0 || this.listeningStartDate <= startDate) {
             console.log('📊 使用本地快取查詢日期範圍');
-            return this.transactions
-                .filter(tx =>
-                    tx.notebook_id === this.currentNotebook &&
-                    tx.date >= startDate &&
-                    tx.date <= endDate
-                )
-                .sort((a, b) => new Date(b.date) - new Date(a.date));
+            return cachedTransactions;
         }
 
-        // 超出監聽範圍，從 Firebase 查詢
+        // 快取沒有資料且超出監聽範圍，從 Firebase 查詢
         console.log('📊 超出監聽範圍，從 Firebase 查詢');
         try {
             const transactions = await window.FirebaseAPI.getTransactionsByDateRange(
@@ -467,13 +464,7 @@ class DataManager {
         } catch (error) {
             console.error('❌ 查詢日期範圍失敗:', error);
             // Fallback 到本地快取
-            return this.transactions
-                .filter(tx =>
-                    tx.notebook_id === this.currentNotebook &&
-                    tx.date >= startDate &&
-                    tx.date <= endDate
-                )
-                .sort((a, b) => new Date(b.date) - new Date(a.date));
+            return cachedTransactions;
         }
     }
 
@@ -1184,23 +1175,23 @@ class DataManager {
     // ==================== 即時監聽 ====================
 
     /**
-     * 開始監聽交易（近 3 個月）
+     * 開始監聽交易（完整歷史記錄）
      */
     startListeningTransactions() {
         // 停止舊的監聽（如果有）
         window.listenerManager.unregister('transactions');
 
-        // 設定監聽起始日期（近 3 個月）
-        const threeMonthsAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-        this.listeningStartDate = this.formatDate(threeMonthsAgo);
+        // 🆕 設定監聽起始日期為 5 年前（涵蓋所有歷史記錄）
+        const fiveYearsAgo = new Date(Date.now() - 5 * 365 * 24 * 60 * 60 * 1000);
+        this.listeningStartDate = this.formatDate(fiveYearsAgo);
 
-        console.log(`🎧 開始監聽交易 (自 ${this.listeningStartDate})...`);
+        console.log(`🎧 開始監聽交易（完整歷史，自 ${this.listeningStartDate}）...`);
 
         // 註冊監聽器
         const unsubscribe = window.FirebaseAPI.onRecentTransactionsChange(
             this.coupleId,
             this.currentNotebook,
-            threeMonthsAgo,
+            fiveYearsAgo,
             (transactions, changes) => this.handleTransactionsChange(transactions, changes)
         );
 

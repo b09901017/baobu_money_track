@@ -31,7 +31,10 @@
       "Bash(timeout:*)",
       "Bash(ping:*)",
       "Bash(del nul)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(./gradlew:*)",
+      "Bash(adb devices:*)",
+      "Bash(ls:*)"
     ]
   }
 }

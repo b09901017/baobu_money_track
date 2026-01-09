@@ -286,3 +286,137 @@
     transform: rotate(180deg);
 }
 
+/* ==================== 扁平流式時間軸（LINE 風格）==================== */
+
+/* 🎯 階層分隔線標籤（年/月/週）- 統一風格 */
+.hierarchy-divider-label {
+    /* 已在 renderDivider 中定義樣式，此處保留以供覆蓋 */
+}
+
+/* 🎯 並排標籤容器 */
+.stacked-labels-container {
+    display: flex;
+    align-items: center;
+    margin: var(--spacing-lg) 0 var(--spacing-md);
+}
+
+.stacked-labels {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* 🎯 並排標籤樣式（簡化版）*/
+.hierarchy-divider-label-inline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 🎯 階層總結卡片（年/月/週收合時顯示）*/
+.hierarchy-summary-card {
+    margin: 0 var(--spacing-md) var(--spacing-md);
+    padding: var(--spacing-md);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hierarchy-summary-card:hover {
+    transform: translateY(-2px);
+}
+
+.hierarchy-summary-card:active {
+    transform: translateY(0) scale(0.98);
+}
+
+/* 🎯 扁平日期組 */
+.flat-day-group {
+    margin-bottom: var(--spacing-sm);
+}
+
+/* ==================== 結算分隔線 ==================== */
+.settlement-divider {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin: var(--spacing-xl) 0;
+    padding: var(--spacing-lg) 0;
+}
+
+.settlement-line {
+    flex: 1;
+    height: 2px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        var(--primary-color) 50%,
+        transparent 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.settlement-line::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 215, 0, 0.3) 25%,
+        rgba(255, 215, 0, 0.6) 50%,
+        rgba(255, 215, 0, 0.3) 75%,
+        transparent 100%);
+    transform: translateY(-50%);
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0%, 100% {
+        transform: translateY(-50%) translateX(-100%);
+    }
+    50% {
+        transform: translateY(-50%) translateX(100%);
+    }
+}
+
+.settlement-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background: linear-gradient(135deg, #FFF9F0 0%, #FFEDDB 100%);
+    border: 2px solid var(--primary-color);
+    border-radius: 20px;
+    box-shadow:
+        0 4px 12px rgba(255, 158, 199, 0.3),
+        inset 0 2px 4px rgba(255, 255, 255, 0.8);
+    white-space: nowrap;
+}
+
+.settlement-icon {
+    font-size: 1.1rem;
+    animation: sparkle 2s ease-in-out infinite;
+}
+
+.settlement-text {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    letter-spacing: 0.3px;
+}
+
+@keyframes sparkle {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.15) rotate(180deg);
+    }
+}
+
