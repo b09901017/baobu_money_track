@@ -38,6 +38,9 @@ class DataManager {
 
         // 防抖計時器
         this._debounceTimer = null;
+
+        // 🆕 防重複提交機制
+        this._pendingOperations = new Set();  // 進行中的操作（用於去重）
     }
 
     // ==================== 初始化 ====================
@@ -265,6 +268,18 @@ class DataManager {
      * @returns {Promise<Object>} - 交易物件
      */
     async addTransaction(transactionData) {
+        // 🆕 生成操作指紋（用於去重）
+        const operationId = this._generateOperationId(transactionData);
+
+        // 檢查是否有相同操作正在進行
+        if (this._pendingOperations.has(operationId)) {
+            console.warn('⚠️ 偵測到重複操作，已忽略');
+            throw new Error('請勿重複提交，操作進行中...');
+        }
+
+        // 標記操作開始
+        this._pendingOperations.add(operationId);
+
         try {
             // 離線提示
             if (window.networkMonitor && !window.networkMonitor.isOnline) {
@@ -334,7 +349,30 @@ class DataManager {
         } catch (error) {
             console.error('❌ 新增交易失敗:', error);
             throw error;
+        } finally {
+            // 🆕 無論成功或失敗，3秒後移除操作標記（避免永久阻塞）
+            setTimeout(() => {
+                this._pendingOperations.delete(operationId);
+            }, 3000);
         }
+    }
+
+    /**
+     * 🆕 生成操作指紋（用於去重）
+     * @param {Object} data - 操作資料
+     * @returns {string} - 操作 ID
+     */
+    _generateOperationId(data) {
+        // 組合關鍵欄位生成指紋
+        const fingerprint = JSON.stringify({
+            payer: data.payer,
+            beneficiary: data.beneficiary,
+            amount: data.amount,
+            item_name: data.item_name,
+            date: data.date,
+            timestamp: Math.floor(Date.now() / 1000)  // 秒級時間戳（同一秒內視為重複）
+        });
+        return fingerprint;
     }
 
     /**
@@ -459,7 +497,24 @@ class DataManager {
      * @returns {Promise<boolean>} - 是否成功
      */
     async deleteTransaction(id) {
+        // 🆕 生成操作指紋（用於去重）
+        const operationId = `delete_${id}`;
+
+        // 檢查是否有相同操作正在進行
+        if (this._pendingOperations.has(operationId)) {
+            console.warn('⚠️ 偵測到重複刪除操作，已忽略');
+            throw new Error('請勿重複刪除，操作進行中...');
+        }
+
+        // 標記操作開始
+        this._pendingOperations.add(operationId);
+
         try {
+            // 離線提示
+            if (window.networkMonitor && !window.networkMonitor.isOnline) {
+                console.log('📡 離線模式：變更將在重新連線後同步');
+            }
+
             // 1. 取得交易資料（用於餘額回退）
             const transaction = this.transactions.find(tx => tx.id === id);
             if (!transaction) {
@@ -521,6 +576,11 @@ class DataManager {
         } catch (error) {
             console.error('❌ 刪除交易失敗:', error);
             throw error;
+        } finally {
+            // 🆕 無論成功或失敗，3秒後移除操作標記（避免永久阻塞）
+            setTimeout(() => {
+                this._pendingOperations.delete(operationId);
+            }, 3000);
         }
     }
 
@@ -531,7 +591,24 @@ class DataManager {
      * @returns {Promise<Object>} - 更新後的交易物件
      */
     async updateTransaction(id, updates) {
+        // 🆕 生成操作指紋（用於去重）
+        const operationId = `update_${id}_${this._generateOperationId(updates)}`;
+
+        // 檢查是否有相同操作正在進行
+        if (this._pendingOperations.has(operationId)) {
+            console.warn('⚠️ 偵測到重複修改操作，已忽略');
+            throw new Error('請勿重複修改，操作進行中...');
+        }
+
+        // 標記操作開始
+        this._pendingOperations.add(operationId);
+
         try {
+            // 離線提示
+            if (window.networkMonitor && !window.networkMonitor.isOnline) {
+                console.log('📡 離線模式：變更將在重新連線後同步');
+            }
+
             // 1. 取得舊交易資料
             const oldTransaction = this.transactions.find(tx => tx.id === id);
             if (!oldTransaction) {
@@ -668,6 +745,11 @@ class DataManager {
         } catch (error) {
             console.error('❌ 更新交易失敗:', error);
             throw error;
+        } finally {
+            // 🆕 無論成功或失敗，3秒後移除操作標記（避免永久阻塞）
+            setTimeout(() => {
+                this._pendingOperations.delete(operationId);
+            }, 3000);
         }
     }
 

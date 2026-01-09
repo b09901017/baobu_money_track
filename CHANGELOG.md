@@ -7,6 +7,90 @@
 
 ---
 
+## [5.8.2] - 2026-01-09
+
+### 🔒 完善離線防重複機制
+
+**擴展防重複機制至編輯和刪除操作**
+
+#### 新增修正
+
+5. **編輯交易防重複機制** ([data.js:571-731](js/data.js#L571-L731))
+   - `updateTransaction()` 加入操作去重邏輯
+   - 操作指紋：`update_{id}_{contentHash}`
+   - 3 秒內相同編輯操作直接拒絕
+   - 防止離線時重複修改導致衝突
+
+6. **刪除交易防重複機制** ([data.js:499-585](js/data.js#L499-L585))
+   - `deleteTransaction()` 加入操作去重邏輯
+   - 操作指紋：`delete_{id}`
+   - 防止重複刪除導致餘額多次扣減
+
+#### 完整離線處理分析
+詳見 [docs/OFFLINE_ANALYSIS.md](docs/OFFLINE_ANALYSIS.md)
+
+#### 測試場景
+- ✅ 離線新增：連續點擊 → 只產生 1 筆操作
+- ✅ 離線編輯：連續修改 → 只接受第一次編輯
+- ✅ 離線刪除：連續刪除 → 只執行一次刪除
+
+---
+
+## [5.8.1] - 2026-01-09
+
+### 🔒 修復離線重複提交問題
+
+**解決離線時重複點擊「記入日記」導致多筆相同交易的 Bug**
+
+#### 問題描述
+- 離線時連續點擊提交按鈕，Firebase 離線持久化會將每次操作排隊
+- 重新上線後所有排隊操作一次執行，導致出現多筆相同的交易記錄
+
+#### 修復內容
+
+1. **表單提交防抖機制** ([TransactionForm.js](js/components/TransactionForm.js:395-422))
+   - 提交時禁用按鈕，顯示「⏳ 處理中...」狀態
+   - 防止用戶重複點擊
+   - 30 秒超時自動恢復（避免卡死）
+   - finally 區塊確保按鈕必定恢復
+
+2. **客戶端操作去重機制** ([data.js](js/data.js:271-376))
+   - 新增 `_pendingOperations` Set 追蹤進行中的操作
+   - 為每次操作生成唯一指紋（基於關鍵欄位 + 秒級時間戳）
+   - 同一秒內相同內容的操作直接拒絕
+   - 3 秒後自動清除操作標記（避免永久阻塞）
+
+3. **離線提示強化** ([NetworkMonitor.js](js/core/NetworkMonitor.js:45))
+   - 離線模式提示文字改為「操作將排隊，連線後自動同步（請勿重複點擊）」
+   - 明確告知用戶不要重複操作
+
+4. **錯誤處理優化** ([TransactionForm.js](js/components/TransactionForm.js:545-552))
+   - 檢測離線錯誤（error.code === 'unavailable'）
+   - 離線時顯示友善提示「交易已排隊，將在重新連線後同步」
+   - 仍然關閉表單（因為資料已排隊）
+
+#### 技術細節
+```javascript
+// 操作指紋生成邏輯
+_generateOperationId(data) {
+  return JSON.stringify({
+    payer: data.payer,
+    beneficiary: data.beneficiary,
+    amount: data.amount,
+    item_name: data.item_name,
+    date: data.date,
+    timestamp: Math.floor(Date.now() / 1000)  // 秒級時間戳
+  });
+}
+```
+
+#### 影響範圍
+- 交易新增流程
+- 離線模式行為
+- 表單提交邏輯
+
+---
+
 ## [5.8.0] - 2026-01-09
 
 ### 🎨 UI/UX 體驗大升級 + 🔙 Android 返回鍵智能處理

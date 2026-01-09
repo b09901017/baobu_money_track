@@ -42,7 +42,7 @@ export class NetworkMonitor {
         this.offlineToast = document.createElement('div');
         this.offlineToast.id = 'offlineToast';
         this.offlineToast.className = 'fixed top-0 left-0 right-0 bg-orange-500 text-white py-2 px-4 text-center z-[200] text-sm font-hand font-bold';
-        this.offlineToast.innerHTML = '📡 離線模式：變更將在重新連線後同步';
+        this.offlineToast.innerHTML = '📡 離線模式：操作將排隊，連線後自動同步（請勿重複點擊）';
         document.body.appendChild(this.offlineToast);
     }
 

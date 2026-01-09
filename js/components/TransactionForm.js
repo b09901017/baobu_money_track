@@ -392,6 +392,35 @@ export class TransactionForm {
             return;
         }
 
+        // 防止重複提交：檢查提交按鈕狀態
+        const submitBtn = this.form?.querySelector('[type="submit"]');
+        if (submitBtn && submitBtn.disabled) {
+            console.warn('⚠️ 正在提交中，請稍候...');
+            return;
+        }
+
+        // 禁用提交按鈕（防止重複點擊）
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '⏳ 處理中...';
+
+            // 確保即使發生錯誤也能恢復按鈕
+            const restoreButton = () => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            };
+
+            // 設定超時恢復（30秒後自動恢復，避免卡死）
+            const timeoutId = setTimeout(restoreButton, 30000);
+
+            // 將恢復函數綁到 try-finally
+            this._restoreButton = () => {
+                clearTimeout(timeoutId);
+                restoreButton();
+            };
+        }
+
         try {
             const payer = document.querySelector('input[name="payer"]:checked').value;
             const beneficiary = document.querySelector('input[name="beneficiary"]:checked').value;
@@ -512,7 +541,21 @@ export class TransactionForm {
             }
         } catch (error) {
             console.error('❌ 提交交易時發生錯誤:', error);
-            await window.customDialog.error('發生錯誤：' + error.message);
+
+            // 檢查是否為離線錯誤
+            if (error.code === 'unavailable' || error.message.includes('offline')) {
+                await window.customDialog.info('📡 離線模式：交易已排隊，將在重新連線後同步');
+                // 離線模式仍然關閉表單（因為資料已排隊）
+                this.close();
+            } else {
+                await window.customDialog.error('發生錯誤：' + error.message);
+            }
+        } finally {
+            // 恢復提交按鈕（無論成功或失敗）
+            if (this._restoreButton) {
+                this._restoreButton();
+                this._restoreButton = null;
+            }
         }
     }
 }
