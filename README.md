@@ -2,7 +2,7 @@
 
 > 一個童話風格的情侶共同記帳應用，支援多帳本管理、彈性付款記錄、智能結算功能。
 
-![Version](https://img.shields.io/badge/version-5.8.0-pink)
+![Version](https://img.shields.io/badge/version-5.8.2-pink)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow)
 ![Firebase](https://img.shields.io/badge/Firebase-Integrated-orange)
@@ -126,8 +126,16 @@ baobu_money_track/
 │       ├── designer/             # UI/UX 設計技能
 │       └── backend/              # 後端整合技能
 │
+├── docs/                         # 📚 技術文檔目錄
+│   ├── README.md                 # 文檔索引與快速導航
+│   ├── changelog/                # 版本更新歷史（v1~v5+）
+│   ├── ANDROID_BUILD_GUIDE.md    # Android APK 建置指南
+│   ├── BALANCE_SAFETY_ANALYSIS.md # 餘額計算安全性分析
+│   ├── CACHE_SYSTEM_ANALYSIS.md  # 快取系統完整分析
+│   ├── OFFLINE_ANALYSIS.md       # 離線功能完整分析
+│   └── ...更多技術文檔
+│
 ├── .gitignore                    # Git 忽略檔案
-├── CHANGELOG.md                  # 更新日誌
 ├── CLAUDE.md                     # Claude Code 專案指南
 ├── DESIGN.md                     # 設計文檔
 └── README.md                     # 本文件
@@ -173,7 +181,7 @@ chmod +x build-android.sh
 
 ### 手動建置流程
 
-如果需要手動建置，請參考完整指南：[ANDROID_BUILD_GUIDE.md](ANDROID_BUILD_GUIDE.md)
+如果需要手動建置，請參考完整指南：[docs/ANDROID_BUILD_GUIDE.md](docs/ANDROID_BUILD_GUIDE.md)
 
 ### 安裝 APK 到手機
 
@@ -194,7 +202,7 @@ adb install android/app/build/outputs/apk/debug/app-debug.apk
 - ⚠️ **Java 版本問題**：本專案使用 Java 17，Capacitor 8.0.0 預設 Java 21，建置腳本會自動修正
 - ⚠️ **Google Sign-In 配置**：確保 `capacitor.config.json` 包含 Firebase Authentication provider 配置
 
-詳細建置過程、常見問題與解決方案，請參閱：[ANDROID_BUILD_GUIDE.md](ANDROID_BUILD_GUIDE.md)
+詳細建置過程、常見問題與解決方案，請參閱：[docs/ANDROID_BUILD_GUIDE.md](docs/ANDROID_BUILD_GUIDE.md)
 
 ### 2. 設定 Firebase 配置
 
@@ -812,8 +820,9 @@ docs: 更新 README Firebase 整合說明
 1. 在對應的資料夾建立新模組
 2. 在 `app.js` 中引入並初始化
 3. 在 `EventBinder.js` 中綁定事件
-4. 更新 `CHANGELOG.md`
-5. 更新文檔
+4. 更新版本記錄（`docs/changelog/`）
+5. 更新相關文檔
+6. Commit 並 Push 到 GitHub
 
 ## 🤝 使用 Claude Code 開發
 
@@ -836,6 +845,57 @@ docs: 更新 README Firebase 整合說明
 詳見 `CLAUDE.md` 完整說明。
 
 ## 📝 更新日誌
+
+完整版本歷史請參見：[docs/changelog/README.md](docs/changelog/README.md)
+
+### v5.8.2 (2026-01-10) - 文檔重整與工作流程優化 📚
+
+**專案文檔結構化整理，優化開發工作流程**
+
+#### 🆕 主要改進
+
+1. **文檔結構重整**
+   - 將 CHANGELOG.md（3761 行）拆分到 `docs/changelog/` 資料夾
+   - 建立版本總覽（README.md）與各版本詳細記錄（v1~v5）
+   - 移動所有技術文檔到 `docs/` 資料夾統一管理
+   - 建立 `docs/README.md` 文檔索引與快速導航
+
+2. **完成階段工作流程**
+   - 在 CLAUDE.md 中新增「完成階段工作流程」章節
+   - 明確定義版本記錄更新規則
+   - 提供 Commit Message 格式規範
+   - 建立文檔更新標準流程
+
+3. **文檔連結更新**
+   - 更新 CLAUDE.md 所有文檔連結（指向 docs/）
+   - 更新 README.md 專案結構與文檔連結
+   - 確保所有文檔相互引用正確
+
+#### 📂 文檔結構
+
+```
+docs/
+├── README.md                 # 文檔索引
+├── changelog/                # 版本歷史
+│   ├── README.md            # 版本總覽
+│   └── v1~v5/               # 各版本詳細記錄
+├── ANDROID_BUILD_GUIDE.md   # Android 建置指南
+├── BALANCE_SAFETY_ANALYSIS.md
+├── CACHE_SYSTEM_ANALYSIS.md
+└── ...更多技術文檔
+```
+
+#### 💡 使用指南
+
+開發完成後請遵循以下流程：
+1. 更新版本記錄（`docs/changelog/v{X}/`）
+2. 建立或更新說明文檔（如需要）
+3. 更新核心文檔（CLAUDE.md、README.md，必要時）
+4. Commit 並 Push 到 GitHub
+
+詳見 [CLAUDE.md - 完成階段工作流程](CLAUDE.md#完成階段工作流程-📋)
+
+---
 
 ### v5.8.0 (2026-01-09) - UI/UX 體驗大升級 🎨
 
@@ -878,7 +938,7 @@ docs: 更新 README Firebase 整合說明
 - ✅ 手機版視野更廣闊
 - ✅ 全螢幕無干擾使用
 
-完整更新內容詳見 [CHANGELOG.md](CHANGELOG.md)
+完整更新內容詳見 [docs/changelog/](docs/changelog/)
 
 ## 🐛 已知問題
 

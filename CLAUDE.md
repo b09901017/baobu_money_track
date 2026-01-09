@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **線上演示：** https://baobu-app.web.app
 
-**當前版本：** v5.7.2 (Android APK 自動化建置腳本)
+**當前版本：** v5.8.2 (文檔重整與工作流程優化)
 
 ---
 
@@ -77,7 +77,7 @@ DevTools.cacheStats()
 
 ### Android APK 建置 🤖
 
-**完整指南：** 參見 [ANDROID_BUILD_GUIDE.md](ANDROID_BUILD_GUIDE.md)
+**完整指南：** 參見 [docs/ANDROID_BUILD_GUIDE.md](docs/ANDROID_BUILD_GUIDE.md)
 
 #### 快速建置流程
 
@@ -399,8 +399,104 @@ async addTransaction(transactionData) {
 3. 在 [data.js](js/data.js) 新增 DataManager 方法
 4. 在 [EventBinder.js](js/core/EventBinder.js) 綁定事件
 5. 在 [app.js](js/app.js) 初始化（如需要）
-6. 更新 CHANGELOG.md
+6. 更新版本記錄（參見下方「完成階段工作流程」）
 7. 使用 `firebase deploy` 部署
+
+---
+
+## 完成階段工作流程 📋
+
+當你完成一個開發階段後，請執行以下步驟來維護專案文檔與版本控制：
+
+### 1️⃣ 更新版本記錄
+**位置：** `docs/changelog/v{X}/`
+
+**命名規則：**
+- 小版本更新：在現有檔案中新增記錄（如 `version5-6_8.md`）
+- 大版本更新：建立新檔案（如 `version6-0_5.md`）或新資料夾（如 `v6/`）
+
+**內容格式：**
+```markdown
+## [X.Y.Z] - YYYY-MM-DD
+
+### 🎯 功能分類標題
+
+**簡短描述**
+
+#### 主要改進/新增功能
+1. **功能名稱**
+   - 具體改進點 1
+   - 具體改進點 2
+
+#### 技術實現
+- 關鍵檔案與修改說明
+- 技術架構變更
+
+#### 修改檔案
+- `path/to/file.js` - 說明
+```
+
+**更新 README.md：**
+- 如果建立新版本資料夾（v6/），記得在 `docs/changelog/v{X}/README.md` 中建立版本摘要
+- 更新 `docs/changelog/README.md` 的版本總覽
+
+### 2️⃣ 建立或更新說明文檔
+**位置：** `docs/`
+
+**適用情況：**
+- 新增重要功能需要使用指南
+- 建立技術分析文檔（如 BALANCE_SAFETY_ANALYSIS.md）
+- 故障排查指南（如 IDX_TROUBLESHOOTING.md）
+
+**更新索引：**
+記得在 `docs/README.md` 中加入新文檔的連結與說明
+
+### 3️⃣ 更新核心文檔（必要時）
+- **CLAUDE.md** - 新增重要架構變更、開發指令、注意事項
+- **README.md** - 更新專案說明、功能列表、部署指南
+
+### 4️⃣ Commit 與 Push
+```bash
+# 查看變更
+git status
+
+# 加入所有變更
+git add .
+
+# 提交（使用有意義的 commit message）
+git commit -m "feat: 新增功能名稱
+
+- 具體改進 1
+- 具體改進 2
+- 更新文檔與版本記錄"
+
+# 推送到 GitHub
+git push origin main
+```
+
+**Commit Message 格式：**
+- `feat:` - 新功能
+- `fix:` - Bug 修復
+- `docs:` - 文檔更新
+- `style:` - 樣式調整
+- `refactor:` - 重構
+- `test:` - 測試相關
+
+---
+
+## 文檔結構說明
+
+### 根目錄文檔
+- **CLAUDE.md** - Claude Code 專案指南（本檔案）
+- **README.md** - 專案說明與部署指南
+- **DESIGN.md** - 童話風格設計規範（可選保留）
+
+### docs/ 文檔目錄
+- **changelog/** - 版本更新歷史（v1~v5+）
+- **技術分析文檔** - BALANCE_SAFETY_ANALYSIS.md、CACHE_SYSTEM_ANALYSIS.md 等
+- **開發指南** - ANDROID_BUILD_GUIDE.md、TESTING_GUIDE.md 等
+- **故障排查** - IDX_TROUBLESHOOTING.md 等
+- **README.md** - 文檔索引與快速導航
 
 ---
 
@@ -475,23 +571,42 @@ Types: feat, fix, style, refactor, docs, test, chore
 ## 參考文件
 
 ### 核心文檔
-- [CHANGELOG.md](CHANGELOG.md) - 版本更新歷史（包含詳細技術實現）
 - [README.md](README.md) - 專案說明與部署指南
 - [DESIGN.md](DESIGN.md) - 童話風格設計規範
+- [docs/README.md](docs/README.md) - 📚 **文檔索引與快速導航**
+
+### 版本更新歷史 🔄
+- [docs/changelog/README.md](docs/changelog/README.md) - 版本總覽（v1.0.0 ~ v5.8.2）
+- [docs/changelog/v5/](docs/changelog/v5/) - v5 系列詳細記錄（即時同步與體驗優化）
+- [docs/changelog/v4/](docs/changelog/v4/) - v4 系列詳細記錄（Firebase 整合與角色系統）
+- [docs/changelog/v3/](docs/changelog/v3/) - v3 系列詳細記錄（模組化大重構）
+- [docs/changelog/v2/](docs/changelog/v2/) - v2 系列詳細記錄（功能擴展）
+- [docs/changelog/v1/](docs/changelog/v1/) - v1 系列詳細記錄（初始版本）
 
 ### Android 開發文檔 🤖
-- [ANDROID_BUILD_GUIDE.md](ANDROID_BUILD_GUIDE.md) - **完整 Android APK 建置指南**
+- [docs/ANDROID_BUILD_GUIDE.md](docs/ANDROID_BUILD_GUIDE.md) - **完整 Android APK 建置指南**
   - 詳細試錯過程（5 次嘗試）
   - 根本原因分析
   - 完整解決方案
   - 常見問題排查
   - 建置自動化腳本
   - 下次注意事項與最佳實踐
-- [IDX_TROUBLESHOOTING.md](IDX_TROUBLESHOOTING.md) - Google Project IDX 環境問題排查
-- [IDX_GUIDE.md](IDX_GUIDE.md) - Google Project IDX 完整操作指南（已過時，參考用）
+- [docs/IDX_TROUBLESHOOTING.md](docs/IDX_TROUBLESHOOTING.md) - Google Project IDX 環境問題排查
+- [docs/IDX_GUIDE.md](docs/IDX_GUIDE.md) - Google Project IDX 完整操作指南（已過時，參考用）
+
+### 技術分析文檔 🔒
+- [docs/BALANCE_SAFETY_ANALYSIS.md](docs/BALANCE_SAFETY_ANALYSIS.md) - 餘額計算安全性分析
+- [docs/CACHE_SYSTEM_ANALYSIS.md](docs/CACHE_SYSTEM_ANALYSIS.md) - 快取系統完整分析
+- [docs/OFFLINE_ANALYSIS.md](docs/OFFLINE_ANALYSIS.md) - 離線功能完整分析
+- [docs/OFFLINE_TESTING_GUIDE.md](docs/OFFLINE_TESTING_GUIDE.md) - 離線防重複機制測試指南
+
+### 開發指南 🛠️
+- [docs/TESTING_GUIDE.md](docs/TESTING_GUIDE.md) - 測試指南
+- [docs/DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) - Firebase 部署指南
+- [docs/ICON_GUIDE.md](docs/ICON_GUIDE.md) - 圖示與 PWA 配置
 
 ### Firebase 配置
-- FIRESTORE_INDEXES.md - Firestore 索引需求
+- [docs/FIRESTORE_INDEXES.md](docs/FIRESTORE_INDEXES.md) - Firestore 索引需求
 - firestore.rules - Firestore 安全規則
 - storage.rules - Firebase Storage 安全規則
 - `android/app/google-services.json` - Firebase Android 配置（包含 SHA-1）
