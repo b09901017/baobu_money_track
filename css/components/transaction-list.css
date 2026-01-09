@@ -236,13 +236,15 @@
 
 /* 交易列表容器 */
 .date-transactions-wrapper {
-    overflow: hidden;
+    overflow: visible;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    padding-top: 16px; /* 給第一筆交易的小圓球留出空間 */
 }
 
 .date-transactions-wrapper.collapsed {
     max-height: 0;
     opacity: 0;
+    padding-top: 0; /* 收合時不需要上方空間 */
 }
 
 .date-transactions-wrapper.expanded {
@@ -284,6 +286,64 @@
 
 .timeline-toggle-btn.all-expanded .material-symbols-outlined {
     transform: rotate(180deg);
+}
+
+/* ==================== 時間軸對話框小圓球樣式（LINE 風格）==================== */
+
+/* 🎯 付款標籤小圓球（浮在對話框外，一半在內一半在外）*/
+.timeline-payment-badge {
+    position: absolute;
+    top: -12px;
+    min-width: 60px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 12px;
+    border: 2px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    z-index: 15;
+    pointer-events: none;
+}
+
+.timeline-payment-left {
+    left: -8px;
+}
+
+.timeline-payment-right {
+    right: -8px;
+}
+
+/* 🎯 照片小圓球（浮在對話框外，一半在內一半在外）*/
+.timeline-photo-badge {
+    position: absolute;
+    bottom: -10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #D4AF37, #F0C14B);
+    border: 2px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    z-index: 15;
+    pointer-events: none;
+}
+
+.timeline-photo-left {
+    left: -8px;
+}
+
+.timeline-photo-right {
+    right: -8px;
+}
+
+/* 🎯 時間軸對話框基礎樣式（確保 overflow visible）*/
+.timeline-bubble-left,
+.timeline-bubble-right {
+    overflow: visible !important;
 }
 
 /* ==================== 扁平流式時間軸（LINE 風格）==================== */

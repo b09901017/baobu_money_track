@@ -123,94 +123,111 @@ export class TransactionRenderer {
      * @returns {string} - HTML 字串
      */
     static renderTimelineItemWithTime(tx, index) {
-        // 使用 getPaymentText 獲取付款描述
-        const paymentText = getPaymentText(tx);
-
         // 判斷是否為寶寶付款（使用絕對角色）
         const isBaobao = tx.payer === 'baobao';
 
-        // 根據付款人決定樣式
-        const payerBadgeClass = isBaobao
-            ? 'bg-macaron-pink/20 text-macaron-rose'
-            : 'bg-macaron-blue/20 text-blue-600';
+        // 獲取付款描述文字（誰幫誰付）
+        const paymentText = getPaymentText(tx);
 
-        const payerBorderClass = isBaobao
-            ? 'border-l-4 border-macaron-pink'
-            : 'border-r-4 border-macaron-blue';
+        // 根據受益人決定對話框背景顏色
+        let bubbleBgClass = '';
+        let beneficiaryBubbleClass = '';
+        if (tx.beneficiary === 'baobao') {
+            // 幫寶付 - 粉色
+            bubbleBgClass = 'bg-macaron-pink/15 border-macaron-pink/30';
+            beneficiaryBubbleClass = 'bg-macaron-pink border-macaron-pink/50 text-white';
+        } else if (tx.beneficiary === 'bubu') {
+            // 幫步付 - 藍色
+            bubbleBgClass = 'bg-macaron-blue/15 border-macaron-blue/30';
+            beneficiaryBubbleClass = 'bg-macaron-blue border-macaron-blue/50 text-white';
+        } else {
+            // 幫共付 - 綠色
+            bubbleBgClass = 'bg-macaron-green/15 border-macaron-green/30';
+            beneficiaryBubbleClass = 'bg-macaron-green border-macaron-green/50 text-white';
+        }
 
         // 計算時間（使用 created_at）
         let time;
         if (tx.created_at && tx.created_at.toDate) {
-            // Firebase Timestamp 物件
             time = tx.created_at.toDate();
         } else if (tx.created_at) {
-            // 一般日期字串
             time = new Date(tx.created_at);
         } else {
-            // 沒有 created_at，使用當前時間
             time = new Date();
         }
         const timeStr = `${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`;
 
-        // 照片圖標（如果有照片）
-        const photoIndicator = tx.photo_url ? `<span class="text-xs">📸</span>` : '';
-
-        // 對話框風格佈局
-        // 寶寶付款：卡片靠左，時間在右側（中間偏右）
-        // 步步付款：時間在左側（中間偏左），卡片靠右
+        // 寶寶付款：卡片靠左，付款標籤在左上角，照片在右下角
+        // 步步付款：卡片靠右，付款標籤在右上角，照片在左下角
         if (isBaobao) {
-            return `
-                <div class="mb-3 flex items-start gap-2">
-                    <!-- 交易卡片 - 靠左 -->
-                    <div class="transaction-item max-w-[70%] bg-white rounded-2xl p-3 shadow-watercolor-layered hover:shadow-floating transition-all cursor-pointer group ${payerBorderClass}" data-transaction-id="${tx.id}">
-                        <div class="flex items-center gap-3">
-                            <!-- 付款標籤 -->
-                            <span class="px-2 py-0.5 rounded-full ${payerBadgeClass} text-xs font-bold shrink-0">${paymentText}</span>
+            // 照片小圓球（浮在右下角）
+            const photoBubble = tx.photo_url ? `
+                <div class="timeline-photo-badge timeline-photo-right">
+                    <span class="text-sm">📸</span>
+                </div>
+            ` : '';
 
-                            <!-- 價錢 -->
-                            <div class="shrink-0">
-                                <div class="font-display font-bold text-lg text-[#E27D60]">$${tx.amount}</div>
+            return `
+                <div class="mb-5 flex items-start gap-2">
+                    <!-- 交易卡片 - 靠左（寶付）-->
+                    <div class="transaction-item timeline-bubble-left relative max-w-[75%] rounded-2xl p-3.5 shadow-md hover:shadow-lg transition-all cursor-pointer ${bubbleBgClass} border-2" data-transaction-id="${tx.id}">
+                        <!-- 付款標籤小圓球（浮在左上角）-->
+                        <div class="timeline-payment-badge timeline-payment-left ${beneficiaryBubbleClass}">
+                            <span class="text-[10px] font-bold leading-none whitespace-nowrap">${paymentText}</span>
+                        </div>
+
+                        <!-- 照片小圓球（浮在右下角）-->
+                        ${photoBubble}
+
+                        <div class="flex items-center gap-3">
+                            <!-- 名稱（固定最大寬度，避免擠壓）-->
+                            <div class="flex-1 min-w-0 max-w-[140px]">
+                                <h4 class="font-hand font-bold text-base text-soft-ink truncate leading-tight">${tx.item_name}</h4>
                             </div>
 
-                            <!-- 名稱 -->
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-1">
-                                    <h4 class="font-hand font-bold text-base text-soft-ink truncate">${tx.item_name}</h4>
-                                    ${photoIndicator}
-                                </div>
-                                ${tx.note ? `<p class="text-xs text-warm-brown/60 italic truncate">📝 ${tx.note}</p>` : ''}
+                            <!-- 金額（固定寬度，右對齊）-->
+                            <div class="shrink-0 min-w-[75px] text-right">
+                                <div class="font-display font-bold text-lg text-[#E27D60] leading-tight">$${tx.amount}</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 時間標記 - 中間偏右 -->
-                    <div class="shrink-0 mt-3 text-xs text-warm-brown/60 font-hand">${timeStr}</div>
+                    <!-- 時間標記 -->
+                    <div class="shrink-0 mt-4 text-xs text-warm-brown/60 font-hand">${timeStr}</div>
                 </div>
             `;
         } else {
+            // 照片小圓球（浮在左下角）
+            const photoBubble = tx.photo_url ? `
+                <div class="timeline-photo-badge timeline-photo-left">
+                    <span class="text-sm">📸</span>
+                </div>
+            ` : '';
+
             return `
-                <div class="mb-3 flex items-start gap-2 justify-end">
-                    <!-- 時間標記 - 中間偏左 -->
-                    <div class="shrink-0 mt-3 text-xs text-warm-brown/60 font-hand">${timeStr}</div>
+                <div class="mb-5 flex items-start gap-2 justify-end">
+                    <!-- 時間標記 -->
+                    <div class="shrink-0 mt-4 text-xs text-warm-brown/60 font-hand">${timeStr}</div>
 
-                    <!-- 交易卡片 - 靠右 -->
-                    <div class="transaction-item max-w-[70%] bg-white rounded-2xl p-3 shadow-watercolor-layered hover:shadow-floating transition-all cursor-pointer group ${payerBorderClass}" data-transaction-id="${tx.id}">
+                    <!-- 交易卡片 - 靠右（步付）-->
+                    <div class="transaction-item timeline-bubble-right relative max-w-[75%] rounded-2xl p-3.5 shadow-md hover:shadow-lg transition-all cursor-pointer ${bubbleBgClass} border-2" data-transaction-id="${tx.id}">
+                        <!-- 付款標籤小圓球（浮在右上角）-->
+                        <div class="timeline-payment-badge timeline-payment-right ${beneficiaryBubbleClass}">
+                            <span class="text-[10px] font-bold leading-none whitespace-nowrap">${paymentText}</span>
+                        </div>
+
+                        <!-- 照片小圓球（浮在左下角）-->
+                        ${photoBubble}
+
                         <div class="flex items-center gap-3">
-                            <!-- 付款標籤 -->
-                            <span class="px-2 py-0.5 rounded-full ${payerBadgeClass} text-xs font-bold shrink-0">${paymentText}</span>
-
-                            <!-- 價錢 -->
-                            <div class="shrink-0">
-                                <div class="font-display font-bold text-lg text-[#E27D60]">$${tx.amount}</div>
+                            <!-- 名稱（固定最大寬度，避免擠壓）-->
+                            <div class="flex-1 min-w-0 max-w-[140px]">
+                                <h4 class="font-hand font-bold text-base text-soft-ink truncate leading-tight">${tx.item_name}</h4>
                             </div>
 
-                            <!-- 名稱 -->
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-1">
-                                    <h4 class="font-hand font-bold text-base text-soft-ink truncate">${tx.item_name}</h4>
-                                    ${photoIndicator}
-                                </div>
-                                ${tx.note ? `<p class="text-xs text-warm-brown/60 italic truncate">📝 ${tx.note}</p>` : ''}
+                            <!-- 金額（固定寬度，右對齊）-->
+                            <div class="shrink-0 min-w-[75px] text-right">
+                                <div class="font-display font-bold text-lg text-[#E27D60] leading-tight">$${tx.amount}</div>
                             </div>
                         </div>
                     </div>
