@@ -7,6 +7,59 @@
 
 ---
 
+## [5.12.0] - 2026-01-10
+
+### ✨ 通知中心篩選功能（已讀/未讀切換）
+
+**新增童話風格的 Segmented Control，優化通知瀏覽體驗**
+
+#### 核心功能
+
+1. **智能篩選邏輯** ([NotificationPanel.js:17](js/components/NotificationPanel.js#L17), [NotificationPanel.js:142-182](js/components/NotificationPanel.js#L142-L182))
+   - 📬 預設顯示「未讀」通知（避免一打開就看到已讀通知）
+   - 📋 可切換到「全部」查看所有通知
+   - 🔄 切換時自動重置分頁計數
+   - 🎯 篩選狀態與 UI 完全同步
+
+2. **童話風格 Segmented Control** ([notifications.css:85-163](css/components/notifications.css#L85-L163))
+   - 🎨 馬卡龍粉色漸層（`#FFB7B2` → `#FF9EAA`）
+   - 🍮 果凍彈跳動畫（jellyBounce）
+   - ✨ 圖標放大 + 陰影效果
+   - 💫 流暢的 0.25s cubic-bezier 過渡
+
+3. **智能空狀態訊息** ([NotificationPanel.js:200-214](js/components/NotificationPanel.js#L200-L214))
+   - 未讀篩選：「太棒了！你已經看完所有通知了 🎉」
+   - 全部篩選：「當對方修改記帳時會顯示在這裡喔」
+
+#### 技術實作
+
+4. **狀態管理** ([NotificationPanel.js:17](js/components/NotificationPanel.js#L17))
+   ```javascript
+   this.currentFilter = 'unread'; // 'unread' | 'all'
+   ```
+
+5. **篩選方法**
+   - `setFilter(filter)` - 切換篩選狀態
+   - `getFilteredActivities()` - 取得過濾後的活動列表
+   - `updateFilterButtons()` - 更新按鈕 active 狀態
+
+6. **HTML 結構** ([index.html:988-997](index.html#L988-L997))
+   ```html
+   <div class="notification-filter">
+       <button data-filter="unread">📬 未讀</button>
+       <button data-filter="all">📋 全部</button>
+   </div>
+   ```
+
+#### 使用者體驗提升
+
+- ✅ 預設只顯示未讀通知，避免視覺干擾
+- ✅ 可愛的果凍彈跳動畫，增加互動樂趣
+- ✅ 篩選後的分頁載入正常運作
+- ✅ 友善的空狀態提示訊息
+
+---
+
 ## [5.11.0] - 2026-01-09
 
 ### ✨ 時間軸對話框 UI/UX 大優化（LINE 風格）

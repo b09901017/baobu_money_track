@@ -13,6 +13,9 @@ export class NotificationPanel {
         this.displayedCount = 6; // 初始顯示 6 個
         this.pageSize = 6; // 每次載入 6 個
 
+        // 篩選相關
+        this.currentFilter = 'unread'; // 'unread' | 'all'
+
         // 返回鍵處理
         this.backButtonUnregister = null;
         this.detailBackButtonUnregister = null;
@@ -45,6 +48,15 @@ export class NotificationPanel {
         if (loadMoreBtn) {
             loadMoreBtn.addEventListener('click', () => this.loadMore());
         }
+
+        // 綁定篩選切換按鈕
+        const filterButtons = this.panel.querySelectorAll('[data-filter]');
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const filter = btn.dataset.filter;
+                this.setFilter(filter);
+            });
+        });
 
         // 綁定詳情彈窗關閉
         const detailModal = document.getElementById('notificationDetailModal');
@@ -136,21 +148,76 @@ export class NotificationPanel {
     }
 
     /**
-     * 渲染通知列表（支援分頁）
+     * 切換篩選狀態
+     * @param {string} filter - 'unread' | 'all'
+     */
+    setFilter(filter) {
+        if (this.currentFilter === filter) return;
+
+        this.currentFilter = filter;
+        this.displayedCount = 6; // 重置分頁
+        this.render();
+        this.updateFilterButtons();
+
+        console.log(`📋 切換篩選：${filter === 'unread' ? '未讀' : '全部'}`);
+    }
+
+    /**
+     * 更新篩選按鈕狀態
+     */
+    updateFilterButtons() {
+        const filterButtons = this.panel?.querySelectorAll('[data-filter]');
+        if (!filterButtons) return;
+
+        filterButtons.forEach(btn => {
+            const filter = btn.dataset.filter;
+            if (filter === this.currentFilter) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    /**
+     * 取得過濾後的活動列表
+     * @returns {Array}
+     */
+    getFilteredActivities() {
+        const myRole = window.DataManager.myRole;
+
+        if (this.currentFilter === 'unread') {
+            return this.activities.filter(activity => !activity.isRead[myRole]);
+        }
+
+        return this.activities;
+    }
+
+    /**
+     * 渲染通知列表（支援分頁和篩選）
      */
     render() {
         const listContainer = this.panel?.querySelector('#notificationList');
         const loadMoreContainer = document.getElementById('notificationLoadMore');
         if (!listContainer) return;
 
+        // 更新篩選按鈕狀態
+        this.updateFilterButtons();
+
+        // 取得過濾後的活動列表
+        const filteredActivities = this.getFilteredActivities();
+
         // 如果沒有活動記錄
-        if (this.activities.length === 0) {
+        if (filteredActivities.length === 0) {
+            const emptyMessage = this.currentFilter === 'unread'
+                ? '目前沒有未讀通知<br><span class="text-sm">太棒了！你已經看完所有通知了 🎉</span>'
+                : '目前沒有任何通知<br><span class="text-sm">當對方修改記帳時會顯示在這裡喔</span>';
+
             listContainer.innerHTML = `
                 <div class="flex flex-col items-center justify-center py-16 px-6">
                     <div class="text-6xl mb-4">📭</div>
                     <p class="text-warm-brown/60 text-center font-hand">
-                        目前沒有任何通知<br>
-                        <span class="text-sm">當對方修改記帳時會顯示在這裡喔</span>
+                        ${emptyMessage}
                     </p>
                 </div>
             `;
@@ -160,7 +227,7 @@ export class NotificationPanel {
 
         // 渲染活動列表（分頁顯示）
         const myRole = window.DataManager.myRole;
-        const displayedActivities = this.activities.slice(0, this.displayedCount);
+        const displayedActivities = filteredActivities.slice(0, this.displayedCount);
 
         const activityItems = displayedActivities.map(activity => {
             const isUnread = !activity.isRead[myRole];
@@ -197,7 +264,7 @@ export class NotificationPanel {
 
         // 顯示/隱藏載入更多按鈕
         if (loadMoreContainer) {
-            if (this.displayedCount < this.activities.length) {
+            if (this.displayedCount < filteredActivities.length) {
                 loadMoreContainer.classList.remove('hidden');
             } else {
                 loadMoreContainer.classList.add('hidden');
