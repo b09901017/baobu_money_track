@@ -911,7 +911,8 @@ export class CalendarPage {
      */
     scrollToTransactionsList() {
         const dayDetails = document.getElementById('dayDetails');
-        const mainContent = document.querySelector('.main-content');
+        // 修正：使用正確的滾動容器（main#mainContent）
+        const mainContent = document.getElementById('mainContent');
 
         if (!dayDetails || !mainContent) {
             console.warn('⚠️ 找不到 dayDetails 或 mainContent');
@@ -925,16 +926,19 @@ export class CalendarPage {
             const contentRect = mainContent.getBoundingClientRect();
 
             // 目標滾動位置：讓 dayDetails 距離頂部有一點間距（舒適的閱讀位置）
-            const targetOffset = 80; // 距離頂部 80px
+            const targetOffset = 100; // 距離頂部 100px
             const currentScrollTop = mainContent.scrollTop;
             const detailsOffsetTop = detailsRect.top - contentRect.top + currentScrollTop;
             const scrollDistance = detailsOffsetTop - targetOffset;
 
             console.log('📜 滾動參數:', {
+                dayDetailsTop: detailsRect.top,
+                contentTop: contentRect.top,
                 currentScrollTop,
                 detailsOffsetTop,
                 targetOffset,
-                scrollDistance
+                scrollDistance,
+                finalScroll: Math.max(0, scrollDistance)
             });
 
             // 平滑滾動
