@@ -23,8 +23,46 @@ export class CalendarPage {
         this.touchStartX = 0;
         this.touchEndX = 0;
 
+        // 💖 顯示模式設定 💖
+        this.displayMode = {
+            type: 'amount',      // 'amount' | 'category'
+            mode: 'total'        // amount: 'total' | 'shared' | 'baobao' | 'bubu'
+                                // category: 類別名稱（如 '吃吃'）
+        };
+
+        // 類別圖示對應（與 TransactionRenderer 保持一致）
+        this.categoryIcons = {
+            '吃吃': 'restaurant',
+            '喝喝': 'local_cafe',
+            '玩玩': 'toys',
+            '刷寶媽卡': 'credit_card',
+            '高級吃吃': 'dinner_dining',
+            '優惠超人': 'local_offer',
+            '家樂福/全聯': 'shopping_cart',
+            '交通': 'directions_bus',
+            '洗衣服': 'local_laundry_service',
+            '寵寶寶': 'favorite',
+            '寵步步': 'favorite_border',
+            '房租': 'home',
+            '蝦皮/光南': 'shopping_bag',
+            '居家': 'weekend',
+            '噗嚕天堂': 'videogame_asset',
+            '3C': 'devices',
+            '醫療': 'medical_services',
+            '大日子': 'cake',
+            '訂閱東東': 'subscriptions',
+            '大爆買買': 'shopping_basket',
+            '整理窩窩日': 'cleaning_services',
+            '其他': 'auto_stories'
+        };
+
         // 綁定滑動手勢
         this.initSwipeGesture();
+
+        // 延遲初始化顯示模式選擇器（確保 DOM 已渲染）
+        setTimeout(() => {
+            this.initDisplayModeSelector();
+        }, 100);
 
         // 訂閱交易變更（新增）
         this.state.subscribe('transactions', (data) => {
@@ -80,7 +118,7 @@ export class CalendarPage {
         }
     }
 
-    renderCalendar() {
+    async renderCalendar() {
         const year = this.state.currentMonth.getFullYear();
         const month = this.state.currentMonth.getMonth();
 
@@ -107,28 +145,32 @@ export class CalendarPage {
             grid.appendChild(cell);
         });
 
+        // 收集所有日期單格的 Promise
+        const cellPromises = [];
+
         // 上個月的日期
         for (let i = firstDay - 1; i >= 0; i--) {
             const day = daysInPrevMonth - i;
-            const cell = this.createCalendarDay(day, year, month - 1, true);
-            grid.appendChild(cell);
+            cellPromises.push(this.createCalendarDay(day, year, month - 1, true));
         }
 
         // 當月日期
         for (let day = 1; day <= daysInMonth; day++) {
-            const cell = this.createCalendarDay(day, year, month, false, dailyExpenses);
-            grid.appendChild(cell);
+            cellPromises.push(this.createCalendarDay(day, year, month, false, dailyExpenses));
         }
 
         // 下個月的日期
         const remainingCells = 42 - (firstDay + daysInMonth);
         for (let day = 1; day <= remainingCells; day++) {
-            const cell = this.createCalendarDay(day, year, month + 1, true);
-            grid.appendChild(cell);
+            cellPromises.push(this.createCalendarDay(day, year, month + 1, true));
         }
+
+        // 等待所有日期單格渲染完成
+        const cells = await Promise.all(cellPromises);
+        cells.forEach(cell => grid.appendChild(cell));
     }
 
-    createCalendarDay(day, year, month, isOtherMonth, dailyExpenses = {}) {
+    async createCalendarDay(day, year, month, isOtherMonth, dailyExpenses = {}) {
         const cell = document.createElement('div');
         cell.className = 'aspect-square flex flex-col items-center justify-center rounded-xl cursor-pointer transition-all relative font-hand';
 
@@ -187,13 +229,8 @@ export class CalendarPage {
         dayNum.textContent = day;
         cell.appendChild(dayNum);
 
-        // 金額
-        if (dailyExpenses[dateStr]) {
-            const amount = document.createElement('div');
-            amount.className = 'text-xs text-[#E27D60] font-bold';
-            amount.textContent = `$${Math.round(dailyExpenses[dateStr])}`;
-            cell.appendChild(amount);
-        }
+        // 根據顯示模式渲染內容
+        await this.renderCalendarDayContent(cell, dateStr, dailyExpenses);
 
         // 點擊事件
         if (!isOtherMonth) {
@@ -485,5 +522,253 @@ export class CalendarPage {
 
         this.renderCalendar();
         await this.showDayTransactions(todayStr);
+    }
+
+    /**
+     * 💖 根據顯示模式渲染日曆單格內容 💖
+     */
+    async renderCalendarDayContent(cell, dateStr, dailyExpenses) {
+        const { type, mode } = this.displayMode;
+
+        if (type === 'amount') {
+            // 金額顯示模式
+            await this.renderAmountMode(cell, dateStr, dailyExpenses, mode);
+        } else if (type === 'category') {
+            // 類別顯示模式
+            await this.renderCategoryMode(cell, dateStr, mode);
+        }
+    }
+
+    /**
+     * 渲染金額模式
+     */
+    async renderAmountMode(cell, dateStr, dailyExpenses, mode) {
+        let amount = 0;
+
+        if (mode === 'total') {
+            // 總花費（預設）
+            amount = dailyExpenses[dateStr] || 0;
+        } else {
+            // 需要查詢當天交易來計算特定角色花費
+            const transactions = await window.DataManager.getTransactionsByDate(dateStr);
+
+            if (mode === 'shared') {
+                // 共花花費（beneficiary === 'both'）
+                amount = transactions
+                    .filter(tx => tx.beneficiary === 'both')
+                    .reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
+            } else if (mode === 'baobao') {
+                // 寶付的錢
+                amount = transactions
+                    .filter(tx => tx.payer === 'baobao')
+                    .reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
+            } else if (mode === 'bubu') {
+                // 步付的錢
+                amount = transactions
+                    .filter(tx => tx.payer === 'bubu')
+                    .reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
+            }
+        }
+
+        // 顯示金額
+        if (amount > 0) {
+            const amountEl = document.createElement('div');
+            amountEl.className = 'text-xs text-[#E27D60] font-bold';
+            amountEl.textContent = `$${Math.round(amount)}`;
+            cell.appendChild(amountEl);
+        }
+    }
+
+    /**
+     * 渲染類別模式
+     */
+    async renderCategoryMode(cell, dateStr, categoryName) {
+        // 查詢當天交易
+        const transactions = await window.DataManager.getTransactionsByDate(dateStr);
+
+        // 檢查是否有該類別的交易
+        const hasCategory = transactions.some(tx => {
+            const categories = tx.categories || [];
+            return categories.includes(categoryName);
+        });
+
+        if (hasCategory) {
+            // 顯示類別圖示
+            const icon = this.categoryIcons[categoryName] || 'auto_stories';
+            const iconEl = document.createElement('span');
+            iconEl.className = 'material-symbols-outlined text-base category-icon-glow';
+            iconEl.textContent = icon;
+            iconEl.style.color = '#FF9EC7';  // 主題色
+            iconEl.style.filter = 'drop-shadow(0 0 4px rgba(255, 158, 199, 0.8))';
+            cell.appendChild(iconEl);
+        }
+    }
+
+    /**
+     * 💖 初始化顯示模式選擇器 💖
+     */
+    initDisplayModeSelector() {
+        const btn = document.getElementById('calendarDisplayModeBtn');
+        const dropdown = document.getElementById('calendarDisplayModeDropdown');
+        const categoryExpandBtn = document.querySelector('.category-expand-btn');
+        const categoryList = document.getElementById('categoryList');
+
+        if (!btn || !dropdown) {
+            console.warn('⚠️ 顯示模式選擇器元素未找到，稍後重試');
+            return;
+        }
+
+        console.log('✅ 顯示模式選擇器初始化成功');
+
+        // 設定預設選中狀態（總花費）
+        this.updateSelectedOption('amount', 'total');
+
+        // 點擊主按鈕切換下拉選單
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = dropdown.classList.contains('show');
+
+            if (isOpen) {
+                this.closeDisplayModeDropdown();
+            } else {
+                this.openDisplayModeDropdown();
+            }
+        });
+
+        // 點擊下拉選項
+        const options = dropdown.querySelectorAll('.dropdown-option[data-mode]');
+        options.forEach(option => {
+            option.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const mode = option.dataset.mode;
+                const type = option.dataset.type;
+
+                this.changeDisplayMode(type, mode);
+                this.closeDisplayModeDropdown();
+            });
+        });
+
+        // 點擊類別展開按鈕
+        if (categoryExpandBtn && categoryList) {
+            categoryExpandBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isExpanded = categoryList.classList.contains('show');
+
+                if (isExpanded) {
+                    categoryList.classList.remove('show');
+                    categoryExpandBtn.classList.remove('expanded');
+                } else {
+                    categoryList.classList.add('show');
+                    categoryExpandBtn.classList.add('expanded');
+                }
+            });
+        }
+
+        // 點擊外部關閉下拉選單
+        document.addEventListener('click', (e) => {
+            if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
+                this.closeDisplayModeDropdown();
+            }
+        });
+    }
+
+    /**
+     * 開啟下拉選單
+     */
+    openDisplayModeDropdown() {
+        const btn = document.getElementById('calendarDisplayModeBtn');
+        const dropdown = document.getElementById('calendarDisplayModeDropdown');
+
+        btn.classList.add('active');
+        dropdown.classList.add('show');
+    }
+
+    /**
+     * 關閉下拉選單
+     */
+    closeDisplayModeDropdown() {
+        const btn = document.getElementById('calendarDisplayModeBtn');
+        const dropdown = document.getElementById('calendarDisplayModeDropdown');
+        const categoryList = document.getElementById('categoryList');
+        const categoryExpandBtn = document.querySelector('.category-expand-btn');
+
+        btn.classList.remove('active');
+        dropdown.classList.remove('show');
+
+        // 同時收起類別列表
+        if (categoryList) categoryList.classList.remove('show');
+        if (categoryExpandBtn) categoryExpandBtn.classList.remove('expanded');
+    }
+
+    /**
+     * 切換顯示模式
+     */
+    changeDisplayMode(type, mode) {
+        this.displayMode.type = type;
+        this.displayMode.mode = mode;
+
+        // 更新按鈕顯示
+        this.updateDisplayModeButton();
+
+        // 更新選中狀態
+        this.updateSelectedOption(type, mode);
+
+        // 重新渲染日曆
+        this.renderCalendar();
+
+        console.log('📅 切換顯示模式:', { type, mode });
+    }
+
+    /**
+     * 更新顯示模式按鈕的文字和圖示
+     */
+    updateDisplayModeButton() {
+        const btn = document.getElementById('calendarDisplayModeBtn');
+        if (!btn) return;
+
+        const iconSpan = btn.querySelector('.mode-icon');
+        const labelSpan = btn.querySelector('.mode-label');
+
+        const { type, mode } = this.displayMode;
+
+        if (type === 'amount') {
+            const modeConfig = {
+                'total': { icon: '💰', label: '總花費' },
+                'shared': { icon: '💕', label: '共花花費' },
+                'baobao': { icon: '🧸', label: '寶花費用' },
+                'bubu': { icon: '🐾', label: '步花費用' }
+            };
+            const config = modeConfig[mode] || modeConfig['total'];
+            iconSpan.textContent = config.icon;
+            labelSpan.textContent = config.label;
+        } else if (type === 'category') {
+            // 類別模式：顯示類別圖示和名稱
+            const icon = this.categoryIcons[mode] || 'auto_stories';
+            iconSpan.innerHTML = `<span class="material-symbols-outlined" style="font-size: 1.5rem;">${icon}</span>`;
+            labelSpan.textContent = mode;
+        }
+    }
+
+    /**
+     * 更新選中選項的樣式
+     */
+    updateSelectedOption(type, mode) {
+        const dropdown = document.getElementById('calendarDisplayModeDropdown');
+        if (!dropdown) return;
+
+        // 清除所有選中狀態
+        dropdown.querySelectorAll('.dropdown-option').forEach(opt => {
+            opt.classList.remove('selected');
+            const checkmark = opt.querySelector('.checkmark');
+            if (checkmark) checkmark.classList.add('hidden');
+        });
+
+        // 設定當前選中項
+        const selected = dropdown.querySelector(`.dropdown-option[data-type="${type}"][data-mode="${mode}"]`);
+        if (selected) {
+            selected.classList.add('selected');
+            const checkmark = selected.querySelector('.checkmark');
+            if (checkmark) checkmark.classList.remove('hidden');
+        }
     }
 }

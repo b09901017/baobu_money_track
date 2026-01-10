@@ -6,6 +6,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>情侶記帳 - 童話故事本</title>
 
+    <!-- Debug 東東 -->
+    <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
+    <script>var vConsole = new VConsole();</script>
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Quicksand:wght@300;400;500;600;700&family=Caveat:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Pacifico&display=swap" rel="stylesheet">
 
@@ -374,6 +378,110 @@
                             <button id="nextMonth" class="w-10 h-10 rounded-full bg-macaron-purple/20 hover:bg-macaron-purple/40 flex items-center justify-center transition-all hover:scale-110">
                                 <span class="material-symbols-outlined">chevron_right</span>
                             </button>
+                        </div>
+
+                        <!-- 💖 顯示模式選擇器 💖 -->
+                        <div class="calendar-display-mode-selector mb-4">
+                            <!-- 主選擇器按鈕 -->
+                            <button id="calendarDisplayModeBtn" class="calendar-display-mode-btn">
+                                <span class="mode-icon">💰</span>
+                                <span class="mode-label">總花費</span>
+                                <span class="material-symbols-outlined dropdown-icon">expand_more</span>
+                            </button>
+
+                            <!-- 下拉選單 -->
+                            <div id="calendarDisplayModeDropdown" class="calendar-display-mode-dropdown">
+                                <!-- 金額模式 -->
+                                <div class="dropdown-section">
+                                    <div class="section-title">
+                                        <span class="material-symbols-outlined">payments</span>
+                                        金額顯示
+                                    </div>
+                                    <button class="dropdown-option" data-mode="total" data-type="amount">
+                                        <span class="option-icon">💰</span>
+                                        <span class="option-label">總花費</span>
+                                        <span class="checkmark hidden">✓</span>
+                                    </button>
+                                    <button class="dropdown-option" data-mode="shared" data-type="amount">
+                                        <span class="option-icon">💕</span>
+                                        <span class="option-label">共花花費</span>
+                                        <span class="checkmark hidden">✓</span>
+                                    </button>
+                                    <button class="dropdown-option" data-mode="baobao" data-type="amount">
+                                        <span class="option-icon">🧸</span>
+                                        <span class="option-label">寶花費用</span>
+                                        <span class="checkmark hidden">✓</span>
+                                    </button>
+                                    <button class="dropdown-option" data-mode="bubu" data-type="amount">
+                                        <span class="option-icon">🐾</span>
+                                        <span class="option-label">步花費用</span>
+                                        <span class="checkmark hidden">✓</span>
+                                    </button>
+                                </div>
+
+                                <!-- 類別模式 -->
+                                <div class="dropdown-section">
+                                    <div class="section-title">
+                                        <span class="material-symbols-outlined">category</span>
+                                        類別顯示
+                                    </div>
+                                    <button class="dropdown-option category-expand-btn" data-action="expand">
+                                        <span class="option-icon">🏷️</span>
+                                        <span class="option-label">選擇類別</span>
+                                        <span class="material-symbols-outlined expand-icon">chevron_right</span>
+                                    </button>
+
+                                    <!-- 類別列表（可展開） -->
+                                    <div id="categoryList" class="category-list">
+                                        <!-- 常用類別 -->
+                                        <button class="dropdown-option" data-mode="吃吃" data-type="category">
+                                            <span class="material-symbols-outlined option-icon">restaurant</span>
+                                            <span class="option-label">吃吃</span>
+                                            <span class="checkmark hidden">✓</span>
+                                        </button>
+                                        <button class="dropdown-option" data-mode="喝喝" data-type="category">
+                                            <span class="material-symbols-outlined option-icon">local_cafe</span>
+                                            <span class="option-label">喝喝</span>
+                                            <span class="checkmark hidden">✓</span>
+                                        </button>
+                                        <button class="dropdown-option" data-mode="玩玩" data-type="category">
+                                            <span class="material-symbols-outlined option-icon">toys</span>
+                                            <span class="option-label">玩玩</span>
+                                            <span class="checkmark hidden">✓</span>
+                                        </button>
+                                        <button class="dropdown-option" data-mode="交通" data-type="category">
+                                            <span class="material-symbols-outlined option-icon">directions_bus</span>
+                                            <span class="option-label">交通</span>
+                                            <span class="checkmark hidden">✓</span>
+                                        </button>
+                                        <button class="dropdown-option" data-mode="刷寶媽卡" data-type="category">
+                                            <span class="material-symbols-outlined option-icon">credit_card</span>
+                                            <span class="option-label">刷寶媽卡</span>
+                                            <span class="checkmark hidden">✓</span>
+                                        </button>
+                                        <button class="dropdown-option" data-mode="高級吃吃" data-type="category">
+                                            <span class="material-symbols-outlined option-icon">dinner_dining</span>
+                                            <span class="option-label">高級吃吃</span>
+                                            <span class="checkmark hidden">✓</span>
+                                        </button>
+                                        <button class="dropdown-option" data-mode="優惠超人" data-type="category">
+                                            <span class="material-symbols-outlined option-icon">local_offer</span>
+                                            <span class="option-label">優惠超人</span>
+                                            <span class="checkmark hidden">✓</span>
+                                        </button>
+                                        <button class="dropdown-option" data-mode="家樂福/全聯" data-type="category">
+                                            <span class="material-symbols-outlined option-icon">shopping_cart</span>
+                                            <span class="option-label">家樂福/全聯</span>
+                                            <span class="checkmark hidden">✓</span>
+                                        </button>
+                                        <button class="dropdown-option" data-mode="其他" data-type="category">
+                                            <span class="material-symbols-outlined option-icon">auto_stories</span>
+                                            <span class="option-label">其他</span>
+                                            <span class="checkmark hidden">✓</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div id="calendarGrid" class="grid grid-cols-7 gap-2">

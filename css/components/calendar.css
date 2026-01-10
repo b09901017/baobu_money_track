@@ -233,3 +233,360 @@
     75% { transform: scale(1.2) rotate(-3deg); }
 }
 
+/* ==================== 日曆顯示模式選擇器（軟萌童話風格）==================== */
+
+.calendar-display-mode-selector {
+    position: relative;
+    z-index: 100; /* 提高 z-index 確保在最上層 */
+}
+
+/* 主按鈕 - 貼紙風格 */
+.calendar-display-mode-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #FFF9F5 0%, #FFF5F0 100%);
+    border: 3px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(255, 158, 199, 0.15),
+                inset 0 1px 2px rgba(255, 255, 255, 0.8);
+    font-family: 'Fredoka', sans-serif;
+    position: relative;
+    overflow: hidden;
+}
+
+/* 背景閃爍效果 */
+.calendar-display-mode-btn::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        45deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.3) 50%,
+        transparent 70%
+    );
+    animation: shimmer 3s infinite;
+    pointer-events: none;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+.calendar-display-mode-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 158, 199, 0.25),
+                inset 0 1px 3px rgba(255, 255, 255, 0.9);
+    border-color: var(--primary-color);
+}
+
+.calendar-display-mode-btn:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 2px 8px rgba(255, 158, 199, 0.2),
+                inset 0 1px 2px rgba(255, 255, 255, 0.7);
+}
+
+/* 圖示與文字 */
+.calendar-display-mode-btn .mode-icon {
+    font-size: 1.5rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.calendar-display-mode-btn:hover .mode-icon {
+    transform: scale(1.15) rotate(-5deg);
+}
+
+.calendar-display-mode-btn .mode-label {
+    flex: 1;
+    text-align: left;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    position: relative;
+    z-index: 1;
+}
+
+.calendar-display-mode-btn .dropdown-icon {
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 下拉展開時旋轉箭頭 */
+.calendar-display-mode-btn.active .dropdown-icon {
+    transform: rotate(180deg);
+}
+
+/* 下拉選單 */
+.calendar-display-mode-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background: white;
+    border: 3px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 8px 24px rgba(255, 158, 199, 0.2),
+                inset 0 1px 3px rgba(255, 255, 255, 0.8);
+    overflow: visible; /* 改為 visible，避免裁切類別列表 */
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    z-index: 1000; /* 確保浮在最上層 */
+}
+
+.calendar-display-mode-dropdown.show {
+    max-height: 600px; /* 增加高度以容納展開的類別列表 */
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    animation: dropdownSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto; /* 展開時允許垂直滾動 */
+    overflow-x: hidden; /* 水平方向隱藏 */
+}
+
+@keyframes dropdownSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+    }
+    60% {
+        transform: translateY(2px) scale(1.01);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* 下拉區段 */
+.dropdown-section {
+    padding: 12px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.dropdown-section:last-child {
+    border-bottom: none;
+}
+
+/* 區段標題 */
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    font-family: 'Fredoka', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: linear-gradient(135deg, var(--fairy-pink)/10, var(--fairy-purple)/10);
+    border-radius: var(--radius-md);
+}
+
+.section-title .material-symbols-outlined {
+    font-size: 1.1rem;
+}
+
+/* 下拉選項 */
+.dropdown-option {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'Fredoka', sans-serif;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Hover 效果 */
+.dropdown-option::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--fairy-pink)/20, var(--fairy-purple)/20);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.dropdown-option:hover::before {
+    opacity: 1;
+}
+
+.dropdown-option:hover {
+    transform: translateX(4px);
+    background: linear-gradient(135deg, var(--fairy-pink)/10, var(--fairy-purple)/10);
+}
+
+.dropdown-option:active {
+    transform: translateX(2px) scale(0.98);
+}
+
+/* 選項圖示 */
+.dropdown-option .option-icon {
+    font-size: 1.3rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 1;
+}
+
+/* Material Icons 圖示 */
+.dropdown-option .material-symbols-outlined.option-icon {
+    font-size: 1.5rem;
+}
+
+.dropdown-option:hover .option-icon {
+    transform: scale(1.15) rotate(-5deg);
+    animation: jelly-pop 0.5s ease;
+}
+
+@keyframes jelly-pop {
+    0%, 100% { transform: scale(1.15) rotate(-5deg); }
+    25% { transform: scale(1.3) rotate(-8deg); }
+    50% { transform: scale(1.1) rotate(-3deg); }
+    75% { transform: scale(1.2) rotate(-6deg); }
+}
+
+/* 選項文字 */
+.dropdown-option .option-label {
+    flex: 1;
+    text-align: left;
+    font-weight: 500;
+    position: relative;
+    z-index: 1;
+}
+
+/* 勾選標記 */
+.dropdown-option .checkmark {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 1;
+}
+
+.dropdown-option.selected .checkmark {
+    animation: checkmarkPop 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes checkmarkPop {
+    0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+    50% { transform: scale(1.3) rotate(5deg); }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+/* 已選中的選項 */
+.dropdown-option.selected {
+    background: linear-gradient(135deg, var(--primary-color)/15, var(--accent-color)/15);
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.dropdown-option.selected::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 70%;
+    background: linear-gradient(180deg, var(--primary-color), var(--accent-color));
+    border-radius: 0 4px 4px 0;
+    box-shadow: 0 0 8px var(--primary-color)/50;
+}
+
+/* 展開箭頭圖示 */
+.dropdown-option .expand-icon {
+    font-size: 1.3rem;
+    color: var(--text-secondary);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dropdown-option.expanded .expand-icon {
+    transform: rotate(90deg);
+}
+
+/* 類別列表 */
+.category-list {
+    margin-top: 8px;
+    padding-left: 12px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.category-list.show {
+    max-height: 400px;
+}
+
+.category-list .dropdown-option {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+}
+
+/* 類別展開按鈕 */
+.category-expand-btn {
+    background: linear-gradient(135deg, var(--fairy-mint)/20, var(--fairy-blue)/20);
+    border: 2px solid var(--fairy-mint)/30;
+}
+
+.category-expand-btn:hover {
+    background: linear-gradient(135deg, var(--fairy-mint)/30, var(--fairy-blue)/30);
+    border-color: var(--fairy-mint)/50;
+}
+
+/* 類別圖示發光效果 */
+.category-icon-glow {
+    animation: icon-glow 2s ease-in-out infinite;
+}
+
+@keyframes icon-glow {
+    0%, 100% {
+        filter: drop-shadow(0 0 4px rgba(255, 158, 199, 0.8));
+        transform: scale(1);
+    }
+    50% {
+        filter: drop-shadow(0 0 8px rgba(255, 158, 199, 1));
+        transform: scale(1.1);
+    }
+}
+
+/* 響應式設計 */
+@media (max-width: 640px) {
+    .calendar-display-mode-btn {
+        padding: 12px 16px;
+    }
+
+    .calendar-display-mode-btn .mode-label {
+        font-size: 0.95rem;
+    }
+
+    .dropdown-option {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+}
+
