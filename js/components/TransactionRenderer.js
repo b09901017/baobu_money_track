@@ -4,8 +4,8 @@
 
 import { formatDisplayDate } from '../utils/dateUtils.js';
 
-// 分類圖標配置
-const CATEGORY_ICONS = {
+// 分類圖標配置（匯出供其他模組使用）
+export const CATEGORY_ICONS = {
     // 常用類別
     '吃吃': 'restaurant',
     '喝喝': 'local_cafe',

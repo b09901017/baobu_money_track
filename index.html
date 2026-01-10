@@ -369,7 +369,7 @@
                     </div>
 
                     <!-- 月曆 -->
-                    <div class="bg-white rounded-2xl p-5 shadow-watercolor-layered mb-4">
+                    <div class="bg-white rounded-2xl p-5 shadow-watercolor-layered mb-4" style="overflow: visible;">
                         <div class="flex items-center justify-between mb-4">
                             <button id="prevMonth" class="w-10 h-10 rounded-full bg-macaron-purple/20 hover:bg-macaron-purple/40 flex items-center justify-center transition-all hover:scale-110">
                                 <span class="material-symbols-outlined">chevron_left</span>
@@ -402,11 +402,6 @@
                                         <span class="option-label">總花費</span>
                                         <span class="checkmark hidden">✓</span>
                                     </button>
-                                    <button class="dropdown-option" data-mode="shared" data-type="amount">
-                                        <span class="option-icon">💕</span>
-                                        <span class="option-label">共花花費</span>
-                                        <span class="checkmark hidden">✓</span>
-                                    </button>
                                     <button class="dropdown-option" data-mode="baobao" data-type="amount">
                                         <span class="option-icon">🧸</span>
                                         <span class="option-label">寶花費用</span>
@@ -431,54 +426,9 @@
                                         <span class="material-symbols-outlined expand-icon">chevron_right</span>
                                     </button>
 
-                                    <!-- 類別列表（可展開） -->
+                                    <!-- 類別列表（動態生成） -->
                                     <div id="categoryList" class="category-list">
-                                        <!-- 常用類別 -->
-                                        <button class="dropdown-option" data-mode="吃吃" data-type="category">
-                                            <span class="material-symbols-outlined option-icon">restaurant</span>
-                                            <span class="option-label">吃吃</span>
-                                            <span class="checkmark hidden">✓</span>
-                                        </button>
-                                        <button class="dropdown-option" data-mode="喝喝" data-type="category">
-                                            <span class="material-symbols-outlined option-icon">local_cafe</span>
-                                            <span class="option-label">喝喝</span>
-                                            <span class="checkmark hidden">✓</span>
-                                        </button>
-                                        <button class="dropdown-option" data-mode="玩玩" data-type="category">
-                                            <span class="material-symbols-outlined option-icon">toys</span>
-                                            <span class="option-label">玩玩</span>
-                                            <span class="checkmark hidden">✓</span>
-                                        </button>
-                                        <button class="dropdown-option" data-mode="交通" data-type="category">
-                                            <span class="material-symbols-outlined option-icon">directions_bus</span>
-                                            <span class="option-label">交通</span>
-                                            <span class="checkmark hidden">✓</span>
-                                        </button>
-                                        <button class="dropdown-option" data-mode="刷寶媽卡" data-type="category">
-                                            <span class="material-symbols-outlined option-icon">credit_card</span>
-                                            <span class="option-label">刷寶媽卡</span>
-                                            <span class="checkmark hidden">✓</span>
-                                        </button>
-                                        <button class="dropdown-option" data-mode="高級吃吃" data-type="category">
-                                            <span class="material-symbols-outlined option-icon">dinner_dining</span>
-                                            <span class="option-label">高級吃吃</span>
-                                            <span class="checkmark hidden">✓</span>
-                                        </button>
-                                        <button class="dropdown-option" data-mode="優惠超人" data-type="category">
-                                            <span class="material-symbols-outlined option-icon">local_offer</span>
-                                            <span class="option-label">優惠超人</span>
-                                            <span class="checkmark hidden">✓</span>
-                                        </button>
-                                        <button class="dropdown-option" data-mode="家樂福/全聯" data-type="category">
-                                            <span class="material-symbols-outlined option-icon">shopping_cart</span>
-                                            <span class="option-label">家樂福/全聯</span>
-                                            <span class="checkmark hidden">✓</span>
-                                        </button>
-                                        <button class="dropdown-option" data-mode="其他" data-type="category">
-                                            <span class="material-symbols-outlined option-icon">auto_stories</span>
-                                            <span class="option-label">其他</span>
-                                            <span class="checkmark hidden">✓</span>
-                                        </button>
+                                        <!-- 類別選項將由 CalendarPage.js 動態生成 -->
                                     </div>
                                 </div>
                             </div>

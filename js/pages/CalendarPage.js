@@ -1,7 +1,7 @@
 // ==================== 日曆頁面控制器 ====================
 // 來源: app.js 行 841-970
 
-import { TransactionRenderer } from '../components/TransactionRenderer.js';
+import { TransactionRenderer, CATEGORY_ICONS } from '../components/TransactionRenderer.js';
 import { formatDisplayDate } from '../utils/dateUtils.js';
 
 export class CalendarPage {
@@ -26,35 +26,12 @@ export class CalendarPage {
         // 💖 顯示模式設定 💖
         this.displayMode = {
             type: 'amount',      // 'amount' | 'category'
-            mode: 'total'        // amount: 'total' | 'shared' | 'baobao' | 'bubu'
+            mode: 'total'        // amount: 'total' | 'baobao' | 'bubu'
                                 // category: 類別名稱（如 '吃吃'）
         };
 
-        // 類別圖示對應（與 TransactionRenderer 保持一致）
-        this.categoryIcons = {
-            '吃吃': 'restaurant',
-            '喝喝': 'local_cafe',
-            '玩玩': 'toys',
-            '刷寶媽卡': 'credit_card',
-            '高級吃吃': 'dinner_dining',
-            '優惠超人': 'local_offer',
-            '家樂福/全聯': 'shopping_cart',
-            '交通': 'directions_bus',
-            '洗衣服': 'local_laundry_service',
-            '寵寶寶': 'favorite',
-            '寵步步': 'favorite_border',
-            '房租': 'home',
-            '蝦皮/光南': 'shopping_bag',
-            '居家': 'weekend',
-            '噗嚕天堂': 'videogame_asset',
-            '3C': 'devices',
-            '醫療': 'medical_services',
-            '大日子': 'cake',
-            '訂閱東東': 'subscriptions',
-            '大爆買買': 'shopping_basket',
-            '整理窩窩日': 'cleaning_services',
-            '其他': 'auto_stories'
-        };
+        // 類別圖示對應（從 TransactionRenderer 匯入）
+        this.categoryIcons = CATEGORY_ICONS;
 
         // 綁定滑動手勢
         this.initSwipeGesture();
@@ -558,12 +535,7 @@ export class CalendarPage {
             // 需要查詢當天交易來計算特定角色花費
             const transactions = await window.DataManager.getTransactionsByDate(dateStr);
 
-            if (mode === 'shared') {
-                // 共花花費（beneficiary === 'both'）
-                amount = transactions
-                    .filter(tx => tx.beneficiary === 'both')
-                    .reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
-            } else if (mode === 'baobao') {
+            if (mode === 'baobao') {
                 // 寶付的錢
                 amount = transactions
                     .filter(tx => tx.payer === 'baobao')
@@ -611,6 +583,38 @@ export class CalendarPage {
     }
 
     /**
+     * 💖 動態生成類別選項 💖
+     */
+    renderCategoryOptions() {
+        const categoryList = document.getElementById('categoryList');
+        if (!categoryList) return;
+
+        // 清空現有內容
+        categoryList.innerHTML = '';
+
+        // 遍歷所有類別（從 CATEGORY_ICONS 取得）
+        Object.keys(this.categoryIcons).forEach(categoryName => {
+            const icon = this.categoryIcons[categoryName];
+
+            // 建立類別按鈕
+            const button = document.createElement('button');
+            button.className = 'dropdown-option';
+            button.setAttribute('data-mode', categoryName);
+            button.setAttribute('data-type', 'category');
+
+            button.innerHTML = `
+                <span class="material-symbols-outlined option-icon">${icon}</span>
+                <span class="option-label">${categoryName}</span>
+                <span class="checkmark hidden">✓</span>
+            `;
+
+            categoryList.appendChild(button);
+        });
+
+        console.log(`✅ 已動態生成 ${Object.keys(this.categoryIcons).length} 個類別選項`);
+    }
+
+    /**
      * 💖 初始化顯示模式選擇器 💖
      */
     initDisplayModeSelector() {
@@ -625,6 +629,9 @@ export class CalendarPage {
         }
 
         console.log('✅ 顯示模式選擇器初始化成功');
+
+        // 動態生成類別選項
+        this.renderCategoryOptions();
 
         // 設定預設選中狀態（總花費）
         this.updateSelectedOption('amount', 'total');
@@ -641,17 +648,19 @@ export class CalendarPage {
             }
         });
 
-        // 點擊下拉選項
-        const options = dropdown.querySelectorAll('.dropdown-option[data-mode]');
-        options.forEach(option => {
-            option.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const mode = option.dataset.mode;
-                const type = option.dataset.type;
+        // 點擊下拉選項（使用事件委派處理動態生成的類別按鈕）
+        dropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
 
-                this.changeDisplayMode(type, mode);
-                this.closeDisplayModeDropdown();
-            });
+            // 找到被點擊的 dropdown-option
+            const option = e.target.closest('.dropdown-option[data-mode]');
+            if (!option) return;
+
+            const mode = option.dataset.mode;
+            const type = option.dataset.type;
+
+            this.changeDisplayMode(type, mode);
+            this.closeDisplayModeDropdown();
         });
 
         // 點擊類別展開按鈕
@@ -740,7 +749,6 @@ export class CalendarPage {
         if (type === 'amount') {
             const modeConfig = {
                 'total': { icon: '💰', label: '總花費' },
-                'shared': { icon: '💕', label: '共花花費' },
                 'baobao': { icon: '🧸', label: '寶花費用' },
                 'bubu': { icon: '🐾', label: '步花費用' }
             };

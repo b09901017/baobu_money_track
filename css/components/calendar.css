@@ -57,6 +57,11 @@
     box-shadow: var(--shadow-soft);
 }
 
+/* 確保日曆月份容器不會裁切下拉選單 */
+.calendar-grid-container {
+    overflow: visible !important;
+}
+
 .calendar-day {
     aspect-ratio: 1;
     display: flex;
@@ -238,6 +243,7 @@
 .calendar-display-mode-selector {
     position: relative;
     z-index: 100; /* 提高 z-index 確保在最上層 */
+    margin-bottom: 16px; /* 增加底部空間，避免選單展開時與日曆重疊 */
 }
 
 /* 主按鈕 - 貼紙風格 */
@@ -349,7 +355,7 @@
 }
 
 .calendar-display-mode-dropdown.show {
-    max-height: 500px; /* 設定固定最大高度，確保可滾動 */
+    max-height: 700px; /* 增加最大高度以容納更多類別 */
     opacity: 1;
     transform: translateY(0);
     pointer-events: auto;
@@ -541,7 +547,10 @@
 }
 
 .category-list.show {
-    max-height: 400px;
+    max-height: 600px; /* 增加高度以容納更多類別 */
+    overflow-y: auto; /* 允許垂直滾動 */
+    overflow-x: hidden; /* 隱藏水平滾動 */
+    -webkit-overflow-scrolling: touch; /* iOS 平滑滾動 */
 }
 
 .category-list .dropdown-option {
