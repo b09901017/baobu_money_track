@@ -237,14 +237,14 @@ export class TransactionRenderer {
                         ${photoBubble}
 
                         <div class="flex items-center gap-3">
-                            <!-- 名稱（固定最大寬度，避免擠壓）-->
-                            <div class="flex-1 min-w-0 max-w-[140px]">
+                            <!-- 名稱（允許縮小，使用 truncate）-->
+                            <div class="flex-1 min-w-0">
                                 <h4 class="font-hand font-bold text-base text-soft-ink truncate leading-tight">${tx.item_name}</h4>
                             </div>
 
-                            <!-- 金額（固定寬度，右對齊）-->
-                            <div class="shrink-0 min-w-[75px] text-right">
-                                <div class="font-display font-bold text-lg text-[#E27D60] leading-tight">$${tx.amount}</div>
+                            <!-- 金額（固定寬度，確保完整顯示）-->
+                            <div class="shrink-0 min-w-[80px] text-right">
+                                <div class="font-display font-bold text-lg text-[#E27D60] leading-tight whitespace-nowrap">$${tx.amount}</div>
                             </div>
                         </div>
                     </div>
@@ -277,14 +277,14 @@ export class TransactionRenderer {
                         ${photoBubble}
 
                         <div class="flex items-center gap-3">
-                            <!-- 名稱（固定最大寬度，避免擠壓）-->
-                            <div class="flex-1 min-w-0 max-w-[140px]">
+                            <!-- 名稱（允許縮小，使用 truncate）-->
+                            <div class="flex-1 min-w-0">
                                 <h4 class="font-hand font-bold text-base text-soft-ink truncate leading-tight">${tx.item_name}</h4>
                             </div>
 
-                            <!-- 金額（固定寬度，右對齊）-->
-                            <div class="shrink-0 min-w-[75px] text-right">
-                                <div class="font-display font-bold text-lg text-[#E27D60] leading-tight">$${tx.amount}</div>
+                            <!-- 金額（固定寬度，確保完整顯示）-->
+                            <div class="shrink-0 min-w-[80px] text-right">
+                                <div class="font-display font-bold text-lg text-[#E27D60] leading-tight whitespace-nowrap">$${tx.amount}</div>
                             </div>
                         </div>
                     </div>
