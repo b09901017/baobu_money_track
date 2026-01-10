@@ -1,8 +1,8 @@
 # 🌸 寶寶步步的記帳本 - Couple Expense Tracker
 
-> 一個童話風格的情侶共同記帳應用，支援多帳本管理、彈性付款記錄、智能結算功能。
+> 一個童話風格的情侶共同記帳應用，支援多帳本管理、彈性付款記錄、即時同步與智能分析。
 
-![Version](https://img.shields.io/badge/version-5.8.2-pink)
+![Version](https://img.shields.io/badge/version-6.0.0-pink)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow)
 ![Firebase](https://img.shields.io/badge/Firebase-Integrated-orange)
@@ -847,6 +847,63 @@ docs: 更新 README Firebase 整合說明
 ## 📝 更新日誌
 
 完整版本歷史請參見：[docs/changelog/README.md](docs/changelog/README.md)
+
+### v6.0.0 (2026-01-11) - 重大架構重整（移除結算功能）🔄
+
+**回歸核心、專注本質 - 移除結算功能系統，保留優質體驗**
+
+#### 🔄 重大變更
+
+1. **Git 歷史重整（Interactive Rebase）**
+   - 回退基準點：`6817ce1` - 階層式時間軸大升級
+   - 移除 7 個結算相關 commits（v5.10.0 完整系統）
+   - 保留 5 個優質功能 commits（LINE 風格、趨勢分析、類別系統等）
+   - 建立備份分支：`backup-before-cleanup`
+
+2. **移除的功能**
+   - ❌ 自動結算功能（餘額歸零智能提示）
+   - ❌ 手動建立結算標記（欠款卡片點擊）
+   - ❌ 交易詳情「轉為結算」功能
+   - ❌ 時間軸結算分隔線顯示
+
+3. **保留的核心功能**
+   - ✅ 完整記帳功能（新增、編輯、刪除）
+   - ✅ 即時同步與離線支援
+   - ✅ 餘額計算與顯示（誰欠誰多少）
+   - ✅ 通知系統（活動記錄、已讀/未讀篩選）
+   - ✅ 時間軸視圖（折疊/展開、LINE 風格小圓球）
+   - ✅ 趨勢分析與統計圖表
+   - ✅ 類別系統（20 個精選類別）
+
+#### 📝 設計決策
+
+**移除原因：**
+- 功能複雜度與使用頻率不匹配
+- 自動結算提示可能干擾正常記帳流程
+- 維護成本考量（程式碼分散在多個模組）
+- 回歸核心功能（專注記帳本質）
+
+**影響評估：**
+- 程式碼行數減少：約 285 行
+- 維護複雜度降低：3 個核心檔案簡化
+- 使用者體驗優化：移除干擾性提示
+- 餘額顯示保留：功能依然完整
+
+#### 🛠️ 技術細節
+
+**Git 操作：**
+```bash
+git branch backup-before-cleanup  # 建立備份
+git rebase -i 6817ce1              # Interactive Rebase
+# 手動解決 CHANGELOG.md 衝突
+git push -f origin main            # 強制推送
+```
+
+**詳細文檔：**
+- [v6.0.0 完整變更記錄](docs/changelog/v6/version6-0_0.md)
+- [v6 系列版本總覽](docs/changelog/v6/README.md)
+
+---
 
 ### v5.8.2 (2026-01-10) - 文檔重整與工作流程優化 📚
 

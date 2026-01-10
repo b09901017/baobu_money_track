@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **線上演示：** https://baobu-app.web.app
 
-**當前版本：** v5.8.2 (文檔重整與工作流程優化)
+**當前版本：** v6.0.0 (重大架構重整 - 移除結算功能)
 
 ---
 
@@ -468,7 +468,9 @@ git commit -m "feat: 新增功能名稱
 
 - 具體改進 1
 - 具體改進 2
-- 更新文檔與版本記錄"
+- 更新文檔與版本記錄
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 
 # 推送到 GitHub
 git push origin main
@@ -481,6 +483,13 @@ git push origin main
 - `style:` - 樣式調整
 - `refactor:` - 重構
 - `test:` - 測試相關
+- `chore:` - 建置或輔助工具變更
+
+**重要提醒：**
+- ✅ 每個 commit 都應該包含對應的文檔更新
+- ✅ 完成功能後立即更新 CHANGELOG 和版本記錄
+- ✅ 使用 Co-Authored-By 標註 AI 協作
+- ⚠️ 謹慎使用 `git push -f`（僅在確定需要改寫歷史時使用）
 
 ---
 
@@ -576,7 +585,8 @@ Types: feat, fix, style, refactor, docs, test, chore
 - [docs/README.md](docs/README.md) - 📚 **文檔索引與快速導航**
 
 ### 版本更新歷史 🔄
-- [docs/changelog/README.md](docs/changelog/README.md) - 版本總覽（v1.0.0 ~ v5.8.2）
+- [docs/changelog/README.md](docs/changelog/README.md) - 版本總覽（v1.0.0 ~ v6.0.0）
+- [docs/changelog/v6/](docs/changelog/v6/) - **v6 系列詳細記錄（架構重整與功能聚焦）** ✨ NEW
 - [docs/changelog/v5/](docs/changelog/v5/) - v5 系列詳細記錄（即時同步與體驗優化）
 - [docs/changelog/v4/](docs/changelog/v4/) - v4 系列詳細記錄（Firebase 整合與角色系統）
 - [docs/changelog/v3/](docs/changelog/v3/) - v3 系列詳細記錄（模組化大重構）

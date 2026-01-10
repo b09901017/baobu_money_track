@@ -7,6 +7,104 @@
 
 ---
 
+## [6.0.0] - 2026-01-11
+
+### 🔄 重大架構重整（移除結算功能）
+
+**回歸核心、專注本質 - 移除結算功能系統，保留優質體驗**
+
+#### 重大變更
+
+1. **Git 歷史重整** - Interactive Rebase
+   - 🔙 回退基準點：`6817ce1` - 階層式時間軸大升級
+   - ❌ 移除 7 個結算相關 commits（v5.10.0 完整系統）
+   - ✅ 保留 5 個優質功能 commits（LINE 風格、趨勢分析等）
+   - 📦 建立備份分支：`backup-before-cleanup`
+
+2. **移除的功能**
+   - ❌ 自動結算功能（餘額歸零智能提示）
+   - ❌ 手動建立結算標記（欠款卡片點擊）
+   - ❌ 交易詳情「轉為結算」功能
+   - ❌ 時間軸結算分隔線顯示
+   - ❌ 結算相關 UI 動畫（scaleIn, bounceSlow）
+
+3. **保留的核心功能**
+   - ✅ 完整記帳功能（新增、編輯、刪除）
+   - ✅ 即時同步與離線支援
+   - ✅ 餘額計算與顯示（誰欠誰多少）
+   - ✅ 通知系統（活動記錄、已讀/未讀篩選）
+   - ✅ 時間軸視圖（折疊/展開、LINE 風格小圓球）
+   - ✅ 趨勢分析與統計圖表
+   - ✅ 類別系統（20 個精選類別）
+
+#### 程式碼變更
+
+**修改的核心檔案：**
+- `js/data.js` - 移除結算邏輯（約 150 行）
+- `js/components/BalanceCard.js` - 移除點擊結算功能（約 50 行）
+- `js/components/TransactionDetail.js` - 移除「轉為結算」按鈕（約 30 行）
+- `js/components/TimelineView.js` - 移除結算分隔線渲染（約 20 行）
+- `css/animations/animations.css` - 移除結算動畫（約 35 行）
+- `docs/changelog/CHANGELOG.md` - 移除 v5.10.0 章節
+
+**保留的預留檔案：**
+- `js/utils/SettlementDetector.js` - 標記為「未來支援」
+
+#### 設計決策
+
+**移除原因：**
+1. 功能複雜度與使用頻率不匹配
+2. 自動結算提示可能干擾正常記帳流程
+3. 維護成本考量（程式碼分散在多個模組）
+4. 回歸核心功能（專注記帳本質）
+
+**影響評估：**
+- 程式碼行數減少：約 285 行
+- 維護複雜度降低：3 個核心檔案簡化
+- 使用者體驗優化：移除干擾性提示
+- 餘額顯示保留：功能依然完整
+
+#### 技術細節
+
+**Git 操作記錄：**
+```bash
+# 建立備份分支
+git branch backup-before-cleanup
+
+# Interactive Rebase
+git rebase -i 6817ce1
+
+# 解決 CHANGELOG.md 衝突
+git checkout --theirs CHANGELOG.md
+# 手動移除 v5.10.0 章節（第 57-193 行）
+git add CHANGELOG.md
+git rebase --continue
+
+# 強制推送更新遠端歷史
+git push -f origin main
+```
+
+**衝突處理：**
+- 衝突檔案：`CHANGELOG.md`
+- 解決方式：保留 v5.11.0（LINE 風格），移除 v5.10.0（結算功能）
+
+#### 升級指南
+
+**開發者：**
+- 使用 `git fetch origin && git reset --hard origin/main` 強制更新
+- 如需保留結算功能，參考 `backup-before-cleanup` 分支
+
+**使用者：**
+- 無需任何操作
+- 舊的結算交易（如有）仍會保留在資料庫
+- 不影響任何現有記帳資料
+
+#### 詳細文檔
+
+📚 [完整變更記錄](v6/version6-0_0.md) - Git 操作、程式碼變更、經驗總結
+
+---
+
 ## [5.12.0] - 2026-01-10
 
 ### ✨ 通知中心篩選功能（已讀/未讀切換）
