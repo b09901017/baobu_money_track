@@ -146,13 +146,13 @@ class CoupleApp {
             });
         }
 
-        // 綁定全域展開/收合按鈕
+        // 🆕 綁定全域展開/收合按鈕（三階段切換）
         const btnToggleAllDates = document.getElementById('btnToggleAllDates');
         if (btnToggleAllDates) {
             btnToggleAllDates.addEventListener('click', () => {
-                this.timelineView.toggleAllExpansion();
-                // 切換按鈕樣式
-                btnToggleAllDates.classList.toggle('all-expanded');
+                const newMode = this.timelineView.toggleAllExpansion();
+                // 更新按鈕圖示與標題
+                this.updateToggleButtonIcon(btnToggleAllDates, newMode);
             });
         }
 
@@ -166,6 +166,74 @@ class CoupleApp {
         this.notebooksPage.update();
 
         console.log('✨ 情侶記帳 App 已啟動！');
+    }
+
+    /**
+     * 🆕 更新切換按鈕圖示（三階段：預設/半開/全開）
+     */
+    updateToggleButtonIcon(button, mode) {
+        const icon = button.querySelector('.timeline-icon-text');
+        if (!icon) return;
+
+        // 移除所有模式的 class
+        button.classList.remove('mode-default', 'mode-half', 'mode-full');
+
+        let bubbleText = '';
+
+        // 根據模式更新圖示和樣式
+        if (mode === 'default') {
+            icon.textContent = '○';
+            button.title = '預設模式';
+            button.classList.add('mode-default');
+            bubbleText = '✨ 展開兩天';
+        } else if (mode === 'half') {
+            icon.textContent = '◇';
+            button.title = '半開模式';
+            button.classList.add('mode-half');
+            bubbleText = '🌟 展開3個月';
+        } else if (mode === 'full') {
+            icon.textContent = '◆';
+            button.title = '全開模式';
+            button.classList.add('mode-full');
+            bubbleText = '💫 展開半年';
+        }
+
+        // 顯示童話泡泡提示
+        this.showModeBubble(button, bubbleText);
+    }
+
+    /**
+     * 🆕 顯示童話風格泡泡提示
+     */
+    showModeBubble(button, text) {
+        // 移除舊泡泡
+        const oldBubble = document.querySelector('.mode-bubble');
+        if (oldBubble) {
+            oldBubble.remove();
+        }
+
+        // 建立新泡泡
+        const bubble = document.createElement('div');
+        bubble.className = 'mode-bubble';
+        bubble.textContent = text;
+
+        // 計算位置（在按鈕右側）
+        const rect = button.getBoundingClientRect();
+        bubble.style.left = `${rect.right + 12}px`;
+        bubble.style.top = `${rect.top + rect.height / 2}px`;
+
+        document.body.appendChild(bubble);
+
+        // 觸發動畫
+        requestAnimationFrame(() => {
+            bubble.classList.add('show');
+        });
+
+        // 2秒後淡出移除
+        setTimeout(() => {
+            bubble.classList.remove('show');
+            setTimeout(() => bubble.remove(), 300);
+        }, 2000);
     }
 }
 

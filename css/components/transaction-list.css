@@ -252,7 +252,7 @@
     opacity: 1;
 }
 
-/* ==================== 全域展開/收合按鈕 ==================== */
+/* ==================== 全域展開/收合按鈕（三階段）==================== */
 .timeline-toggle-btn {
     width: 32px;
     height: 32px;
@@ -278,14 +278,44 @@
     transform: scale(0.95);
 }
 
-.timeline-toggle-btn .material-symbols-outlined {
-    font-size: 1.2rem;
+/* 🆕 自定義圖示文字 */
+.timeline-icon-text {
+    font-size: 1.1rem;
+    font-weight: bold;
     color: var(--text-primary);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    line-height: 1;
 }
 
-.timeline-toggle-btn.all-expanded .material-symbols-outlined {
-    transform: rotate(180deg);
+/* 🆕 三階段模式視覺樣式 */
+/* 預設模式（智能折疊）○ */
+.timeline-toggle-btn.mode-default {
+    background: linear-gradient(135deg, #FFF5F0, white);
+    border-color: var(--macaron-pink);
+}
+
+.timeline-toggle-btn.mode-default .timeline-icon-text {
+    color: var(--macaron-pink);
+}
+
+/* 半開模式（3個月）◇ */
+.timeline-toggle-btn.mode-half {
+    background: linear-gradient(135deg, #FFF8E1, #FFFAEB);
+    border-color: var(--macaron-orange);
+}
+
+.timeline-toggle-btn.mode-half .timeline-icon-text {
+    color: var(--macaron-orange);
+}
+
+/* 全開模式（6個月）◆ */
+.timeline-toggle-btn.mode-full {
+    background: linear-gradient(135deg, #E8F5E9, #F1F8F4);
+    border-color: var(--macaron-green);
+}
+
+.timeline-toggle-btn.mode-full .timeline-icon-text {
+    color: var(--macaron-green);
 }
 
 /* ==================== 時間軸對話框小圓球樣式（LINE 風格）==================== */
@@ -478,5 +508,76 @@
         opacity: 0.7;
         transform: scale(1.15) rotate(180deg);
     }
+}
+
+/* ==================== 🆕 童話泡泡提示 ==================== */
+.mode-bubble {
+    position: fixed;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #FFFAF5 0%, #FFF0E5 100%);
+    border: 2px solid var(--macaron-pink);
+    border-radius: 20px;
+    box-shadow:
+        0 4px 16px rgba(255, 158, 199, 0.3),
+        inset 0 1px 3px rgba(255, 255, 255, 0.8);
+    font-family: 'Fredoka', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    z-index: 1000;
+    pointer-events: none;
+
+    /* 初始狀態（隱藏）*/
+    opacity: 0;
+    transform: translateY(-50%) translateX(-10px) scale(0.8);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 顯示狀態（彈跳果凍動畫）*/
+.mode-bubble.show {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0) scale(1);
+}
+
+/* 🎀 小三角形指向按鈕 */
+.mode-bubble::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 6px 8px 6px 0;
+    border-color: transparent var(--macaron-pink) transparent transparent;
+}
+
+.mode-bubble::after {
+    content: '';
+    position: absolute;
+    left: -5px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 5px 7px 5px 0;
+    border-color: transparent #FFFAF5 transparent transparent;
+}
+
+/* 🌸 泡泡飄浮動畫 */
+@keyframes bubbleFloat {
+    0%, 100% {
+        transform: translateY(-50%) translateX(0) scale(1);
+    }
+    50% {
+        transform: translateY(-50%) translateX(0) scale(1.02);
+    }
+}
+
+.mode-bubble.show {
+    animation: bubbleFloat 2s ease-in-out infinite;
 }
 

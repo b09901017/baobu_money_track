@@ -21,6 +21,9 @@ export class TimelineView {
         this.expandedWeeks = new Set();   // 已展開的週 (格式: "2025-3-10")
         this.expandedDays = new Set();    // 已展開的日期 (格式: "2025-03-15")
 
+        // 🆕 三階段展開模式：'default' | 'half' | 'full'
+        this.expansionMode = 'default';
+
         // 快取最後收到的交易列表
         this.cachedTransactions = [];
 
@@ -71,7 +74,12 @@ export class TimelineView {
     }
 
     /**
-     * 初始化預設展開狀態（展開當月）
+     * 🆕 初始化預設展開狀態（智能階層式折疊）
+     * - 今天和昨天：展開到當天花費對話
+     * - 當週其他天：顯示當天摘要（收合）
+     * - 當月其他週：顯示當週摘要（收合）
+     * - 當年其他月：顯示當月摘要（收合）
+     * - 其他年：顯示年摘要（收合）
      */
     initializeDefaultExpansion(transactions) {
         const now = new Date();
@@ -79,20 +87,31 @@ export class TimelineView {
         const currentMonth = now.getMonth() + 1;
         const currentWeek = TimelineGrouper.getWeekNumber(now);
 
-        // 展開當年
+        // 計算今天和昨天的日期
+        const today = this.formatDate(now);
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = this.formatDate(yesterday);
+
+        // 1. 展開當年
         this.expandedYears.add(currentYear);
 
-        // 展開當月
+        // 2. 展開當月
         this.expandedMonths.add(`${currentYear}-${currentMonth}`);
 
-        // 展開當週
+        // 3. 展開當週
         this.expandedWeeks.add(`${currentYear}-${currentMonth}-${currentWeek}`);
 
-        // 展開今天
-        const today = this.formatDate(now);
+        // 4. 只展開今天和昨天的交易對話
         this.expandedDays.add(today);
+        this.expandedDays.add(yesterdayStr);
 
-        console.log('📅 預設展開當月:', `${currentYear}-${currentMonth}`);
+        console.log('📅 智能折疊初始化:', {
+            展開年份: currentYear,
+            展開月份: `${currentYear}-${currentMonth}`,
+            展開週: `${currentYear}-${currentMonth}-${currentWeek}`,
+            展開日期: [today, yesterdayStr]
+        });
     }
 
     /**
@@ -638,6 +657,115 @@ export class TimelineView {
         const month = date.getMonth() + 1;
         const day = date.getDate();
         return `${year}/${month}/${day}`;
+    }
+
+    /**
+     * 🆕 三階段切換展開狀態（預設 → 半開 → 全開 → 預設...）
+     * - 預設模式：今天/昨天展開，當週其他天摘要，當月其他週摘要，當年其他月摘要，其他年摘要
+     * - 半開模式：最近3個月的所有日期都展開，其他月份和年份維持摘要
+     * - 全開模式：最近半年的所有日期都展開，其他月份和年份維持摘要
+     */
+    toggleAllExpansion() {
+        // 狀態循環：default → half → full → default
+        if (this.expansionMode === 'default') {
+            this.setExpansionMode('half');
+        } else if (this.expansionMode === 'half') {
+            this.setExpansionMode('full');
+        } else {
+            this.setExpansionMode('default');
+        }
+
+        // 重新渲染時間軸
+        this.renderFlatTimeline(this.cachedTransactions);
+
+        return this.expansionMode;
+    }
+
+    /**
+     * 🆕 設定展開模式並更新展開狀態
+     */
+    setExpansionMode(mode) {
+        this.expansionMode = mode;
+
+        // 清空所有展開狀態
+        this.expandedYears.clear();
+        this.expandedMonths.clear();
+        this.expandedWeeks.clear();
+        this.expandedDays.clear();
+
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1;
+        const currentWeek = TimelineGrouper.getWeekNumber(now);
+
+        if (mode === 'default') {
+            // 預設模式：智能折疊
+            this.initializeDefaultExpansion(this.cachedTransactions);
+        } else if (mode === 'half') {
+            // 半開模式：最近3個月全部展開
+            this.expandRecentMonths(3, currentYear, currentMonth);
+        } else if (mode === 'full') {
+            // 全開模式：最近6個月全部展開
+            this.expandRecentMonths(6, currentYear, currentMonth);
+        }
+
+        console.log(`🔄 切換展開模式: ${mode}`, {
+            展開年份: [...this.expandedYears],
+            展開月份: [...this.expandedMonths],
+            展開週: [...this.expandedWeeks],
+            展開日期數: this.expandedDays.size
+        });
+    }
+
+    /**
+     * 🆕 展開最近 N 個月的所有日期
+     */
+    expandRecentMonths(monthsCount, currentYear, currentMonth) {
+        const monthsToExpand = [];
+
+        // 計算需要展開的月份
+        for (let i = 0; i < monthsCount; i++) {
+            let year = currentYear;
+            let month = currentMonth - i;
+
+            // 處理跨年
+            while (month <= 0) {
+                month += 12;
+                year -= 1;
+            }
+
+            monthsToExpand.push({ year, month });
+        }
+
+        // 展開對應的年/月/週/日
+        this.hierarchyCache.forEach(yearData => {
+            const { year, months } = yearData;
+
+            const shouldExpandYear = monthsToExpand.some(m => m.year === year);
+            if (shouldExpandYear) {
+                this.expandedYears.add(year);
+
+                months.forEach(monthData => {
+                    const { month, weeks } = monthData;
+                    const monthKey = `${year}-${month}`;
+
+                    const shouldExpandMonth = monthsToExpand.some(m => m.year === year && m.month === month);
+                    if (shouldExpandMonth) {
+                        this.expandedMonths.add(monthKey);
+
+                        weeks.forEach(weekData => {
+                            const { weekNumber, days } = weekData;
+                            const weekKey = `${year}-${month}-${weekNumber}`;
+                            this.expandedWeeks.add(weekKey);
+
+                            days.forEach(dayData => {
+                                this.expandedDays.add(dayData.date);
+                            });
+                        });
+                    }
+                });
+            }
+        });
     }
 
     /**
