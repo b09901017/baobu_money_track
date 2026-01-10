@@ -59,10 +59,8 @@ export class CalendarPage {
         // 綁定滑動手勢
         this.initSwipeGesture();
 
-        // 延遲初始化顯示模式選擇器（確保 DOM 已渲染）
-        setTimeout(() => {
-            this.initDisplayModeSelector();
-        }, 100);
+        // 標記是否已初始化選擇器
+        this.displayModeSelectorInitialized = false;
 
         // 訂閱交易變更（新增）
         this.state.subscribe('transactions', (data) => {
@@ -119,6 +117,14 @@ export class CalendarPage {
     }
 
     async renderCalendar() {
+        // 確保顯示模式選擇器已初始化（首次渲染時）
+        if (!this.displayModeSelectorInitialized) {
+            setTimeout(() => {
+                this.initDisplayModeSelector();
+            }, 50);
+            this.displayModeSelectorInitialized = true;
+        }
+
         const year = this.state.currentMonth.getFullYear();
         const month = this.state.currentMonth.getMonth();
 

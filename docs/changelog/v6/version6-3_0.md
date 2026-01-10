@@ -165,26 +165,64 @@
 
 ---
 
-## 🔮 已知問題
+## 🔮 已知問題與修復（v6.3.1）
 
-### 1. 下拉選單有時無法展開 ⚠️
-**現象：** 點擊主按鈕時，下拉選單偶爾不會展開
+### 1. 下拉選單初始化時序問題 ✅ 已修復
+**問題：** 點擊主按鈕時，下拉選單偶爾不會展開
 
-**可能原因：**
-- 事件綁定時序問題（已使用 `setTimeout` 延遲初始化）
-- DOM 元素尚未完全渲染
+**根本原因：**
+- 日曆頁面初始載入時為隱藏狀態（`display: none`）
+- Constructor 中的 `setTimeout` 在頁面未顯示時執行，DOM 元素查詢失敗
+- Router 切換到日曆視圖時才顯示，但此時事件未綁定
 
-**狀態：** 🔄 調查中
+**解決方案：**
+- 移除 Constructor 中的初始化邏輯
+- 在 `renderCalendar()` 首次執行時才初始化選擇器
+- 使用 `displayModeSelectorInitialized` 標記，確保只初始化一次
+```javascript
+async renderCalendar() {
+    // 確保顯示模式選擇器已初始化（首次渲染時）
+    if (!this.displayModeSelectorInitialized) {
+        setTimeout(() => {
+            this.initDisplayModeSelector();
+        }, 50);
+        this.displayModeSelectorInitialized = true;
+    }
+    // ...
+}
+```
 
-### 2. 下拉選單被裁切或無法滾動 ⚠️
-**現象：** 下拉選單展開時，類別列表可能被卡住無法滾動
+**狀態：** ✅ 已修復（2026-01-11）
 
-**可能原因：**
-- 父元素的 `overflow: hidden` 裁切
-- `max-height` 設定不足
-- 滾動容器未正確設定
+### 2. 下拉選單滾動優化 ✅ 已修復
+**問題：** 下拉選單展開時，類別列表可能被卡住無法滾動
 
-**狀態：** 🔄 待修復（下一版本）
+**根本原因：**
+- `overflow: visible` 導致初始狀態無法正確隱藏
+- `max-height: 600px` 過大，可能超出視窗範圍
+- 缺少移動端滾動優化
+
+**解決方案：**
+- 初始狀態改為 `overflow: hidden`
+- 展開時改為 `overflow-y: auto`
+- 降低 `max-height` 至 `500px`（更合理的高度）
+- 新增 iOS 平滑滾動：`-webkit-overflow-scrolling: touch`
+- 新增滾動穿透防護：`overscroll-behavior: contain`
+```css
+.calendar-display-mode-dropdown {
+    overflow: hidden; /* 初始狀態隱藏溢出 */
+    max-height: 0;
+}
+
+.calendar-display-mode-dropdown.show {
+    max-height: 500px; /* 設定固定最大高度，確保可滾動 */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* iOS 平滑滾動 */
+    overscroll-behavior: contain; /* 防止滾動穿透 */
+}
+```
+
+**狀態：** ✅ 已修復（2026-01-11）
 
 ---
 
