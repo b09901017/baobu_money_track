@@ -319,6 +319,88 @@ scrollDistance = detailsOffsetTop - targetOffset
 
 ---
 
+---
+
+## 🔧 補充修復（Commit 2: e65eb70）
+
+### 修復點擊日期自動滾動功能
+
+**問題分析**：
+1. **滾動容器選擇錯誤**：
+   - 程式碼中使用 `document.querySelector('.main-content')`
+   - 但 HTML 中不存在 `.main-content` class
+   - 實際的滾動容器是 `main#mainContent` 元素
+
+2. **頁面結構問題**：
+   ```html
+   <!-- 原本 -->
+   <div id="mainContainer" class="... min-h-screen ...">
+       <main class="flex-1 px-6 pt-6 relative">  <!-- 沒有滾動條 -->
+
+   <!-- 修正後 -->
+   <div id="mainContainer" class="... h-screen ... overflow-hidden">
+       <main id="mainContent" class="flex-1 ... overflow-y-auto overflow-x-hidden">
+   ```
+
+3. **為什麼沒有滾動條？**
+   - `#mainContainer` 使用 `min-h-screen`（最小高度 100vh）
+   - 內容會自動撐開容器，不會產生滾動
+   - 改為固定高度 `h-screen` + `overflow-hidden`
+   - `main` 元素 `flex-1` 會填滿剩餘空間並產生滾動條
+
+**解決方案**：
+
+1. **修正 HTML 結構**（[index.html](index.html#L239)）：
+   ```html
+   <!-- #mainContainer -->
+   - class="... min-h-screen ..."
+   + class="... h-screen ... overflow-hidden"
+
+   <!-- main 元素 -->
+   - <main class="flex-1 px-6 pt-6 relative">
+   + <main id="mainContent" class="flex-1 px-6 pt-6 relative overflow-y-auto overflow-x-hidden">
+   ```
+
+2. **修正 JavaScript**（[CalendarPage.js](js/pages/CalendarPage.js#L912-L950)）：
+   ```javascript
+   // 修正前
+   const mainContent = document.querySelector('.main-content');  // ❌ 找不到
+
+   // 修正後
+   const mainContent = document.getElementById('mainContent');   // ✅ 正確
+   ```
+
+3. **調整滾動參數**：
+   - `targetOffset` 從 80px 調整為 100px（更舒適的閱讀位置）
+   - 新增詳細的 console.log 方便除錯
+
+**測試結果**：
+- ✅ 點擊日期後會平滑滾動到清單區域
+- ✅ 清單距離頂部約 100px（舒適閱讀位置）
+- ✅ 不會滾動到負值（使用 `Math.max(0, scrollDistance)`）
+- ✅ 手機上也能正常滾動（iOS/Android 都支援）
+
+**修改檔案**：
+- `index.html` - #mainContainer 與 main 元素樣式修正
+- `js/pages/CalendarPage.js` - scrollToTransactionsList() 修正
+
+---
+
 **版本更新：** v6.3.2 → v6.3.3
-**核心改進：** 滑動交互 + 手勢識別 + 滑卡動畫
+**核心改進：** 滑動交互 + 手勢識別 + 滑卡動畫 + 自動滾動修復
 **使用者體驗：** ⭐⭐⭐⭐⭐ 大幅提升！
+
+---
+
+## 📝 Git Commit 記錄
+
+1. **3be931c** - feat: 日曆頁面滑動交互全面優化
+   - 修復左右滾動問題
+   - 智能手勢識別（防止上下滑誤觸）
+   - 清單區域滑卡動畫
+   - 雙區域滑動模式
+
+2. **e65eb70** - fix: 修復點擊日期自動滾動功能
+   - 修正滾動容器選擇錯誤
+   - 修正 HTML 結構（h-screen + overflow）
+   - 調整滾動參數與除錯資訊
