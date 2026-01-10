@@ -204,17 +204,40 @@ export class TransactionForm {
         // 渲染自訂分類
         this.renderCustomCategories();
 
-        // 自動 focus 金額欄位（延遲執行以確保動畫完成後才 focus）
+        // 自動 focus 金額欄位（延遲執行以確保動畫開始後就 focus，手機體驗優先）
+        // 使用較短的延遲時間（400ms），讓使用者感覺更快速
         setTimeout(() => {
-            const amountInput = document.getElementById('transactionAmount');
+            const amountInput = document.getElementById('amount'); // 修正：正確的 ID 是 'amount'
             if (amountInput) {
+                console.log('🎯 嘗試 focus 金額欄位...');
+
+                // 先 focus
                 amountInput.focus();
-                // 行動裝置上自動打開鍵盤
-                if (window.Capacitor) {
-                    amountInput.click();
-                }
+
+                // 手機上需要額外觸發 click 來打開鍵盤
+                // 使用 requestAnimationFrame 確保 DOM 已更新
+                requestAnimationFrame(() => {
+                    const isMobile = window.Capacitor || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                    console.log('📱 是否為手機:', isMobile);
+
+                    if (isMobile) {
+                        // 觸發 click 事件（某些手機需要）
+                        amountInput.click();
+
+                        // 設定 selection（確保游標在正確位置）
+                        if (amountInput.value) {
+                            amountInput.select();
+                        }
+
+                        console.log('✅ 已觸發手機鍵盤');
+                    }
+
+                    console.log('✅ Focus 完成，當前焦點元素:', document.activeElement);
+                });
+            } else {
+                console.error('❌ 找不到金額輸入框 (ID: amount)');
             }
-        }, 800); // 配合 slideUpBounce 動畫時間（0.8 秒）
+        }, 400); // 優化延遲時間，手機體驗優先
     }
 
     /**
@@ -476,6 +499,37 @@ export class TransactionForm {
         } catch (error) {
             console.error('❌ 新增分類失敗:', error);
             await window.customDialog.error('新增分類失敗：' + error.message);
+        }
+    }
+
+    /**
+     * 切換「更多類別」區域的顯示/隱藏
+     */
+    toggleMoreCategories() {
+        const moreCategories = document.getElementById('moreCategories');
+        const btnShowMore = document.getElementById('btnShowMore');
+
+        if (!moreCategories || !btnShowMore) return;
+
+        const isHidden = moreCategories.classList.contains('hidden');
+
+        if (isHidden) {
+            // 展開更多類別
+            moreCategories.classList.remove('hidden');
+
+            // 更新按鈕文字與圖示
+            btnShowMore.querySelector('.material-symbols-outlined').textContent = 'expand_less';
+            btnShowMore.querySelector('span:last-child').textContent = '收合類別';
+
+            // 果凍彈跳動畫（可選）
+            moreCategories.style.animation = 'fadeIn 0.3s ease-out';
+        } else {
+            // 收合更多類別
+            moreCategories.classList.add('hidden');
+
+            // 更新按鈕文字與圖示
+            btnShowMore.querySelector('.material-symbols-outlined').textContent = 'expand_more';
+            btnShowMore.querySelector('span:last-child').textContent = '載入更多類別';
         }
     }
 

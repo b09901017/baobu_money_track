@@ -6,31 +6,88 @@ import { formatDisplayDate } from '../utils/dateUtils.js';
 
 // 分類圖標配置
 const CATEGORY_ICONS = {
+    // 常用類別
     '吃吃': 'restaurant',
-    '玩': 'local_activity',
-    '交通': 'directions_subway',
-    '購物': 'shopping_bag',
-    '生活': 'cottage',
+    '喝喝': 'local_cafe',
+    '玩玩': 'toys',
+    '刷寶媽卡': 'credit_card',
+    '高級吃吃': 'dinner_dining',
+    '優惠超人': 'local_offer',
+    '家樂福/全聯': 'shopping_cart',
+    '交通': 'directions_bus',
+    // 更多類別
+    '洗衣服': 'local_laundry_service',
+    '寵寶寶': 'favorite',
+    '寵步步': 'favorite_border',
+    '房租': 'home',
+    '蝦皮/光南': 'shopping_bag',
+    '居家': 'weekend',
+    '噗嚕天堂': 'videogame_asset',
+    '3C': 'devices',
+    '醫療': 'medical_services',
+    '大日子': 'cake',
+    '訂閱東東': 'subscriptions',
+    '大爆買買': 'shopping_basket',
+    '整理窩窩日': 'cleaning_services',
+    // 預設
     '其他': 'auto_stories'
 };
 
 // 分類顏色配置（列表模式）
 const CATEGORY_COLORS = {
+    // 常用類別
     '吃吃': 'bg-macaron-pink/20',
-    '玩': 'bg-macaron-blue/20',
+    '喝喝': 'bg-macaron-blue/20',
+    '玩玩': 'bg-macaron-purple/20',
+    '刷寶媽卡': 'bg-antique-gold/20',
+    '高級吃吃': 'bg-macaron-rose/20',
+    '優惠超人': 'bg-macaron-orange/20',
+    '家樂福/全聯': 'bg-macaron-green/20',
     '交通': 'bg-macaron-green/20',
-    '購物': 'bg-macaron-purple/20',
-    '生活': 'bg-macaron-cream/40',
+    // 更多類別
+    '洗衣服': 'bg-macaron-blue/15',
+    '寵寶寶': 'bg-macaron-pink/25',
+    '寵步步': 'bg-macaron-blue/25',
+    '房租': 'bg-warm-brown/15',
+    '蝦皮/光南': 'bg-macaron-purple/20',
+    '居家': 'bg-macaron-cream/40',
+    '噗嚕天堂': 'bg-macaron-lavender/20',
+    '3C': 'bg-macaron-blue/20',
+    '醫療': 'bg-macaron-rose/15',
+    '大日子': 'bg-macaron-pink/30',
+    '訂閱東東': 'bg-macaron-purple/15',
+    '大爆買買': 'bg-macaron-orange/25',
+    '整理窩窩日': 'bg-macaron-green/15',
+    // 預設
     '其他': 'bg-warm-brown/10'
 };
 
 // 分類顏色配置（時間軸模式）
 const TIMELINE_COLORS = {
+    // 常用類別
     '吃吃': 'bg-macaron-pink/20 border-macaron-pink',
-    '玩': 'bg-macaron-blue/20 border-macaron-blue',
+    '喝喝': 'bg-macaron-blue/20 border-macaron-blue',
+    '玩玩': 'bg-macaron-purple/20 border-macaron-purple',
+    '刷寶媽卡': 'bg-antique-gold/20 border-antique-gold',
+    '高級吃吃': 'bg-macaron-rose/20 border-macaron-rose',
+    '優惠超人': 'bg-macaron-orange/20 border-macaron-orange',
+    '家樂福/全聯': 'bg-macaron-green/20 border-macaron-green',
     '交通': 'bg-macaron-green/20 border-macaron-green',
-    '購物': 'bg-macaron-purple/20 border-macaron-purple',
-    '生活': 'bg-macaron-cream/40 border-macaron-cream',
+    // 更多類別
+    '洗衣服': 'bg-macaron-blue/15 border-macaron-blue',
+    '寵寶寶': 'bg-macaron-pink/25 border-macaron-pink',
+    '寵步步': 'bg-macaron-blue/25 border-macaron-blue',
+    '房租': 'bg-warm-brown/15 border-warm-brown',
+    '蝦皮/光南': 'bg-macaron-purple/20 border-macaron-purple',
+    '居家': 'bg-macaron-cream/40 border-macaron-cream',
+    '噗嚕天堂': 'bg-macaron-lavender/20 border-macaron-lavender',
+    '3C': 'bg-macaron-blue/20 border-macaron-blue',
+    '醫療': 'bg-macaron-rose/15 border-macaron-rose',
+    '大日子': 'bg-macaron-pink/30 border-macaron-pink',
+    '訂閱東東': 'bg-macaron-purple/15 border-macaron-purple',
+    '大爆買買': 'bg-macaron-orange/25 border-macaron-orange',
+    '整理窩窩日': 'bg-macaron-green/15 border-macaron-green',
+    // 預設
     '其他': 'bg-warm-brown/10 border-warm-brown'
 };
 

@@ -773,6 +773,7 @@
                 <div class="mb-10">
                     <label class="block text-warm-brown text-lg font-hand font-bold mb-4 ml-2">哪一章？</label>
                     <div class="grid grid-cols-4 gap-y-6 gap-x-4" id="categoryTags">
+                        <!-- 常用類別 -->
                         <!-- 吃吃 -->
                         <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="吃吃">
                             <div class="bg-gradient-to-br from-macaron-pink/40 to-macaron-rose/30">
@@ -781,42 +782,183 @@
                             <span class="text-sm font-hand font-bold text-warm-brown">吃吃</span>
                         </button>
 
-                        <!-- 玩樂 -->
-                        <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="玩">
+                        <!-- 喝喝 -->
+                        <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="喝喝">
                             <div class="bg-gradient-to-br from-macaron-blue/40 to-macaron-blue/30">
-                                <span class="material-symbols-outlined text-2xl">local_activity</span>
+                                <span class="material-symbols-outlined text-2xl">local_cafe</span>
                             </div>
-                            <span class="text-sm font-hand font-bold text-warm-brown">玩樂</span>
+                            <span class="text-sm font-hand font-bold text-warm-brown">喝喝</span>
+                        </button>
+
+                        <!-- 玩玩 -->
+                        <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="玩玩">
+                            <div class="bg-gradient-to-br from-macaron-purple/40 to-macaron-purple/30">
+                                <span class="material-symbols-outlined text-2xl">toys</span>
+                            </div>
+                            <span class="text-sm font-hand font-bold text-warm-brown">玩玩</span>
+                        </button>
+
+                        <!-- 刷寶媽卡 -->
+                        <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="刷寶媽卡">
+                            <div class="bg-gradient-to-br from-antique-gold/40 to-antique-gold/30">
+                                <span class="material-symbols-outlined text-2xl">credit_card</span>
+                            </div>
+                            <span class="text-xs font-hand font-bold text-warm-brown">刷寶媽卡</span>
+                        </button>
+
+                        <!-- 高級吃吃 -->
+                        <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="高級吃吃">
+                            <div class="bg-gradient-to-br from-macaron-rose/40 to-macaron-rose/30">
+                                <span class="material-symbols-outlined text-2xl">dinner_dining</span>
+                            </div>
+                            <span class="text-xs font-hand font-bold text-warm-brown">高級吃吃</span>
+                        </button>
+
+                        <!-- 優惠超人 -->
+                        <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="優惠超人">
+                            <div class="bg-gradient-to-br from-macaron-orange/40 to-macaron-orange/30">
+                                <span class="material-symbols-outlined text-2xl">local_offer</span>
+                            </div>
+                            <span class="text-xs font-hand font-bold text-warm-brown">優惠超人</span>
+                        </button>
+
+                        <!-- 家樂福/全聯 -->
+                        <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="家樂福/全聯">
+                            <div class="bg-gradient-to-br from-macaron-green/40 to-macaron-green/30">
+                                <span class="material-symbols-outlined text-2xl">shopping_cart</span>
+                            </div>
+                            <span class="text-xs font-hand font-bold text-warm-brown leading-tight text-center">家樂福<br>全聯</span>
                         </button>
 
                         <!-- 交通 -->
                         <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="交通">
                             <div class="bg-gradient-to-br from-macaron-green/40 to-macaron-green/30">
-                                <span class="material-symbols-outlined text-2xl">directions_subway</span>
+                                <span class="material-symbols-outlined text-2xl">directions_bus</span>
                             </div>
                             <span class="text-sm font-hand font-bold text-warm-brown">交通</span>
                         </button>
 
-                        <!-- 購物 -->
-                        <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="購物">
-                            <div class="bg-gradient-to-br from-macaron-purple/40 to-macaron-purple/30">
-                                <span class="material-symbols-outlined text-2xl">shopping_bag</span>
-                            </div>
-                            <span class="text-sm font-hand font-bold text-warm-brown">購物</span>
-                        </button>
+                        <!-- 更多類別（預設隱藏）-->
+                        <div id="moreCategories" class="hidden col-span-4 grid grid-cols-4 gap-y-6 gap-x-4">
+                            <!-- 洗衣服 -->
+                            <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="洗衣服">
+                                <div class="bg-gradient-to-br from-macaron-blue/35 to-macaron-blue/25">
+                                    <span class="material-symbols-outlined text-2xl">local_laundry_service</span>
+                                </div>
+                                <span class="text-sm font-hand font-bold text-warm-brown">洗衣服</span>
+                            </button>
 
-                        <!-- 生活 -->
-                        <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="生活">
-                            <div class="bg-gradient-to-br from-macaron-cream/60 to-macaron-cream/40">
-                                <span class="material-symbols-outlined text-2xl">cottage</span>
+                            <!-- 寵寶寶 -->
+                            <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="寵寶寶">
+                                <div class="bg-gradient-to-br from-macaron-pink/45 to-macaron-pink/35">
+                                    <span class="material-symbols-outlined text-2xl">favorite</span>
+                                </div>
+                                <span class="text-sm font-hand font-bold text-warm-brown">寵寶寶</span>
+                            </button>
+
+                            <!-- 寵步步 -->
+                            <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="寵步步">
+                                <div class="bg-gradient-to-br from-macaron-blue/45 to-macaron-blue/35">
+                                    <span class="material-symbols-outlined text-2xl">favorite_border</span>
+                                </div>
+                                <span class="text-sm font-hand font-bold text-warm-brown">寵步步</span>
+                            </button>
+
+                            <!-- 房租 -->
+                            <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="房租">
+                                <div class="bg-gradient-to-br from-warm-brown/30 to-warm-brown/20">
+                                    <span class="material-symbols-outlined text-2xl">home</span>
+                                </div>
+                                <span class="text-sm font-hand font-bold text-warm-brown">房租</span>
+                            </button>
+
+                            <!-- 蝦皮/光南 -->
+                            <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="蝦皮/光南">
+                                <div class="bg-gradient-to-br from-macaron-purple/40 to-macaron-purple/30">
+                                    <span class="material-symbols-outlined text-2xl">shopping_bag</span>
+                                </div>
+                                <span class="text-xs font-hand font-bold text-warm-brown leading-tight text-center">蝦皮<br>光南</span>
+                            </button>
+
+                            <!-- 居家 -->
+                            <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="居家">
+                                <div class="bg-gradient-to-br from-macaron-cream/60 to-macaron-cream/40">
+                                    <span class="material-symbols-outlined text-2xl">weekend</span>
+                                </div>
+                                <span class="text-sm font-hand font-bold text-warm-brown">居家</span>
+                            </button>
+
+                            <!-- 噗嚕天堂 -->
+                            <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="噗嚕天堂">
+                                <div class="bg-gradient-to-br from-macaron-lavender/40 to-macaron-lavender/30">
+                                    <span class="material-symbols-outlined text-2xl">videogame_asset</span>
+                                </div>
+                                <span class="text-xs font-hand font-bold text-warm-brown">噗嚕天堂</span>
+                            </button>
+
+                            <!-- 3C -->
+                            <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="3C">
+                                <div class="bg-gradient-to-br from-macaron-blue/40 to-macaron-blue/30">
+                                    <span class="material-symbols-outlined text-2xl">devices</span>
+                                </div>
+                                <span class="text-sm font-hand font-bold text-warm-brown">3C</span>
+                            </button>
+
+                            <!-- 醫療 -->
+                            <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="醫療">
+                                <div class="bg-gradient-to-br from-macaron-rose/35 to-macaron-rose/25">
+                                    <span class="material-symbols-outlined text-2xl">medical_services</span>
+                                </div>
+                                <span class="text-sm font-hand font-bold text-warm-brown">醫療</span>
+                            </button>
+
+                            <!-- 大日子 -->
+                            <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="大日子">
+                                <div class="bg-gradient-to-br from-macaron-pink/50 to-macaron-pink/40">
+                                    <span class="material-symbols-outlined text-2xl">cake</span>
+                                </div>
+                                <span class="text-sm font-hand font-bold text-warm-brown">大日子</span>
+                            </button>
+
+                            <!-- 訂閱東東 -->
+                            <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="訂閱東東">
+                                <div class="bg-gradient-to-br from-macaron-purple/35 to-macaron-purple/25">
+                                    <span class="material-symbols-outlined text-2xl">subscriptions</span>
+                                </div>
+                                <span class="text-xs font-hand font-bold text-warm-brown">訂閱東東</span>
+                            </button>
+
+                            <!-- 大爆買買 -->
+                            <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="大爆買買">
+                                <div class="bg-gradient-to-br from-macaron-orange/45 to-macaron-orange/35">
+                                    <span class="material-symbols-outlined text-2xl">shopping_basket</span>
+                                </div>
+                                <span class="text-xs font-hand font-bold text-warm-brown">大爆買買</span>
+                            </button>
+
+                            <!-- 整理窩窩日 -->
+                            <button type="button" class="tag-btn flex flex-col items-center gap-2" data-category="整理窩窩日">
+                                <div class="bg-gradient-to-br from-macaron-green/35 to-macaron-green/25">
+                                    <span class="material-symbols-outlined text-2xl">cleaning_services</span>
+                                </div>
+                                <span class="text-[10px] font-hand font-bold text-warm-brown leading-tight text-center">整理<br>窩窩日</span>
+                            </button>
+
+                            <!-- 新增自訂類別 -->
+                            <button type="button" id="btnAddCustomCategory" class="group flex flex-col items-center gap-2">
+                                <div class="w-16 h-16 rounded-full border-2 border-dashed border-warm-brown/30 flex items-center justify-center text-warm-brown/50 hover:border-[#E27D60]/50 hover:text-[#E27D60] transition-all group-active:scale-95 bg-white/30">
+                                    <span class="material-symbols-outlined text-2xl">add</span>
+                                </div>
+                                <span class="text-sm font-hand font-bold text-warm-brown">新增</span>
+                            </button>
+                        </div>
+
+                        <!-- 載入更多按鈕 -->
+                        <button type="button" id="btnShowMore" class="group flex flex-col items-center gap-2 col-span-4">
+                            <div class="w-full h-12 rounded-2xl border-2 border-dashed border-[#E27D60]/30 flex items-center justify-center text-[#E27D60]/70 hover:border-[#E27D60]/60 hover:text-[#E27D60] hover:bg-macaron-pink/5 transition-all group-active:scale-98 bg-white/20">
+                                <span class="material-symbols-outlined text-xl mr-2">expand_more</span>
+                                <span class="font-hand font-bold text-base">載入更多類別</span>
                             </div>
-                            <span class="text-sm font-hand font-bold text-warm-brown">生活</span>
-                        </button>
-                        <button type="button" id="btnAddCustomCategory" class="group flex flex-col items-center gap-2">
-                            <div class="w-16 h-16 rounded-full border-2 border-dashed border-warm-brown/30 flex items-center justify-center text-warm-brown/50 hover:border-[#E27D60]/50 hover:text-[#E27D60] transition-all group-active:scale-95 bg-white/30">
-                                <span class="material-symbols-outlined text-2xl">add</span>
-                            </div>
-                            <span class="text-sm font-hand font-bold text-warm-brown">新增</span>
                         </button>
                     </div>
                 </div>
@@ -874,7 +1016,7 @@
     <!-- 花費詳情模態框 -->
     <div id="transactionDetailModal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="detailModalOverlay"></div>
-        <div class="relative w-full max-w-md bg-paper rounded-3xl shadow-2xl max-h-[85vh] overflow-y-auto border border-macaron-rose/20 my-auto">
+        <div id="transactionDetailCard" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-paper rounded-3xl shadow-2xl max-h-[85vh] overflow-y-auto border border-macaron-rose/20">
             <!-- 頂部裝飾 -->
             <div class="sticky top-0 bg-paper/95 backdrop-blur-sm z-10 pt-6 pb-4 px-6 border-b border-macaron-rose/20">
                 <div class="flex items-center justify-between mb-4">

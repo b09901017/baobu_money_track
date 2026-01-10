@@ -109,6 +109,17 @@ export class EventBinder {
             });
         });
 
+        // 載入更多類別按鈕
+        const btnShowMore = document.getElementById('btnShowMore');
+        if (btnShowMore) {
+            btnShowMore.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (this.app.transactionForm) {
+                    this.app.transactionForm.toggleMoreCategories();
+                }
+            });
+        }
+
         // 新增自訂標籤
         const btnAddCustomCategory = document.getElementById('btnAddCustomCategory');
         if (btnAddCustomCategory) {
