@@ -1,6 +1,16 @@
 /* ==================== 日曆視圖（童話月曆）==================== */
+/* 修正：直接對 calendarView 應用樣式 */
+#calendarView {
+    overflow-x: hidden !important; /* 防止左右滾動 */
+    width: 100%;
+    max-width: 100%;
+}
+
 .calendar-container {
     padding: 0 var(--spacing-lg);
+    overflow-x: hidden; /* 防止左右滾動 */
+    width: 100%;
+    max-width: 100%;
 }
 
 .calendar-header {
@@ -55,6 +65,8 @@
     background: white;
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-soft);
+    max-width: 100%;
+    overflow-x: hidden; /* 防止日曆格子溢出 */
 }
 
 /* 確保日曆月份容器不會裁切下拉選單 */
@@ -131,6 +143,8 @@
     background: white;
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-soft);
+    overflow: hidden; /* 防止內容溢出 */
+    position: relative; /* 為滑卡動畫提供定位基準 */
 }
 
 #selectedDate {
@@ -145,6 +159,8 @@
 .calendar-mode-switcher {
     display: flex;
     justify-content: center;
+    max-width: 100%;
+    overflow: hidden; /* 防止模式切換器溢出 */
 }
 
 .mode-switcher-container {
@@ -582,6 +598,76 @@
     50% {
         filter: drop-shadow(0 0 8px rgba(255, 158, 199, 1));
         transform: scale(1.1);
+    }
+}
+
+/* ==================== 滑卡切換動畫（交友軟體風格）==================== */
+#dayTransactions {
+    position: relative;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 向左滑出（下一天） */
+#dayTransactions.swipe-left-out {
+    animation: swipeLeftOut 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes swipeLeftOut {
+    0% {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(-120%) scale(0.8);
+        opacity: 0;
+    }
+}
+
+/* 向右滑出（前一天） */
+#dayTransactions.swipe-right-out {
+    animation: swipeRightOut 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes swipeRightOut {
+    0% {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(120%) scale(0.8);
+        opacity: 0;
+    }
+}
+
+/* 從左側滑入（前一天） */
+#dayTransactions.swipe-in-from-left {
+    animation: swipeInFromLeft 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes swipeInFromLeft {
+    0% {
+        transform: translateX(-120%) scale(0.8);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+}
+
+/* 從右側滑入（下一天） */
+#dayTransactions.swipe-in-from-right {
+    animation: swipeInFromRight 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes swipeInFromRight {
+    0% {
+        transform: translateX(120%) scale(0.8);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0) scale(1);
+        opacity: 1;
     }
 }
 

@@ -36,7 +36,10 @@
       "Bash(adb devices:*)",
       "Bash(ls:*)",
       "Bash(dir:*)",
-      "Bash(node -c:*)"
+      "Bash(node -c:*)",
+      "Skill(designer)",
+      "Skill(designer:*)",
+      "Bash(taskkill:*)"
     ]
   }
 }

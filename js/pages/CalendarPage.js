@@ -21,7 +21,13 @@ export class CalendarPage {
 
         // 滑動手勢相關
         this.touchStartX = 0;
+        this.touchStartY = 0;
         this.touchEndX = 0;
+        this.touchEndY = 0;
+        this.touchStartTime = 0;
+
+        // 標記滑動來源（calendar 或 list）
+        this.swipeSource = null;
 
         // 💖 顯示模式設定 💖
         this.displayMode = {
@@ -62,35 +68,84 @@ export class CalendarPage {
         const calendarView = document.getElementById('calendarView');
         if (!calendarView) return;
 
-        calendarView.addEventListener('touchstart', (e) => {
-            this.touchStartX = e.changedTouches[0].screenX;
-        }, { passive: true });
+        // 分別為日曆區域和清單區域綁定滑動事件
+        const calendarGrid = document.getElementById('calendarGrid');
+        const dayTransactions = document.getElementById('dayTransactions');
 
-        calendarView.addEventListener('touchend', (e) => {
-            this.touchEndX = e.changedTouches[0].screenX;
-            this.handleSwipe();
-        }, { passive: true });
+        // 日曆區域的滑動（直接切換，無動畫）
+        if (calendarGrid) {
+            calendarGrid.addEventListener('touchstart', (e) => {
+                this.touchStartX = e.changedTouches[0].screenX;
+                this.touchStartY = e.changedTouches[0].screenY;
+                this.touchStartTime = Date.now();
+                this.swipeSource = 'calendar';
+            }, { passive: true });
+
+            calendarGrid.addEventListener('touchend', (e) => {
+                this.touchEndX = e.changedTouches[0].screenX;
+                this.touchEndY = e.changedTouches[0].screenY;
+                this.handleSwipe();
+            }, { passive: true });
+        }
+
+        // 清單區域的滑動（滑卡動畫）
+        if (dayTransactions) {
+            dayTransactions.addEventListener('touchstart', (e) => {
+                // 只在有選中日期時啟用
+                if (!this.currentSelectedDate) return;
+
+                this.touchStartX = e.changedTouches[0].screenX;
+                this.touchStartY = e.changedTouches[0].screenY;
+                this.touchStartTime = Date.now();
+                this.swipeSource = 'list';
+            }, { passive: true });
+
+            dayTransactions.addEventListener('touchend', (e) => {
+                this.touchEndX = e.changedTouches[0].screenX;
+                this.touchEndY = e.changedTouches[0].screenY;
+                this.handleSwipe();
+            }, { passive: true });
+        }
     }
 
     /**
-     * 處理滑動手勢
+     * 處理滑動手勢（優化版：防止上下滑誤觸）
      */
     handleSwipe() {
         // 只在單日模式下啟用滑動
         if (this.calendarMode !== 'single') return;
         if (!this.currentSelectedDate) return;
+        if (!this.swipeSource) return;
 
-        const swipeThreshold = 50; // 滑動觸發閾值（像素）
-        const diff = this.touchStartX - this.touchEndX;
+        const diffX = this.touchStartX - this.touchEndX;
+        const diffY = this.touchStartY - this.touchEndY;
+        const swipeTime = Date.now() - this.touchStartTime;
+
+        // 滑動閾值設定
+        const horizontalThreshold = 60;  // 水平滑動最小距離
+        const verticalThreshold = 30;    // 垂直滑動容忍度
+        const maxSwipeTime = 500;        // 最大滑動時間（毫秒）
+
+        // 判斷是否為有效的水平滑動
+        const isHorizontalSwipe = Math.abs(diffX) > horizontalThreshold &&
+                                   Math.abs(diffX) > Math.abs(diffY) * 1.5 && // 水平距離 > 垂直距離的 1.5 倍
+                                   swipeTime < maxSwipeTime;
+
+        if (!isHorizontalSwipe) {
+            this.swipeSource = null;
+            return;
+        }
 
         // 向左滑（顯示下一天）
-        if (diff > swipeThreshold) {
-            this.changeSingleDay(1);
+        if (diffX > 0) {
+            this.changeSingleDay(1, this.swipeSource);
         }
         // 向右滑（顯示前一天）
-        else if (diff < -swipeThreshold) {
-            this.changeSingleDay(-1);
+        else {
+            this.changeSingleDay(-1, this.swipeSource);
         }
+
+        this.swipeSource = null;
     }
 
     async renderCalendar() {
@@ -237,6 +292,11 @@ export class CalendarPage {
             this.state.selectedDate = dateStr;
 
             await this.showDayTransactions(dateStr);
+
+            // 點擊日期後自動向下滾動，讓清單「滑上來」的感覺
+            setTimeout(() => {
+                this.scrollToTransactionsList();
+            }, 100);
         } else {
             // 區間模式：選擇開始和結束日期
             if (!this.tempRangeStart || this.tempRangeEnd) {
@@ -272,6 +332,9 @@ export class CalendarPage {
 
         if (!container) return;
 
+        // 清除任何可能殘留的動畫 class
+        container.className = '';
+
         if (transactions.length === 0) {
             container.innerHTML = '<p class="text-center text-warm-brown/60 py-4 font-hand">當天無交易記錄 ✨</p>';
         } else {
@@ -280,6 +343,54 @@ export class CalendarPage {
             container.innerHTML = html;
             TransactionRenderer.bindClickEvents(container, this.onTransactionClickCallback);
         }
+    }
+
+    /**
+     * 帶滑卡動畫的顯示交易記錄
+     * @param {string} dateStr - 日期字串
+     * @param {number} delta - 日期變化量（+1 下一天，-1 前一天）
+     */
+    async showDayTransactionsWithSwipeAnimation(dateStr, delta) {
+        const container = document.getElementById('dayTransactions');
+        if (!container) return;
+
+        // 先更新日曆（無動畫）
+        this.renderCalendar();
+
+        // 1. 播放滑出動畫
+        const swipeOutClass = delta > 0 ? 'swipe-left-out' : 'swipe-right-out';
+        container.classList.add(swipeOutClass);
+
+        // 等待滑出動畫完成
+        await new Promise(resolve => setTimeout(resolve, 350));
+
+        // 2. 更新內容（隱藏狀態）
+        const transactions = await window.DataManager.getTransactionsByDate(dateStr);
+        const header = document.getElementById('selectedDate');
+
+        if (header) header.textContent = formatDisplayDate(dateStr);
+
+        container.className = ''; // 清除動畫 class
+
+        if (transactions.length === 0) {
+            container.innerHTML = '<p class="text-center text-warm-brown/60 py-4 font-hand">當天無交易記錄 ✨</p>';
+        } else {
+            const html = this.renderDayCard(dateStr, transactions, true);
+            container.innerHTML = html;
+            TransactionRenderer.bindClickEvents(container, this.onTransactionClickCallback);
+        }
+
+        // 3. 播放滑入動畫（從相反方向）
+        const swipeInClass = delta > 0 ? 'swipe-in-from-right' : 'swipe-in-from-left';
+
+        // 強制瀏覽器重繪
+        void container.offsetWidth;
+
+        container.classList.add(swipeInClass);
+
+        // 動畫完成後清除 class
+        await new Promise(resolve => setTimeout(resolve, 350));
+        container.className = '';
     }
 
     changeMonth(delta) {
@@ -467,8 +578,10 @@ export class CalendarPage {
 
     /**
      * 單日模式下切換日期
+     * @param {number} delta - 日期變化量（+1 下一天，-1 前一天）
+     * @param {string} source - 滑動來源（'calendar' 或 'list'）
      */
-    async changeSingleDay(delta) {
+    async changeSingleDay(delta, source = 'calendar') {
         if (this.calendarMode !== 'single' || !this.currentSelectedDate) return;
 
         const currentDate = new Date(this.currentSelectedDate);
@@ -484,8 +597,14 @@ export class CalendarPage {
             this.state.currentMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
         }
 
-        this.renderCalendar();
-        await this.showDayTransactions(newDateStr);
+        // 如果是從清單滑動，播放滑卡動畫
+        if (source === 'list') {
+            await this.showDayTransactionsWithSwipeAnimation(newDateStr, delta);
+        } else {
+            // 日曆區域滑動：直接切換，無動畫
+            this.renderCalendar();
+            await this.showDayTransactions(newDateStr);
+        }
     }
 
     /**
@@ -784,5 +903,45 @@ export class CalendarPage {
             const checkmark = selected.querySelector('.checkmark');
             if (checkmark) checkmark.classList.remove('hidden');
         }
+    }
+
+    /**
+     * 滾動到交易清單區域（平滑滾動）
+     * 讓使用者有「清單滑上來」的感覺
+     */
+    scrollToTransactionsList() {
+        const dayDetails = document.getElementById('dayDetails');
+        const mainContent = document.querySelector('.main-content');
+
+        if (!dayDetails || !mainContent) {
+            console.warn('⚠️ 找不到 dayDetails 或 mainContent');
+            return;
+        }
+
+        // 使用 requestAnimationFrame 確保 DOM 已更新
+        requestAnimationFrame(() => {
+            // 計算 dayDetails 的位置（相對於 mainContent 的頂部）
+            const detailsRect = dayDetails.getBoundingClientRect();
+            const contentRect = mainContent.getBoundingClientRect();
+
+            // 目標滾動位置：讓 dayDetails 距離頂部有一點間距（舒適的閱讀位置）
+            const targetOffset = 80; // 距離頂部 80px
+            const currentScrollTop = mainContent.scrollTop;
+            const detailsOffsetTop = detailsRect.top - contentRect.top + currentScrollTop;
+            const scrollDistance = detailsOffsetTop - targetOffset;
+
+            console.log('📜 滾動參數:', {
+                currentScrollTop,
+                detailsOffsetTop,
+                targetOffset,
+                scrollDistance
+            });
+
+            // 平滑滾動
+            mainContent.scrollTo({
+                top: Math.max(0, scrollDistance), // 確保不會滾動到負值
+                behavior: 'smooth'
+            });
+        });
     }
 }
