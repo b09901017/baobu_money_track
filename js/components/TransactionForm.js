@@ -495,6 +495,11 @@ export class TransactionForm {
             // 重新渲染分類列表
             this.renderCustomCategories();
 
+            // 同步更新趨勢分析的類別按鈕（v6.2.0 新增）
+            if (window.app && window.app.analyticsPage) {
+                window.app.analyticsPage.updateTrendCategoryButtons();
+            }
+
             await window.customDialog.success(`已新增分類「${trimmedName}」！`);
         } catch (error) {
             console.error('❌ 新增分類失敗:', error);

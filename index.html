@@ -553,26 +553,86 @@
                     <!-- 類別篩選 -->
                     <div class="bg-white rounded-2xl p-4 shadow-watercolor-layered mb-6">
                         <h3 class="text-sm font-hand font-bold text-soft-ink mb-3">🏷️ 類別篩選</h3>
-                        <div class="flex flex-wrap gap-2">
+
+                        <!-- 常用類別（預設顯示）-->
+                        <div class="flex flex-wrap gap-2 mb-2" id="trendCommonCategories">
                             <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all bg-gradient-to-br from-macaron-pink to-macaron-rose text-white shadow-sm" data-category="all">
-                                全部類別
+                                ✨ 全部
                             </button>
-                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-pink/30" data-category="吃吃">
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-pink/30 hover:bg-macaron-pink/10 active:scale-95" data-category="吃吃">
                                 🍽️ 吃吃
                             </button>
-                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-blue/30" data-category="玩">
-                                🎮 玩
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-pink/30 hover:bg-macaron-pink/10 active:scale-95" data-category="喝喝">
+                                🥤 喝喝
                             </button>
-                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-green/30" data-category="交通">
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-blue/30 hover:bg-macaron-blue/10 active:scale-95" data-category="玩玩">
+                                🎮 玩玩
+                            </button>
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-green/30 hover:bg-macaron-green/10 active:scale-95" data-category="交通">
                                 🚌 交通
                             </button>
-                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-purple/30" data-category="購物">
-                                🛍️ 購物
-                            </button>
-                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-warm-brown/30" data-category="生活">
-                                🏡 生活
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-purple/30 hover:bg-macaron-purple/10 active:scale-95" data-category="家樂福/全聯">
+                                🛒 家樂福/全聯
                             </button>
                         </div>
+
+                        <!-- 更多類別（可折疊）-->
+                        <div id="trendMoreCategories" class="flex flex-wrap gap-2 overflow-hidden transition-all duration-300" style="max-height: 0;">
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-pink/30 hover:bg-macaron-pink/10 active:scale-95" data-category="高級吃吃">
+                                🍖 高級吃吃
+                            </button>
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-rose/30 hover:bg-macaron-rose/10 active:scale-95" data-category="刷寶媽卡">
+                                💳 刷寶媽卡
+                            </button>
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-orange/30 hover:bg-macaron-orange/10 active:scale-95" data-category="優惠超人">
+                                🦸 優惠超人
+                            </button>
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-purple/30 hover:bg-macaron-purple/10 active:scale-95" data-category="蝦皮/光南">
+                                📦 蝦皮/光南
+                            </button>
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-warm-brown/30 hover:bg-warm-brown/10 active:scale-95" data-category="洗衣服">
+                                👔 洗衣服
+                            </button>
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-pink/30 hover:bg-macaron-pink/10 active:scale-95" data-category="寵寶寶">
+                                🎀 寵寶寶
+                            </button>
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-blue/30 hover:bg-macaron-blue/10 active:scale-95" data-category="寵步步">
+                                💙 寵步步
+                            </button>
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-warm-brown/30 hover:bg-warm-brown/10 active:scale-95" data-category="房租">
+                                🏠 房租
+                            </button>
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-green/30 hover:bg-macaron-green/10 active:scale-95" data-category="居家">
+                                🪴 居家
+                            </button>
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-purple/30 hover:bg-macaron-purple/10 active:scale-95" data-category="噗嚕天堂">
+                                🎪 噗嚕天堂
+                            </button>
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-blue/30 hover:bg-macaron-blue/10 active:scale-95" data-category="3C">
+                                💻 3C
+                            </button>
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-rose/30 hover:bg-macaron-rose/10 active:scale-95" data-category="醫療">
+                                💊 醫療
+                            </button>
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-pink/30 hover:bg-macaron-pink/10 active:scale-95" data-category="大日子">
+                                🎉 大日子
+                            </button>
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-warm-brown/30 hover:bg-warm-brown/10 active:scale-95" data-category="訂閱東東">
+                                📱 訂閱東東
+                            </button>
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-purple/30 hover:bg-macaron-purple/10 active:scale-95" data-category="大爆買買">
+                                🛍️ 大爆買買
+                            </button>
+                            <button class="trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-green/30 hover:bg-macaron-green/10 active:scale-95" data-category="整理窩窩日">
+                                🧹 整理窩窩日
+                            </button>
+                        </div>
+
+                        <!-- 展開/收合按鈕 -->
+                        <button id="btnToggleMoreCategories" class="w-full mt-2 py-2 rounded-xl font-hand font-bold text-xs text-warm-brown/70 hover:text-soft-ink hover:bg-macaron-cream/30 transition-all active:scale-95 flex items-center justify-center gap-1">
+                            <span id="toggleMoreCategoriesText">更多類別</span>
+                            <span id="toggleMoreCategoriesIcon" class="text-base transition-transform duration-300">✨</span>
+                        </button>
                     </div>
 
                     <!-- 圖表類型切換 -->
@@ -1307,9 +1367,9 @@
         </div>
     </div>
 
-    <!-- 圖表全螢幕檢視彈窗（v5.9.0 新增） -->
+    <!-- 圖表全螢幕檢視彈窗（v5.9.0 新增，v6.2.0 改為橫向顯示） -->
     <div id="chartFullscreenModal" class="fixed inset-0 z-[300] hidden bg-black/95 backdrop-blur-md">
-        <div class="relative w-full h-full flex flex-col">
+        <div class="relative w-full h-full flex items-center justify-center">
             <!-- 關閉按鈕 -->
             <div class="absolute top-4 right-4 z-10">
                 <button type="button" id="btnCloseChartFullscreen" class="bg-white/90 backdrop-blur-sm p-3 rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-110 text-warm-brown">
@@ -1319,15 +1379,27 @@
                 </button>
             </div>
 
-            <!-- 圖表標題 -->
-            <div class="pt-8 pb-4 px-6 text-center">
-                <h2 id="chartFullscreenTitle" class="text-xl font-display font-bold text-macaron-cream">趨勢分析</h2>
+            <!-- 旋轉提示（僅在直立模式顯示） -->
+            <div id="rotateHint" class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div class="bg-macaron-cream/90 backdrop-blur-sm rounded-2xl p-6 text-center max-w-xs mx-4 shadow-xl">
+                    <div class="text-5xl mb-3">📱</div>
+                    <p class="text-soft-ink font-hand font-bold text-lg mb-2">請將手機橫放</p>
+                    <p class="text-warm-brown font-hand text-sm">旋轉手機可以更好地查看圖表 ✨</p>
+                </div>
             </div>
 
-            <!-- 圖表容器 -->
-            <div class="flex-1 overflow-auto px-4 pb-4">
-                <div id="chartFullscreenContent" class="bg-white rounded-2xl p-6 shadow-watercolor-layered h-full min-h-[500px]">
-                    <!-- 動態渲染圖表 -->
+            <!-- 圖表容器（橫向布局） -->
+            <div class="w-full h-full flex flex-col overflow-hidden" id="chartFullscreenWrapper">
+                <!-- 圖表標題 -->
+                <div class="py-4 px-6 text-center shrink-0">
+                    <h2 id="chartFullscreenTitle" class="text-lg font-display font-bold text-macaron-cream">趨勢分析</h2>
+                </div>
+
+                <!-- 圖表內容（橫向填滿） -->
+                <div class="flex-1 overflow-hidden px-4 pb-4 flex items-center justify-center">
+                    <div id="chartFullscreenContent" class="bg-gradient-to-br from-[#2D2741] to-[#1A1626] rounded-2xl p-6 shadow-watercolor-layered w-full h-full flex items-center justify-center">
+                        <!-- 動態渲染圖表 -->
+                    </div>
                 </div>
             </div>
         </div>

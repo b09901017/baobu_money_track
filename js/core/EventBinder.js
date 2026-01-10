@@ -464,6 +464,32 @@ export class EventBinder {
             });
         });
 
+        // 類別折疊展開按鈕
+        const btnToggleMoreCategories = document.getElementById('btnToggleMoreCategories');
+        if (btnToggleMoreCategories) {
+            btnToggleMoreCategories.addEventListener('click', () => {
+                const moreCategories = document.getElementById('trendMoreCategories');
+                const toggleText = document.getElementById('toggleMoreCategoriesText');
+                const toggleIcon = document.getElementById('toggleMoreCategoriesIcon');
+
+                if (moreCategories && toggleText && toggleIcon) {
+                    const isExpanded = moreCategories.style.maxHeight && moreCategories.style.maxHeight !== '0px';
+
+                    if (isExpanded) {
+                        // 收合
+                        moreCategories.style.maxHeight = '0';
+                        toggleText.textContent = '更多類別';
+                        toggleIcon.style.transform = 'rotate(0deg)';
+                    } else {
+                        // 展開
+                        moreCategories.style.maxHeight = moreCategories.scrollHeight + 'px';
+                        toggleText.textContent = '收起類別';
+                        toggleIcon.style.transform = 'rotate(180deg)';
+                    }
+                }
+            });
+        }
+
         // 圖表類型切換（折線圖 / 長條圖）
         const btnTrendLineView = document.getElementById('btnTrendLineView');
         const btnTrendBarView = document.getElementById('btnTrendBarView');

@@ -136,7 +136,7 @@ export default class VerticalBarChart {
 
     const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
 
-    // 背景漸層
+    // 背景漸層（深色背景，讓亮粉色長條更突出）
     const bgGradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
     bgGradient.setAttribute('id', 'vbarBgGradient');
     bgGradient.setAttribute('x1', '0%');
@@ -144,8 +144,8 @@ export default class VerticalBarChart {
     bgGradient.setAttribute('x2', '0%');
     bgGradient.setAttribute('y2', '100%');
     bgGradient.innerHTML = `
-      <stop offset="0%" style="stop-color:#FFF9FC;stop-opacity:0.9" />
-      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0.4" />
+      <stop offset="0%" style="stop-color:#2D2741;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1A1626;stop-opacity:1" />
     `;
     defs.appendChild(bgGradient);
 
@@ -200,10 +200,10 @@ export default class VerticalBarChart {
       line.setAttribute('y1', y);
       line.setAttribute('x2', width - padding.right);
       line.setAttribute('y2', y);
-      line.setAttribute('stroke', '#E8D4FF');
+      line.setAttribute('stroke', '#FFFFFF');
       line.setAttribute('stroke-width', '1');
       line.setAttribute('stroke-dasharray', '4 4');
-      line.setAttribute('opacity', '0.4');
+      line.setAttribute('opacity', '0.15');
       gridGroup.appendChild(line);
     }
 
@@ -234,7 +234,7 @@ export default class VerticalBarChart {
       text.setAttribute('text-anchor', 'middle');
       text.setAttribute('font-size', '12');
       text.setAttribute('font-family', 'Quicksand, sans-serif');
-      text.setAttribute('fill', '#9D7FB8');
+      text.setAttribute('fill', '#E8D4FF');
       text.textContent = this.formatLabel(item.label);
       xAxisGroup.appendChild(text);
     });
@@ -261,7 +261,7 @@ export default class VerticalBarChart {
       text.setAttribute('text-anchor', 'end');
       text.setAttribute('font-size', '11');
       text.setAttribute('font-family', 'Nunito, sans-serif');
-      text.setAttribute('fill', '#B399CC');
+      text.setAttribute('fill', '#D4BAFF');
       text.textContent = this.formatCurrency(value);
       yAxisGroup.appendChild(text);
     }
@@ -435,7 +435,7 @@ export default class VerticalBarChart {
       text.setAttribute('y', startY + 4);
       text.setAttribute('font-size', '13');
       text.setAttribute('font-family', 'Quicksand, sans-serif');
-      text.setAttribute('fill', '#6B5B7D');
+      text.setAttribute('fill', '#E8D4FF');
       text.textContent = legend;
       legendGroup.appendChild(text);
 

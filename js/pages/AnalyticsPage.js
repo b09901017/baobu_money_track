@@ -58,6 +58,45 @@ export class AnalyticsPage {
         console.log('📊 AnalyticsPage 已建立並訂閱交易變更');
     }
 
+    /**
+     * 更新趨勢分析類別按鈕（當新增自訂類別時調用）
+     */
+    updateTrendCategoryButtons() {
+        const customCategories = window.DataManager.getCustomCategories();
+        const moreCategories = document.getElementById('trendMoreCategories');
+
+        if (!moreCategories) return;
+
+        // 取得目前已存在的類別
+        const existingCategories = new Set(
+            Array.from(document.querySelectorAll('.trend-category-btn'))
+                .map(btn => btn.dataset.category)
+        );
+
+        // 新增不存在的自訂類別
+        customCategories.forEach(category => {
+            if (!existingCategories.has(category.name)) {
+                const button = document.createElement('button');
+                button.className = 'trend-category-btn px-3 py-1.5 rounded-full font-hand font-bold text-xs transition-all text-soft-ink bg-white border border-macaron-pink/30 hover:bg-macaron-pink/10 active:scale-95';
+                button.dataset.category = category.name;
+                button.innerHTML = `${category.icon || '🏷️'} ${category.name}`;
+
+                // 綁定點擊事件
+                button.addEventListener('click', () => {
+                    this.changeTrendCategory(category.name);
+                });
+
+                moreCategories.appendChild(button);
+            }
+        });
+
+        // 重新計算展開狀態的高度
+        const isExpanded = moreCategories.style.maxHeight && moreCategories.style.maxHeight !== '0px';
+        if (isExpanded) {
+            moreCategories.style.maxHeight = moreCategories.scrollHeight + 'px';
+        }
+    }
+
     async update(period = 'month') {
         // 儲存當前週期（用於交易變更時重新計算）
         this.currentPeriod = period;
@@ -604,16 +643,27 @@ export class AnalyticsPage {
      * 更新趨勢分析
      */
     async updateTrendAnalysis() {
-        const { range, granularity, category } = this.trendSettings;
+        const { range, granularity, category, customStartDate, customEndDate } = this.trendSettings;
 
         // 計算日期範圍
-        const today = new Date();
-        const startDate = new Date(today);
-        startDate.setDate(today.getDate() - range);
+        let startDate, endDate;
+
+        if (range === 'custom' && customStartDate && customEndDate) {
+            // 使用自訂日期範圍
+            startDate = customStartDate;
+            endDate = customEndDate;
+        } else {
+            // 使用預設日期範圍（最近 N 天）
+            const today = new Date();
+            endDate = window.DataManager.formatDate(today);
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() - parseInt(range));
+            startDate = window.DataManager.formatDate(startDate);
+        }
 
         const transactions = await window.DataManager.getTransactionsByDateRange(
-            window.DataManager.formatDate(startDate),
-            window.DataManager.formatDate(today)
+            startDate,
+            endDate
         );
 
         // 取得趨勢資料
@@ -652,6 +702,7 @@ export class AnalyticsPage {
         container.innerHTML = '';
 
         if (!this.trendLineChart) {
+            // 顏色順序：寶寶（粉）、步步（藍）、總花費（綠）- 與圖例順序一致
             this.trendLineChart = new TrendChart(container, {
                 width: 800,
                 height: 300,
@@ -675,6 +726,7 @@ export class AnalyticsPage {
         container.innerHTML = '';
 
         if (!this.trendBarChart) {
+            // 顏色順序：寶寶（粉）、步步（藍）、總花費（綠）- 與圖例順序一致
             this.trendBarChart = new VerticalBarChart(container, {
                 width: 800,
                 height: 300,
@@ -937,13 +989,15 @@ export class AnalyticsPage {
     }
 
     /**
-     * 放大圖表至全螢幕（v5.9.0 新增）
+     * 放大圖表至全螢幕（v5.9.0 新增，v6.2.0 改為橫向顯示）
      * @param {string} chartType - 圖表類型 ('line' | 'bar')
      */
     expandChart(chartType) {
         const modal = document.getElementById('chartFullscreenModal');
         const content = document.getElementById('chartFullscreenContent');
         const title = document.getElementById('chartFullscreenTitle');
+        const rotateHint = document.getElementById('rotateHint');
+        const wrapper = document.getElementById('chartFullscreenWrapper');
 
         if (!modal || !content || !this.currentTrendData || !this.currentLegends) return;
 
@@ -959,42 +1013,89 @@ export class AnalyticsPage {
         // 清空內容
         content.innerHTML = '';
 
-        // 建立全螢幕圖表實例
-        const chartContainer = document.createElement('div');
-        chartContainer.id = 'fullscreenChartContainer';
-        chartContainer.style.width = '100%';
-        chartContainer.style.height = '100%';
-        content.appendChild(chartContainer);
+        // 偵測螢幕方向並顯示/隱藏旋轉提示
+        const updateOrientation = () => {
+            const isPortrait = window.innerHeight > window.innerWidth;
+            if (rotateHint && wrapper) {
+                if (isPortrait) {
+                    rotateHint.classList.remove('hidden');
+                    wrapper.style.opacity = '0.2';
+                } else {
+                    rotateHint.classList.add('hidden');
+                    wrapper.style.opacity = '1';
+                }
+            }
 
-        // 根據類型渲染圖表
-        if (chartType === 'line') {
-            const chart = new TrendChart(chartContainer, {
-                width: Math.min(window.innerWidth - 80, 1200),
-                height: Math.min(window.innerHeight - 200, 600),
-                animate: true,
-                smooth: true
-            });
-            chart.render(this.currentTrendData, this.currentLegends);
-        } else if (chartType === 'bar') {
-            const chart = new VerticalBarChart(chartContainer, {
-                width: Math.min(window.innerWidth - 80, 1200),
-                height: Math.min(window.innerHeight - 200, 600),
-                animate: true
-            });
-            chart.render(this.currentTrendData, this.currentLegends);
-        }
+            // 重新計算尺寸（橫向時使用更大的寬度）
+            const width = isPortrait
+                ? Math.min(window.innerWidth - 40, 800)
+                : Math.min(window.innerWidth - 80, 1400);
+            const height = isPortrait
+                ? Math.min(window.innerHeight - 200, 400)
+                : Math.min(window.innerHeight - 150, 600);
+
+            // 建立全螢幕圖表實例
+            const chartContainer = document.createElement('div');
+            chartContainer.id = 'fullscreenChartContainer';
+            chartContainer.style.width = '100%';
+            chartContainer.style.height = '100%';
+            content.innerHTML = '';
+            content.appendChild(chartContainer);
+
+            // 根據類型渲染圖表（使用正確的顏色順序）
+            const colors = ['#FFB5D8', '#A8D8FF', '#B8F0D8']; // 寶寶（粉）、步步（藍）、總花費（綠）
+
+            if (chartType === 'line') {
+                const chart = new TrendChart(chartContainer, {
+                    width: width,
+                    height: height,
+                    colors: colors,
+                    animate: true,
+                    smooth: true
+                });
+                chart.render(this.currentTrendData, this.currentLegends);
+            } else if (chartType === 'bar') {
+                const chart = new VerticalBarChart(chartContainer, {
+                    width: width,
+                    height: height,
+                    colors: colors,
+                    animate: true
+                });
+                chart.render(this.currentTrendData, this.currentLegends);
+            }
+        };
+
+        // 初始渲染
+        updateOrientation();
+
+        // 監聽螢幕旋轉
+        const orientationHandler = () => updateOrientation();
+        window.addEventListener('orientationchange', orientationHandler);
+        window.addEventListener('resize', orientationHandler);
 
         // 顯示彈窗
         modal.classList.remove('hidden');
+
+        // 儲存 cleanup 函數（關閉時移除監聽器）
+        this._fullscreenCleanup = () => {
+            window.removeEventListener('orientationchange', orientationHandler);
+            window.removeEventListener('resize', orientationHandler);
+        };
     }
 
     /**
-     * 關閉全螢幕圖表（v5.9.0 新增）
+     * 關閉全螢幕圖表（v5.9.0 新增，v6.2.0 新增清理邏輯）
      */
     closeChartFullscreen() {
         const modal = document.getElementById('chartFullscreenModal');
         if (modal) {
             modal.classList.add('hidden');
+        }
+
+        // 清理事件監聽器
+        if (this._fullscreenCleanup) {
+            this._fullscreenCleanup();
+            this._fullscreenCleanup = null;
         }
     }
 }
