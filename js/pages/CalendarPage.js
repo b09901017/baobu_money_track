@@ -906,12 +906,11 @@ export class CalendarPage {
     }
 
     /**
-     * 滾動到交易清單區域（平滑滾動）
-     * 讓使用者有「清單滑上來」的感覺
+     * 智能滾動到交易清單區域（優化版）
+     * 只在交易清單不在可視範圍內時才滾動，且滾動距離更大
      */
     scrollToTransactionsList() {
         const dayDetails = document.getElementById('dayDetails');
-        // 修正：使用正確的滾動容器（main#mainContent）
         const mainContent = document.getElementById('mainContent');
 
         if (!dayDetails || !mainContent) {
@@ -921,29 +920,43 @@ export class CalendarPage {
 
         // 使用 requestAnimationFrame 確保 DOM 已更新
         requestAnimationFrame(() => {
-            // 計算 dayDetails 的位置（相對於 mainContent 的頂部）
             const detailsRect = dayDetails.getBoundingClientRect();
             const contentRect = mainContent.getBoundingClientRect();
 
-            // 目標滾動位置：讓 dayDetails 距離頂部有一點間距（舒適的閱讀位置）
-            const targetOffset = 100; // 距離頂部 100px
+            // 計算交易清單區域是否在可視範圍內
+            const viewportHeight = contentRect.height;
+            const detailsTop = detailsRect.top - contentRect.top; // 相對於容器頂部的位置
+            const detailsBottom = detailsTop + detailsRect.height;
+
+            // 檢查交易清單是否在可視範圍內
+            // 如果交易清單頂部在可視範圍下半部（50%）以下，或完全不可見，則滾動
+            const isNotVisible = detailsTop > viewportHeight * 0.5 || detailsBottom < 0;
+
+            if (!isNotVisible) {
+                console.log('📜 交易清單已在可視範圍內，無需滾動');
+                return; // 不需要滾動
+            }
+
+            console.log('📜 交易清單不在可視範圍，開始滾動');
+
+            // 計算滾動距離：讓交易清單頂部距離容器頂部更近（更大的滾動距離）
+            const targetOffset = 60; // 距離頂部 60px（比之前的 100px 更近）
             const currentScrollTop = mainContent.scrollTop;
             const detailsOffsetTop = detailsRect.top - contentRect.top + currentScrollTop;
             const scrollDistance = detailsOffsetTop - targetOffset;
 
             console.log('📜 滾動參數:', {
-                dayDetailsTop: detailsRect.top,
-                contentTop: contentRect.top,
-                currentScrollTop,
-                detailsOffsetTop,
-                targetOffset,
+                detailsTop,
+                detailsBottom,
+                viewportHeight,
+                isNotVisible,
                 scrollDistance,
                 finalScroll: Math.max(0, scrollDistance)
             });
 
             // 平滑滾動
             mainContent.scrollTo({
-                top: Math.max(0, scrollDistance), // 確保不會滾動到負值
+                top: Math.max(0, scrollDistance),
                 behavior: 'smooth'
             });
         });

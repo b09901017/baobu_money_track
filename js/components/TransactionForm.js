@@ -386,7 +386,70 @@ export class TransactionForm {
     }
 
     /**
-     * 處理照片上傳
+     * 顯示照片來源選擇對話框（拍照 vs 從相簿選擇）
+     */
+    async showPhotoSourceDialog() {
+        try {
+            // 檢查是否為 Capacitor 環境（行動裝置）
+            const isCapacitor = window.Capacitor && window.Capacitor.isNativePlatform();
+
+            if (isCapacitor) {
+                // 行動裝置：使用 Camera Plugin 的系統選擇器
+                const { Camera, CameraResultType, CameraSource } = await import('@capacitor/camera');
+
+                // 直接使用系統的選擇器（Prompt 模式）
+                // 這會顯示「拍照」和「從相簿選擇」兩個選項
+                const image = await Camera.getPhoto({
+                    quality: 90,
+                    allowEditing: false,
+                    resultType: CameraResultType.DataUrl,
+                    source: CameraSource.Prompt,  // 讓系統顯示選擇器
+                    promptLabelHeader: '選擇照片',
+                    promptLabelCancel: '取消',
+                    promptLabelPhoto: '從相簿選擇',
+                    promptLabelPicture: '拍照'
+                });
+
+                // 將 DataUrl 轉換為 File 物件
+                const blob = await this.dataUrlToBlob(image.dataUrl);
+                const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+
+                // 儲存檔案
+                this.selectedPhoto = file;
+
+                // 顯示預覽
+                this.showPhotoPreview(image.dataUrl);
+            } else {
+                // 網頁版：直接觸發檔案選擇器
+                const photoInput = document.getElementById('photoInput');
+                if (photoInput) {
+                    photoInput.click();
+                }
+            }
+        } catch (error) {
+            console.error('❌ 照片選擇失敗:', error);
+
+            // 如果使用者取消，不顯示錯誤
+            if (error.message && error.message.includes('User cancelled')) {
+                return;
+            }
+
+            await window.customDialog?.error('照片選擇失敗：' + error.message);
+        }
+    }
+
+    /**
+     * 將 DataURL 轉換為 Blob
+     * @param {string} dataUrl - Base64 DataURL
+     * @returns {Promise<Blob>}
+     */
+    async dataUrlToBlob(dataUrl) {
+        const response = await fetch(dataUrl);
+        return await response.blob();
+    }
+
+    /**
+     * 處理照片上傳（從檔案選擇器）
      * @param {FileList} files - 檔案列表
      */
     handlePhotoUpload(files) {
@@ -424,19 +487,44 @@ export class TransactionForm {
      * @param {string} dataUrl - 圖片 Data URL
      */
     showPhotoPreview(dataUrl) {
+        const uploadArea = document.getElementById('btnUploadPhoto');
+        if (!uploadArea) return;
+
+        // 隱藏原本的上傳圖示和文字
+        const icon = uploadArea.querySelector('.material-symbols-outlined')?.parentElement;
+        const text = uploadArea.querySelector('span.text-sm');
+
+        if (icon) icon.style.display = 'none';
+        if (text) text.style.display = 'none';
+
+        // 顯示照片預覽（完全佔滿上傳區域）
         const preview = document.getElementById('photoPreview');
         if (!preview) return;
 
         preview.innerHTML = `
-            <div class="relative inline-block group">
-                <img src="${dataUrl}" alt="預覽" class="w-24 h-24 rounded-2xl object-cover shadow-watercolor-layered border-4 border-white">
-                <!-- 刪除按鈕 -->
-                <button type="button" class="absolute -top-2 -right-2 w-7 h-7 bg-gradient-to-br from-[#E27D60] to-[#E8A87C] text-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all opacity-0 group-hover:opacity-100" data-action="remove-photo">
-                    <span class="material-symbols-outlined text-sm">close</span>
-                </button>
-                <!-- 照片標籤 -->
-                <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-antique-gold text-white text-xs font-bold rounded-full shadow-sm">
-                    📸 已選擇
+            <div class="absolute inset-0 flex items-center justify-center p-4">
+                <div class="relative group w-full h-full flex items-center justify-center">
+                    <!-- 照片預覽 -->
+                    <img src="${dataUrl}" alt="預覽" class="max-w-full max-h-full rounded-2xl object-contain shadow-watercolor-layered border-4 border-white">
+
+                    <!-- 刪除按鈕 -->
+                    <button type="button" class="absolute top-2 right-2 w-9 h-9 bg-gradient-to-br from-[#E27D60] to-[#E8A87C] text-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-20" data-action="remove-photo">
+                        <span class="material-symbols-outlined text-lg">close</span>
+                    </button>
+
+                    <!-- 照片標籤（更換照片提示） -->
+                    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-gradient-to-r from-antique-gold to-[#C17767] text-white text-xs font-hand font-bold rounded-full shadow-lg flex items-center gap-1.5 z-20">
+                        <span class="material-symbols-outlined text-sm">check_circle</span>
+                        <span>已選擇照片</span>
+                    </div>
+
+                    <!-- 點擊更換提示（hover 顯示） -->
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-2xl flex items-center justify-center z-10">
+                        <div class="text-white text-center">
+                            <span class="material-symbols-outlined text-4xl mb-2">sync</span>
+                            <p class="text-sm font-hand font-bold">點擊更換照片</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
@@ -444,7 +532,10 @@ export class TransactionForm {
         // 綁定刪除按鈕事件
         const removeBtn = preview.querySelector('[data-action="remove-photo"]');
         if (removeBtn) {
-            removeBtn.addEventListener('click', () => this.removePhoto());
+            removeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();  // 防止觸發父元素的點擊事件
+                this.removePhoto();
+            });
         }
     }
 
@@ -470,6 +561,16 @@ export class TransactionForm {
         if (preview) {
             preview.innerHTML = '';
         }
+
+        // 恢復原本的上傳圖示和文字
+        const uploadArea = document.getElementById('btnUploadPhoto');
+        if (!uploadArea) return;
+
+        const icon = uploadArea.querySelector('.material-symbols-outlined')?.parentElement;
+        const text = uploadArea.querySelector('span.text-sm');
+
+        if (icon) icon.style.display = '';
+        if (text) text.style.display = '';
     }
 
     /**

@@ -138,8 +138,11 @@ export class EventBinder {
         const photoInput = document.getElementById('photoInput');
 
         if (btnUploadPhoto) {
-            btnUploadPhoto.addEventListener('click', () => {
-                if (photoInput) photoInput.click();
+            btnUploadPhoto.addEventListener('click', async () => {
+                // 呼叫新的照片來源選擇對話框
+                if (this.app.transactionForm) {
+                    await this.app.transactionForm.showPhotoSourceDialog();
+                }
             });
         }
 

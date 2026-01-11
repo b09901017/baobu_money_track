@@ -22,6 +22,18 @@ allprojects {
         google()
         mavenCentral()
     }
+
+    // 強制所有子專案使用 Java 17（包含 Capacitor Plugins）
+    afterEvaluate { project ->
+        if (project.hasProperty("android")) {
+            project.android {
+                compileOptions {
+                    sourceCompatibility = JavaVersion.VERSION_17
+                    targetCompatibility = JavaVersion.VERSION_17
+                }
+            }
+        }
+    }
 }
 
 task clean(type: Delete) {

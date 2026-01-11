@@ -39,7 +39,8 @@
       "Bash(node -c:*)",
       "Skill(designer)",
       "Skill(designer:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(java:*)"
     ]
   }
 }

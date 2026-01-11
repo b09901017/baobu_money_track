@@ -2,7 +2,7 @@
 REM ==================== Android APK 自動化建置腳本（Windows 版本）====================
 REM 用途：自動化執行 Capacitor 同步、Java 版本修正、APK 建置
 REM 作者：Claude Code
-REM 日期：2026-01-09
+REM 日期：2026-01-11 (v6.3.4 - 新增拍照功能)
 
 echo 🚀 開始建置 Android APK...
 echo.
@@ -29,12 +29,9 @@ echo.
 
 REM 步驟 3：修正 Java 版本
 echo 🔧 步驟 3/4: 修正 Java 版本...
-if exist android\app\capacitor.build.gradle (
-    powershell -Command "(Get-Content android\app\capacitor.build.gradle) -replace 'JavaVersion\.VERSION_21', 'JavaVersion.VERSION_17' | Set-Content android\app\capacitor.build.gradle"
-    echo ✅ Java 版本已修正為 17
-) else (
-    echo ⚠️  未找到 capacitor.build.gradle 檔案，跳過 Java 版本修正
-)
+echo ℹ️  注意：已在 android/build.gradle 中全域配置 Java 17
+echo ℹ️  所有子專案（包含 Camera Plugin）將自動使用 Java 17
+echo ✅ Java 版本配置完成
 echo.
 
 REM 步驟 4：建置 APK

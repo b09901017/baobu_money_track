@@ -270,6 +270,59 @@ chmod +x build-android.sh
 
 ---
 
-**最後更新：** 2026-01-09
+---
+
+## 📷 Camera Plugin Java 版本問題 (v6.3.4)
+
+### 問題現象
+在新增 `@capacitor/camera` 後,建置 APK 時出現錯誤：
+```
+> Task :capacitor-camera:compileDebugJavaWithJavac FAILED
+error: invalid source release: 21
+```
+
+### 根本原因
+- Capacitor Camera Plugin (v8.0.0) 預設使用 Java 21
+- 修改 `android/app/capacitor.build.gradle` 只影響主 App，不影響 Plugin
+
+### 解決方案：全域設定 Java 版本
+
+**檔案：** `android/build.gradle`
+
+在 `allprojects` 區塊中新增：
+```gradle
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    // 強制所有子專案使用 Java 17（包含 Capacitor Plugins）
+    afterEvaluate { project ->
+        if (project.hasProperty("android")) {
+            project.android {
+                compileOptions {
+                    sourceCompatibility = JavaVersion.VERSION_17
+                    targetCompatibility = JavaVersion.VERSION_17
+                }
+            }
+        }
+    }
+}
+```
+
+### 為什麼有效？
+- `afterEvaluate` 確保在所有子專案配置完成後執行
+- `project.hasProperty("android")` 只針對 Android 模組
+- 直接覆蓋所有子專案的 `compileOptions`，包含第三方 Plugin
+
+### 測試結果
+✅ 成功建置包含 Camera Plugin 的 APK
+✅ 所有 Capacitor Plugins 都使用 Java 17
+✅ 不需要每次 sync 後手動修改
+
+---
+
+**最後更新：** 2026-01-11 (v6.3.4 - Camera Plugin)
 **建立者：** Claude Code
 **狀態：** ✅ 已驗證可用

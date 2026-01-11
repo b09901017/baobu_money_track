@@ -177,6 +177,87 @@ class CustomDialog {
     info(message) {
         return this.alert(message, '提示', '💡');
     }
+
+    /**
+     * 確認對話框 (是/否選擇)
+     * @param {string} message - 訊息內容
+     * @param {Object} options - 選項 { confirmText: string, cancelText: string, title: string }
+     * @returns {Promise<boolean>} true=確認, false=取消
+     */
+    confirm(message, options = {}) {
+        const {
+            confirmText = '確認',
+            cancelText = '取消',
+            title = '請確認'
+        } = options;
+
+        return new Promise((resolve) => {
+            this.promptResolve = (value) => {
+                resolve(value === true);
+            };
+
+            // 設定內容
+            this.promptTitle.textContent = title;
+            this.promptMessage.textContent = message;
+
+            // 隱藏輸入框
+            this.promptInput.style.display = 'none';
+
+            // 更新按鈕文字
+            this.promptConfirm.textContent = confirmText;
+            this.promptCancel.textContent = cancelText;
+
+            // 顯示模態框
+            this.promptModal.classList.remove('hidden');
+
+            // 臨時更改確認按鈕行為
+            const confirmHandler = () => {
+                this.closePromptConfirm(true);
+            };
+            const cancelHandler = () => {
+                this.closePromptConfirm(false);
+            };
+
+            // 移除舊的事件監聽器並新增臨時的
+            this.promptConfirm.removeEventListener('click', this._originalConfirmHandler);
+            this.promptCancel.removeEventListener('click', this._originalCancelHandler);
+
+            this.promptConfirm.addEventListener('click', confirmHandler, { once: true });
+            this.promptCancel.addEventListener('click', cancelHandler, { once: true });
+            this.promptOverlay.addEventListener('click', cancelHandler, { once: true });
+
+            // 儲存原始處理器以便恢復
+            this._originalConfirmHandler = () => {
+                const value = this.promptInput.value.trim();
+                this.closePrompt(value);
+            };
+            this._originalCancelHandler = () => this.closePrompt(null);
+        });
+    }
+
+    /**
+     * 關閉確認對話框
+     * @param {boolean} result - 確認結果
+     */
+    closePromptConfirm(result) {
+        this.promptModal.classList.add('hidden');
+
+        // 恢復輸入框顯示
+        this.promptInput.style.display = '';
+
+        // 恢復按鈕文字
+        this.promptConfirm.textContent = '確認';
+        this.promptCancel.textContent = '取消';
+
+        // 恢復原始事件處理器
+        this.promptConfirm.addEventListener('click', this._originalConfirmHandler);
+        this.promptCancel.addEventListener('click', this._originalCancelHandler);
+
+        if (this.promptResolve) {
+            this.promptResolve(result);
+            this.promptResolve = null;
+        }
+    }
 }
 
 // 創建全域單例
