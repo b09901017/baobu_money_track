@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **線上演示：** https://baobu-app.web.app
 
-**當前版本：** v6.2.0 (趨勢分析 UI/UX 全面優化)
+**當前版本：** v6.4.0 (帳本頁面 UI/UX 大升級)
 
 ---
 

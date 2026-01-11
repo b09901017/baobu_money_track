@@ -78,47 +78,78 @@ export class NotebooksPage {
             // 計算欠款狀態（誰欠誰多少）
             const difference = balance.baobao_owed - balance.bubu_owed;
             let balanceText = '';
+            let balanceIcon = '';
+            let balanceColor = '';
+
             if (Math.abs(difference) < 0.01) {
-                balanceText = '已結清 💖';
+                balanceText = '已結清';
+                balanceIcon = '💖';
+                balanceColor = 'text-emerald-500';
             } else if (difference > 0) {
                 // 寶寶被欠得多 → 步步欠寶寶
-                balanceText = `步步欠寶寶 $${Math.round(Math.abs(difference))}`;
+                balanceText = `步步欠 $${Math.round(Math.abs(difference))}`;
+                balanceIcon = '💰';
+                balanceColor = 'text-rose-400';
             } else {
                 // 步步被欠得多 → 寶寶欠步步
-                balanceText = `寶寶欠步步 $${Math.round(Math.abs(difference))}`;
+                balanceText = `寶寶欠 $${Math.round(Math.abs(difference))}`;
+                balanceIcon = '💰';
+                balanceColor = 'text-rose-400';
             }
 
             // 根據帳本類型決定顯示內容
             let statsHTML = '';
-            if (notebookType === 'daily') {
-                // 日常帳本：固定顯示欠款資訊
-                statsHTML = `<div class="text-xs text-warm-brown/80">${balanceText}</div>`;
-            } else {
-                // 旅遊/時期性帳本：顯示總花費和各自支出
+            if (index === 0) {
+                // 第一本帳本：顯示欠款資訊（更精緻的設計）
                 statsHTML = `
-                    <div class="space-y-0.5 text-xs text-warm-brown/80">
-                        ${stats.baobao_paid > 0 ? `<div>寶 $${Math.round(stats.baobao_paid)}</div>` : ''}
-                        ${stats.bubu_paid > 0 ? `<div>步 $${Math.round(stats.bubu_paid)}</div>` : ''}
-                        ${stats.total_expense > 0 ? `<div class="text-[#E27D60] font-bold">共 $${Math.round(stats.total_expense)}</div>` : ''}
+                    <div class="notebook-balance-section">
+                        <div class="balance-icon">${balanceIcon}</div>
+                        <div class="balance-text ${balanceColor}">${balanceText}</div>
+                    </div>`;
+            } else {
+                // 其他帳本：顯示總花費和各自支出（新設計）
+                const haobaoAmount = Math.round(stats.baobao_paid);
+                const bubuAmount = Math.round(stats.bubu_paid);
+                const totalAmount = Math.round(stats.total_expense);
+
+                statsHTML = `
+                    <div class="notebook-stats-section">
+                        <div class="stats-row">
+                            <span class="stats-label">寶花</span>
+                            <span class="stats-value stats-value-bao">$${haobaoAmount}</span>
+                        </div>
+                        <div class="stats-row">
+                            <span class="stats-label">步花</span>
+                            <span class="stats-value stats-value-bu">$${bubuAmount}</span>
+                        </div>
+                        <div class="stats-divider"></div>
+                        <div class="stats-row stats-row-total">
+                            <span class="stats-label-total">共花</span>
+                            <span class="stats-value-total">$${totalAmount}</span>
+                        </div>
                     </div>`;
             }
 
             return `
-                <div class="group relative cursor-pointer" data-notebook-id="${nb.id}">
-                    <div class="relative w-full aspect-[3/4] rounded-r-xl rounded-l-md shadow-book bg-white transition-all duration-300 transform ${isActive ? '-translate-y-2 scale-105 shadow-floating ring-2 ring-antique-gold' : 'hover:-translate-y-2 hover:rotate-1'} overflow-visible">
-                        <div class="absolute top-0 bottom-0 left-0 w-3 bg-gradient-to-r ${colorScheme.spine} rounded-l-md z-20 shadow-md"></div>
-                        <div class="absolute inset-0 left-2 bg-gradient-to-br ${colorScheme.gradient} rounded-r-xl overflow-hidden flex flex-col justify-end p-4">
-                            <div class="absolute inset-0 book-texture opacity-20"></div>
-                            <div class="relative z-10">
-                                <h3 class="text-soft-ink text-xl font-hand font-bold leading-tight mb-2">${nb.name}</h3>
-                                ${statsHTML}
-                            </div>
+                <div class="notebook-card ${isActive ? 'notebook-active' : ''}" data-notebook-id="${nb.id}">
+                    <!-- 彩色書脊條 -->
+                    <div class="notebook-spine-bar bg-gradient-to-b ${colorScheme.spine}"></div>
+
+                    <!-- 主卡片 -->
+                    <div class="notebook-main">
+                        <!-- 標題區（固定高度） -->
+                        <div class="notebook-header">
+                            <h3 class="notebook-name">${nb.name}</h3>
                         </div>
-                        <div class="absolute -top-1 right-6 w-6 h-12 ${colorScheme.ribbon} shadow-md z-30 flex justify-center">
-                            <div class="absolute bottom-[-8px] w-full h-4 ${colorScheme.ribbon}" style="clip-path: polygon(0 0, 50% 100%, 100% 0);"></div>
+
+                        <!-- 統計區（固定高度） -->
+                        <div class="notebook-stats">
+                            ${statsHTML}
                         </div>
+
+                        <!-- 裝飾角標 -->
+                        <div class="notebook-corner ${colorScheme.ribbon}"></div>
                     </div>
-                    <div class="absolute -bottom-4 left-4 right-4 h-3 bg-warm-brown/10 rounded-[100%] blur-sm pointer-events-none group-hover:w-3/4 group-hover:mx-auto transition-all"></div>
                 </div>`;
         }).join('');
 
